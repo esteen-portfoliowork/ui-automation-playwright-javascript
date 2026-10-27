@@ -1,0 +1,39 @@
+name: 🔄 GitHub to GitLab Sync
+run-name: Sync Main Branch to GitLab
+
+on:
+  push:
+    branches:
+        - main
+
+concurrency:
+    group: gitlab-sync
+    cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    permissions:
+        contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure GitLab Remote
+        run: |
+          git remote remove gitlab || true
+          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/est-automation-portfolio-group/ui-automation-playwright-javascript.git
+
+      - name: Verify Remote
+        run: git remote -v
+
+      - name: Push Branches
+        run: git push gitlab --all
+
+      - name: Push Tags
+        run: git push gitlab --tags
