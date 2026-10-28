@@ -41,7 +41,7 @@ pipeline {
             ])
 
             slackSend(
-                channel: '#jenkins-run',
+                channel: 'C0CD1PMAN2D',
                 color: currentBuild.currentResult == 'SUCCESS' ? 'good' : 'danger',
                 message: """
                 🚀 Playwright Execution Finished
