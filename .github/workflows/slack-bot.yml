@@ -1,0 +1,18 @@
+name: Slack Bot - PR Check or Manual Trigger
+
+on:
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Bot Message
+        uses: slackapi/slack-github-action@v4
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
+          payload: |
+            channel: "#qa-notifications"
+            text: "🤖 GitHub Bot Integration Working for PR Check or Manual Trigger"
