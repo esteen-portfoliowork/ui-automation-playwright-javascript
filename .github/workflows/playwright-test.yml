@@ -30,3 +30,36 @@ jobs:
 
       - name: Run Tests
         run: npx playwright test
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+
+      - name: Upload Failure Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots
+          path: test-results/
+          if-no-files-found: ignore
+
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v4
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
+          payload: |
+            channel: "#qa-notifications"
+            text: |
+              🚀 Playwright Execution Finished
+
+              📊 Status: ${{ job.status }}
+              🌿 Branch: ${{ github.ref_name }}
+              👤 Actor: ${{ github.actor }}
+
+              https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

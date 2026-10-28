@@ -1,0 +1,17 @@
+name: Slack Webhook - PR Check or Manual Trigger
+
+on:
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Slack Message
+        uses: slackapi/slack-github-action@v4
+        with:
+          webhook: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "✅ GitHub Webhook Integration Working for PR Check or Manual Trigger"
