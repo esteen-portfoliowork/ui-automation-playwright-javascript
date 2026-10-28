@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -29,6 +30,7 @@ pipeline {
 
     post {
         always {
+
             publishHTML([
                 allowMissing: true,
                 alwaysLinkToLastBuild: true,
@@ -44,9 +46,12 @@ pipeline {
                 message: """
                 🚀 Playwright Execution Finished
 
+                👤 Triggered By: ${env.BUILD_USER}
+                📦 Repository: ${env.JOB_NAME}
+
                 📊 Status: ${currentBuild.currentResult}
                 🏗 Build: #${env.BUILD_NUMBER}
-
+                🌿 Branch: ${env.BRANCH_NAME}
                 🔗 ${env.BUILD_URL}
                 """
             )
