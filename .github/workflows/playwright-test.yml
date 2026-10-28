@@ -54,7 +54,7 @@ jobs:
           method: chat.postMessage
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
-            channel: "#qa-notifications"
+            channel: "C0CDR49PPSL"
             text: |
               🚀 Playwright Execution Finished
 
