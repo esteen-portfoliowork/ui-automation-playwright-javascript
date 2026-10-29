@@ -5,7 +5,8 @@ module.exports = defineConfig({
 
   reporter: [
     ['html'],
-    ['list']
+    ['list'],
+    ['allure-playwright']
   ],
 
   use: {
