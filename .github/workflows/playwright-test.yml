@@ -1,4 +1,14 @@
-name: Playwright Initial Test
+name: 🎭 Playwright Validation
+
+run-name: >
+  ${{
+    github.event_name == 'workflow_dispatch'
+    && format('🎭 Manual Validation | {0} | {1}', github.event.inputs.environment, github.event.inputs.browser)
+    || format('✅ PR Validation #{0}', github.run_number)
+  }}
+
+env:
+  TEST_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'qa' }}
 
 on:
   push:
@@ -9,27 +19,131 @@ on:
     branches:
       - main
 
+  # Manual Trigger
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: "🌐 Browser"
+        required: true
+        default: chromium
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+
+      folder:
+        description: "📁 Test Folder"
+        required: true
+        default: tests
+        type: choice
+        options:
+          - tests/practice
+          - tests/demo
+          - tests
+
+      tag:
+        description: "🏷️ Test Tag (ex: smoke)"
+        required: false
+        default: ""
+        type: string
+
+      environment:
+        description: "🌍 Environment"
+        required: true
+        default: qa
+        type: choice
+        options:
+          - dev
+          - qa
+          - uat
+          - prod
+
+      execution_mode:
+        description: "🖥️ Execution Mode"
+        required: true
+        default: headless
+        type: choice
+        options:
+          - headless
+          - headed
+
+      retries:
+        description: "🔄 Retry Count"
+        required: true
+        default: "1"
+        type: choice
+        options:
+          - "0"
+          - "1"
+          - "2"
+          - "3"
+          - "4"
+
+      workers:
+        description: "⚡ Parallel Workers"
+        required: true
+        default: "2"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "4"
+          - "8"
+
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 📋 Execution Configuration
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "🌐 Browser           : ${{ inputs.browser }}"
+          echo "📁 Folder            : ${{ inputs.folder }}"
+          echo "🏷️ Tag               : ${{ inputs.tag }}"
+          echo "🌍 Environment       : ${{ inputs.environment }}"
+          echo "🖥️ Execution Mode    : ${{ inputs.execution_mode }}"
+          echo "🔄 Retries           : ${{ inputs.retries }}"
+          echo "⚡ Workers           : ${{ inputs.workers }}"
+
+      - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Install Dependencies
+      - name: 📦 Install Dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
+      - name: 🎭 Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Tests
-        run: npx playwright test
+      - name: 🧪 Execute Playwright Tests
+        run: |
+          CMD="npx playwright test"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+
+            CMD="$CMD ${{ inputs.folder }}"
+
+            if [ -n "${{ inputs.tag }}" ]; then
+              CMD="$CMD --grep '${{ inputs.tag }}'"
+            fi
+
+            CMD="$CMD --project=${{ inputs.browser }}"
+            CMD="$CMD --workers=${{ inputs.workers }}"
+            CMD="$CMD --retries=${{ inputs.retries }}"
+
+            if [ "${{ inputs.execution_mode }}" = "headed" ]; then
+              CMD="$CMD --headed"
+            fi
+          fi
+
+          echo "$CMD"
+          eval "$CMD"
         continue-on-error: true
 
       - name: Upload Playwright Report
