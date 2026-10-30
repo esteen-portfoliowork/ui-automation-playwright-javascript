@@ -1,8 +1,25 @@
 # UI Playwright Integrated Application
 
+Document Version: v0.1.0
+
 ## Overview
 
 This document summarizes integrations currently implemented within the UI Playwright Automation Framework, planned enhancements, future integration targets, and long-term ecosystem goals.
+
+---
+
+## Integration Status
+
+| Application | Status |
+|------------|---------|
+| Jira | Active |
+| GitHub | Active |
+| GitHub Actions | Active |
+| Slack | Active |
+| Jenkins | Active |
+| GitLab | Active |
+| Allure Report | Active |
+| GitHub Pages | Active |
 
 ---
 
@@ -66,6 +83,6 @@ Create a fully integrated automation ecosystem where:
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.0.1 |
-| Release Date | 2026-10-30 |
+| Release Version | v0.1.0 |
+| Release Date | 2026-10-31 |
 | Repository | UI Playwright - JavaScript |
