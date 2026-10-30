@@ -7,6 +7,9 @@ run-name: >
     || format('✅ PR Validation #{0}', github.run_number)
   }}
 
+env:
+  TEST_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
+
 on:
   push:
     branches:
