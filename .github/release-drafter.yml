@@ -1,0 +1,225 @@
+name-template: 'UI Playwright - JavaScript Release v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+categories:
+  - title: '💥 Breaking Changes'
+    labels:
+      - breaking-change
+
+  - title: '🧪 Automated Tests'
+    labels:
+      - testcase
+
+  - title: '🏗 Framework Enhancements'
+    labels:
+      - framework
+
+  - title: '🔗 Integrations'
+    labels:
+      - integration
+
+  - title: '⚙️ CI/CD'
+    labels:
+      - cicd
+
+  - title: '📊 Reporting'
+    labels:
+      - reporting
+
+  - title: '📢 Notifications'
+    labels:
+      - notification
+
+  - title: '🔒 Security'
+    labels:
+      - security
+
+  - title: '📦 Dependencies'
+    labels:
+      - dependency
+
+  - title: '⚡ Performance'
+    labels:
+      - performance
+
+  - title: '♻️ Refactored Code'
+    labels:
+      - refactor
+
+  - title: '💻 Code Improvements'
+    labels:
+      - code
+
+  - title: '🐞 Bug Fixes'
+    labels:
+      - bugfix
+
+  - title: '🔧 Maintenance'
+    labels:
+      - maintenance
+
+  - title: '📚 Documentation'
+    labels:
+      - documentation
+
+  - title: '🚀 Release Management'
+    labels:
+      - release
+
+exclude-labels:
+  - ignore
+
+exclude-contributors:
+  - github-actions[bot]
+  - dependabot[bot]
+  
+# change-template: '- $TITLE by @$AUTHOR (#$NUMBER)'
+change-template: '- $TITLE (#$NUMBER)'
+change-title-escapes: '\<*_&'
+
+template: |
+  # 🚀 Release v$RESOLVED_VERSION
+
+  > Update this section before publishing the release.
+
+  ---
+
+  ## 📌 Release Information
+  
+  | Item | Value |
+  |------|--------|
+  | Release Version | v$RESOLVED_VERSION |
+  | Repository | UI Playwright - JavaScript |
+  | Release Type | Update before publishing (major, minor, patch) |
+  | Release Date | Update before publishing |
+
+  ---
+
+  ## ✨ Highlights
+
+  > Update this section before publishing the release.
+
+  ---
+
+  ## 📋 Included User Stories & Tasks
+  
+  See the attached `jira-tickets.md` under release assets.
+
+  ---
+
+  ## 📎 Release Assets
+
+  The following documents are attached to this release:
+
+  - dependency-versions.md
+  - framework-summary.md
+  - jira-tickets.md
+
+  ---
+
+  ## 📦 Dependencies
+
+  See the attached `dependency-versions.txt` under release assets.
+
+  ---
+
+  ## 🔀 Merged Pull Requests
+
+  $CHANGES
+
+  ---
+
+  ## 👥 Contributors
+
+  Total: $CONTRIBUTOR_COUNT
+  Contributors: $CONTRIBUTORS
+
+  > Contributors excluded: github-actions[bot], dependabot[bot]
+
+  ---
+
+  ## 🎯 What's Next
+
+  > Add upcoming roadmap items before publishing.
+
+  ---
+
+  **Full Changelog:**
+  https://github.com/esteen-portfoliowork/ui-automation-playwright-javascript/commits/v$RESOLVED_VERSION
+
+### If you want versioning based on labels ###
+version-resolver:
+  major:
+    labels:
+      - breaking-change
+
+  minor:
+    labels:
+      - testcase
+      - framework
+      - integration
+      - cicd
+      - reporting
+      - notification
+
+  patch:
+    labels:
+      - security
+      - dependency
+      - performance
+      - refactor
+      - code
+      - bugfix
+      - maintenance
+      - documentation
+      - release
+
+  default: patch
+
+# ### Automatic adding of label in PR ###
+# autolabeler:
+#   - label: "cicd"
+#     files:
+#       - ".github/workflows/**"
+#       - "Jenkinsfile"
+
+#   - label: "reporting"
+#     files:
+#       - "allure-results/**"
+#       - "allure-report/**"
+#       - "allure.config.*"
+
+#   - label: "documentation"
+#     files:
+#       - "*.md"
+#       - "docs/**"
+
+#   - label: "framework"
+#     files:
+#       - "framework/**"
+#       - "fixtures/**"
+#       - "helpers/**"
+
+#   - label: "integration"
+#     files:
+#       - "integrations/**"
+
+#   - label: "testcase"
+#     files:
+#       - "tests/**"
+
+#   - label: "code"
+#     files:
+#       - "src/**"
+#       - "pages/**"
+#       - "utils/**"
+
+#   - label: "security"
+#     files:
+#       - ".github/**"
+#       - "secrets/**"
+
+#   - label: "dependency"
+#     files:
+#       - "package.json"
+#       - "package-lock.json"
