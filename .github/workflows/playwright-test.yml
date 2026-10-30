@@ -32,12 +32,12 @@ on:
       folder:
         description: Test Folder
         required: true
-        default: all
+        default: tests
         type: choice
         options:
           - practice
           - demo
-          - all
+          - tests
 
       tag:
         description: Test Tag
@@ -96,6 +96,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: 📋 Execution Configuration
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Browser: ${{ inputs.browser }}"
+          echo "Folder: ${{ inputs.folder }}"
+          echo "Tag: ${{ inputs.tag }}"
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Execution Mode: ${{ inputs.execution_mode }}"
+          echo "Retries: ${{ inputs.retries }}"
+          echo "Workers: ${{ inputs.workers }}"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -108,7 +119,28 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run Tests
-        run: npx playwright test
+        run: |
+          CMD="npx playwright test"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+
+            CMD="$CMD ${{ inputs.folder }}"
+
+            if [ -n "${{ inputs.tag }}" ]; then
+              CMD="$CMD --grep '${{ inputs.tag }}'"
+            fi
+
+            CMD="$CMD --project=${{ inputs.browser }}"
+            CMD="$CMD --workers=${{ inputs.workers }}"
+            CMD="$CMD --retries=${{ inputs.retries }}"
+
+            if [ "${{ inputs.execution_mode }}" = "headed" ]; then
+              CMD="$CMD --headed"
+            fi
+          fi
+
+          echo "$CMD"
+          eval "$CMD"
         continue-on-error: true
 
       - name: Upload Playwright Report
