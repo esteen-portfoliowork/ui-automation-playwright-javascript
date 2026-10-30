@@ -1,15 +1,17 @@
 # Jira Tickets
 
-| Jira ID | Type | Description |
-|--------|-------|-----------------------|
-| KAN-28 | Task | Create Release Drafter |
-| KAN-26 | Story | [PR and Manual workflow] Add Manual Trigger (workflow_dispatch) |
-| KAN-15 | Story | Slack integration |
+Document Version: v0.1.0
+
+| Jira ID | Type | Status | Description |
+|--------|----------|-------|-----------------------|
+| KAN-17 | Enhancement | Done | Prevent automatic Allure report deployment on main branch merges |
+| KAN-28 | Task | Done | Create Release Drafter |
+| KAN-29 | Task | Done | Update README and release asset templates for v0.1.0 release |
 
 ## Release Metadata
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.0.1 |
-| Release Date | 2026-10-30 |
+| Release Version | v0.1.0 |
+| Release Date | 2026-10-31 |
 | Repository | UI Playwright - JavaScript |

@@ -1,5 +1,7 @@
 # Architecture
 
+Document Version: v0.1.0
+
 ## Overview
 
 UI Playwright - JavaScript is built using the Page Object Model (POM) design pattern and integrated with multiple applications.
@@ -24,13 +26,21 @@ UI Playwright - JavaScript is built using the Page Object Model (POM) design pat
 - Firefox
 - WebKit
 
-## Framework Structure
+## Deployment Architecture
 
-tests/
-pages/
-data/
-locators/
-.github/workflows/
+GitHub
+↓
+GitHub Actions
+↓
+Playwright Execution
+↓
+Allure Results
+↓
+Allure Report
+↓
+GitHub Pages
+↓
+Slack Notification
 
 ## Test Types
 
@@ -62,6 +72,6 @@ Slack Notification
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.0.1 |
-| Release Date | 2026-10-30 |
+| Release Version | v0.1.0 |
+| Release Date | 2026-10-31 |
 | Repository | UI Playwright - JavaScript |

@@ -1,5 +1,9 @@
 # Dependency Versions
 
+Document Version: v0.1.0
+
+## Dependencies
+
 | Dependency | Version | Source |
 |--------------|----------|----------|
 | Node.js | 24.22.1 | `node -v` |
@@ -21,6 +25,14 @@
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.0.1 |
-| Release Date | 2026-10-30 |
+| Release Version | v0.1.0 |
+| Release Date | 2026-10-31 |
 | Repository | UI Playwright - JavaScript |
+
+## Verification Information
+
+| Item | Value |
+|--------|--------|
+| Verified By | GitHub Release Process |
+| Verification Date | 2026-10-31 |
+| Release Version | v0.1.0 |
