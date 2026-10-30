@@ -1,0 +1,56 @@
+name: 📚 Generate and Publish Release Assets
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  upload-assets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏷 Get Release Version
+        id: version
+        run: |
+          echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: 📁 Create Release Assets Folder
+        run: |
+          mkdir -p generated-release-assets
+
+      - name: 🏗 Generate Architecture
+        run: |
+          cp release/templates/architecture.md \
+          generated-release-assets/architecture-${{ steps.version.outputs.version }}.md
+
+      - name: 📦 Generate Dependency Versions
+        run: |
+          cp release/templates/dependency-versions.md \
+          generated-release-assets/dependency-versions-${{ steps.version.outputs.version }}.md
+
+      - name: 🔗 Generate Integrated Apps
+        run: |
+          cp release/templates/integrated-apps.md \
+          generated-release-assets/integrated-apps-${{ steps.version.outputs.version }}.md
+
+      - name: 📋 Generate Jira Tickets
+        run: |
+          cp release/templates/jira-tickets.md \
+          generated-release-assets/jira-tickets-${{ steps.version.outputs.version }}.md
+
+      - name: 📝 Generate Release Summary
+        run: |
+          cp release/templates/release-summary.md \
+          generated-release-assets/release-summary-${{ steps.version.outputs.version }}.md
+
+      - name: 📎 Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: generated-release-assets/*.md
