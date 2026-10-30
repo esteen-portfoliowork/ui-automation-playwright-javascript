@@ -1,4 +1,11 @@
-name: Playwright Initial Test
+name: 🎭 Playwright Validation
+
+run-name: >
+  ${{
+    github.event_name == 'workflow_dispatch'
+    && format('🎭 Manual Execution #{0}', github.run_number)
+    || format('✅ PR Validation #{0}', github.run_number)
+  }}
 
 on:
   push:
