@@ -16,6 +16,78 @@ on:
     branches:
       - main
 
+  # Manual Trigger
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: Browser
+        required: true
+        default: chromium
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+
+      folder:
+        description: Test Folder
+        required: true
+        default: all
+        type: choice
+        options:
+          - practice
+          - demo
+          - all
+
+      tag:
+        description: Test Tag
+        required: false
+        default: ""
+        type: string
+
+      environment:
+        description: Environment
+        required: true
+        default: uat
+        type: choice
+        options:
+          - dev
+          - qa
+          - uat
+          - prod
+
+      execution_mode:
+        description: Execution Mode
+        required: true
+        default: headless
+        type: choice
+        options:
+          - headless
+          - headed
+
+      retries:
+        description: Retry Count
+        required: true
+        default: "1"
+        type: choice
+        options:
+          - "0"
+          - "1"
+          - "2"
+          - "3"
+          - "4"
+
+      workers:
+        description: Parallel Workers
+        required: true
+        default: "2"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "4"
+          - "8"
+
 jobs:
   test:
     runs-on: ubuntu-latest
