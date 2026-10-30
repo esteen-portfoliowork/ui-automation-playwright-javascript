@@ -131,10 +131,11 @@ template: |
 
   ## 👥 Contributors
 
-  Total: $CONTRIBUTOR_COUNT
-  Contributors: $CONTRIBUTORS
+  $CONTRIBUTORS
 
-  > Contributors excluded: github-actions[bot], dependabot[bot]
+  > Automated contributors excluded from this release:
+  > - github-actions[bot]
+  > - dependabot[bot]
 
   ---
 
