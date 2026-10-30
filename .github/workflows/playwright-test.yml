@@ -3,12 +3,12 @@ name: 🎭 Playwright Validation
 run-name: >
   ${{
     github.event_name == 'workflow_dispatch'
-    && format('🎭 Manual Execution #{0}', github.run_number)
+    && format('🎭 Manual Validation | {0} | {1}', github.event.inputs.environment, github.event.inputs.browser)
     || format('✅ PR Validation #{0}', github.run_number)
   }}
 
 env:
-  TEST_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
+  TEST_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'qa' }}
 
 on:
   push:
@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
     inputs:
       browser:
-        description: Browser
+        description: "🌐 Browser"
         required: true
         default: chromium
         type: choice
@@ -33,25 +33,25 @@ on:
           - webkit
 
       folder:
-        description: Test Folder
+        description: "📁 Test Folder"
         required: true
         default: tests
         type: choice
         options:
-          - practice
-          - demo
+          - tests/practice
+          - tests/demo
           - tests
 
       tag:
-        description: Test Tag
+        description: "🏷️ Test Tag (ex: smoke)"
         required: false
         default: ""
         type: string
 
       environment:
-        description: Environment
+        description: "🌍 Environment"
         required: true
-        default: uat
+        default: qa
         type: choice
         options:
           - dev
@@ -60,7 +60,7 @@ on:
           - prod
 
       execution_mode:
-        description: Execution Mode
+        description: "🖥️ Execution Mode"
         required: true
         default: headless
         type: choice
@@ -69,7 +69,7 @@ on:
           - headed
 
       retries:
-        description: Retry Count
+        description: "🔄 Retry Count"
         required: true
         default: "1"
         type: choice
@@ -81,7 +81,7 @@ on:
           - "4"
 
       workers:
-        description: Parallel Workers
+        description: "⚡ Parallel Workers"
         required: true
         default: "2"
         type: choice
@@ -96,32 +96,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
       - name: 📋 Execution Configuration
         if: github.event_name == 'workflow_dispatch'
         run: |
-          echo "Browser: ${{ inputs.browser }}"
-          echo "Folder: ${{ inputs.folder }}"
-          echo "Tag: ${{ inputs.tag }}"
-          echo "Environment: ${{ inputs.environment }}"
-          echo "Execution Mode: ${{ inputs.execution_mode }}"
-          echo "Retries: ${{ inputs.retries }}"
-          echo "Workers: ${{ inputs.workers }}"
+          echo "🌐 Browser           : ${{ inputs.browser }}"
+          echo "📁 Folder            : ${{ inputs.folder }}"
+          echo "🏷️ Tag               : ${{ inputs.tag }}"
+          echo "🌍 Environment       : ${{ inputs.environment }}"
+          echo "🖥️ Execution Mode    : ${{ inputs.execution_mode }}"
+          echo "🔄 Retries           : ${{ inputs.retries }}"
+          echo "⚡ Workers           : ${{ inputs.workers }}"
 
-      - name: Setup Node.js
+      - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Install Dependencies
+      - name: 📦 Install Dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
+      - name: 🎭 Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Tests
+      - name: 🧪 Execute Playwright Tests
         run: |
           CMD="npx playwright test"
 
