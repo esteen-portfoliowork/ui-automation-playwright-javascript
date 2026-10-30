@@ -38,8 +38,6 @@ on:
         default: tests
         type: choice
         options:
-          - tests/practice
-          - tests/demo
           - tests
 
       tag:
