@@ -101,6 +101,18 @@ template: |
 
   ---
 
+  ## 🎯 Key Deliverables
+
+  > Update this section before publishing the release.
+
+  ---
+
+  ## 🎯 Release Impact
+
+  > Update this section before publishing the release.
+
+  ---
+
   ## 📋 Included User Stories & Tasks
   
   See the attached `jira-tickets.md` under release assets.
@@ -109,7 +121,7 @@ template: |
 
   ## 📎 Release Assets
 
-  The following documents are attached to this release:
+  The following artifacts are generated and attached automatically to the release:
 
   - architecture.md
   - dependency-versions.md
@@ -117,11 +129,13 @@ template: |
   - jira-tickets.md
   - release-summary.md
 
+  These documents provide architectural references, dependency inventories, integrated application details, release summaries, and Jira traceability.
+
   ---
 
   ## 📦 Dependencies
 
-  See the attached `dependency-versions.txt` under release assets.
+  See the attached `dependency-versions.md` document for the complete dependency inventory and version information used during this release.
 
   ---
 
@@ -133,15 +147,24 @@ template: |
 
   ## 👥 Contributors
 
-  $CONTRIBUTORS
+  ### Included Contributors
 
-  > Automated contributors excluded from this release:
-  > - github-actions[bot]
-  > - dependabot[bot]
+  - @esteen-portfoliowork
+
+  ### Excluded Automated Contributors
+
+  - github-actions[bot]
+  - dependabot[bot]
 
   ---
 
   ## 🎯 What's Next
+
+  > Add upcoming roadmap items before publishing.
+
+  ---
+
+  ## 🏆 Release Summary
 
   > Add upcoming roadmap items before publishing.
 
