@@ -173,10 +173,11 @@ jobs:
             if [ "${{ inputs.execution_mode }}" = "headed" ]; then
               CMD="$CMD --headed"
             fi
-          fi
 
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
+
             CMD="$CMD --project=chromium"
+
           fi
 
           echo "Executing command:"
@@ -195,16 +196,68 @@ jobs:
 
           echo "EXECUTION_DURATION=${DURATION}s" >> $GITHUB_ENV
 
+      - name: 📊 Extract Test Statistics
+        if: always()
+        run: |
+          PASSED=$(grep -o '"status":"passed"' playwright-report/results.json | wc -l || true)
+          FAILED=$(grep -o '"status":"failed"' playwright-report/results.json | wc -l || true)
+          SKIPPED=$(grep -o '"status":"skipped"' playwright-report/results.json | wc -l || true)
+
+          echo "PASSED_TESTS=$PASSED" >> $GITHUB_ENV
+          echo "FAILED_TESTS=$FAILED" >> $GITHUB_ENV
+          echo "SKIPPED_TESTS=$SKIPPED" >> $GITHUB_ENV
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🧪 Test Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Passed | $PASSED_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failed | $FAILED_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped | $SKIPPED_TESTS |" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📋 Collect PR Details
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+          echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
+          echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
+
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
           echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BROWSER="chromium"
+          else
+            BROWSER="${{ github.event.inputs.browser || 'all' }}"
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## 🔖 Pull Request Details" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Author | ${{ env.PR_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Source Branch | ${{ github.head_ref }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Target Branch | ${{ github.base_ref }} |" >> $GITHUB_STEP_SUMMARY
+
+          fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Environment | ${{ github.event.inputs.environment || 'qa' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Browser | ${{ github.event.inputs.browser || 'all' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY >> $GITHUB_STEP_SUMMARY
           echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -213,7 +266,7 @@ jobs:
 
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Browser | ${{ github.event.inputs.browser || 'all' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY >> $GITHUB_STEP_SUMMARY
           echo "| Environment | ${{ github.event.inputs.environment || 'qa' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Retry Count | ${{ github.event.inputs.retries || '0' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Workers | ${{ github.event.inputs.workers || 'default' }} |" >> $GITHUB_STEP_SUMMARY
@@ -251,7 +304,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-${{ github.run_number }}
+          name: ${{ github.event_name == 'pull_request' && format('pr-playwright-report-{0}', github.run_number) || format('playwright-report-{0}', github.run_number) }}
           path: playwright-report/
           if-no-files-found: ignore
 
@@ -259,7 +312,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: failure-screenshots-${{ github.run_number }}
+          name: ${{ github.event_name == 'pull_request' && format('pr-failure-screenshots-{0}', github.run_number) || format('failure-screenshots-{0}', github.run_number) }}
+          # name: failure-screenshots-${{ github.run_number }}
           path: test-results/
           if-no-files-found: ignore
 
@@ -267,7 +321,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ github.run_number }}
+          name: ${{ github.event_name == 'pull_request' && format('pr-test-results-{0}', github.run_number) || format('test-results-{0}', github.run_number) }}
           path: test-results/
           if-no-files-found: ignore
 
@@ -275,7 +329,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-json-${{ github.run_number }}
+          name: ${{ github.event_name == 'pull_request' && format('pr-playwright-json-{0}', github.run_number) || format('playwright-json-{0}', github.run_number) }}
           path: playwright-report/results.json
           if-no-files-found: ignore
 
@@ -283,7 +337,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results-${{ github.run_number }}
+          name: ${{ github.event_name == 'pull_request' && format('pr-allure-results-{0}', github.run_number) || format('allure-results-{0}', github.run_number) }}
           path: allure-results/
           if-no-files-found: ignore
 
@@ -304,7 +358,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report-${{ github.run_number }}
+          name: ${{ github.event_name == 'pull_request' && format('pr-allure-report-{0}', github.run_number) || format('allure-report-{0}', github.run_number) }}
           path: allure-report/
           if-no-files-found: ignore
 
@@ -345,14 +399,6 @@ jobs:
 
               🔗 Workflow:
               <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Open Workflow>
-
-      - name: 📋 Collect PR Details
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
-          echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
-          echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
-          echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
 
       - name: 📣 Notify Slack - PR Validation
         if: always() && github.event_name == 'pull_request'
