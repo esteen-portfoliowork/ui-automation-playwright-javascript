@@ -1,6 +1,6 @@
 # Release Summary
 
-Document Version: v0.1.0
+Document Version: v0.2.0
 
 ## Overview
 
@@ -96,7 +96,7 @@ This release establishes the foundation of the framework and delivers essential 
 
 | Metric | Value |
 |----------|----------|
-| Current Release | v0.1.0 |
+| Current Release | v0.2.0 |
 | Framework Maturity | Foundation Release |
 | Test Coverage | Not Yet Implemented |
 | CI/CD Status | Implemented |
@@ -138,7 +138,7 @@ The following release assets provide detailed technical documentation for this r
 
 | Metric | Value |
 |----------|----------|
-| Release Version | v0.1.0 |
+| Release Version | v0.2.0 |
 | Jira Tickets | 3 |
 | Integrations | 8 |
 | Documentation Assets | 5 |
@@ -149,6 +149,6 @@ The following release assets provide detailed technical documentation for this r
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.1.0 |
-| Release Date | 2026-10-31 |
+| Release Version | v0.2.0 |
+| Release Date | 2026-11-01 |
 | Repository | UI Playwright - JavaScript |
