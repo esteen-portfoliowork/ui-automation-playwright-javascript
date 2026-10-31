@@ -4,9 +4,9 @@ Document Version: v0.2.0
 
 | Jira ID | Type | Status | Description |
 |--------|----------|-------|-----------------------|
-| KAN-17 | Enhancement | Done | Prevent automatic Allure report deployment on main branch merges |
-| KAN-28 | Task | Done | Create Release Drafter |
-| KAN-29 | Task | Done | Update README and release asset templates for v0.2.0 release |
+| KAN-30 | Task | Done | UI Playwright - JavaScript: Enhance Release Drafter template structure and release note categorization |
+| KAN-26 | Story | Done | UI Playwright - JavaScript: [PR and Manual workflow] Add Manual Trigger (workflow_dispatch) |
+| KAN-27 | Story | Done | UI Playwright - JavaScript: [PR and Manual workflow] Add PR Validation (pull_request) |
 
 ## Release Metadata
 
