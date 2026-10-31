@@ -4,7 +4,9 @@ run-name: >
   ${{
     github.event_name == 'workflow_dispatch'
     && format('🎭 Manual Validation | {0} | {1}', github.event.inputs.environment, github.event.inputs.browser)
-    || format('✅ PR Validation #{0}', github.run_number)
+    || github.event_name == 'pull_request'
+    && format('✅ PR #{0} | {1}', github.event.pull_request.number, github.head_ref)
+    || format('✅ Push Validation #{0}', github.run_number)
   }}
 
 env:
@@ -115,10 +117,18 @@ jobs:
           echo "⚡ Workers            : ${{ inputs.workers }}"
           echo "📢 Publish Report     : ${{ inputs.publish_report }}"
 
+      - name: 💻 Get Runner OS
+        run: |
+          echo "RUNNER_OS_NAME=$RUNNER_OS" >> $GITHUB_ENV
+
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: 📦 Get Node Version
+        run: |
+          echo "NODE_VERSION=$(node -v)" >> $GITHUB_ENV
 
       - name: 📦 Install Dependencies
         run: npm ci
@@ -139,8 +149,10 @@ jobs:
       #     echo "Folder: ${{ github.event.inputs.folder }}"
       #     echo "Environment: ${{ github.event.inputs.environment }}"
 
-      - name: ⏱️ Capture Start Time
-        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+      - name: ⏱️ Capture Start Details
+        run: |
+          echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+          echo "START_DATE=$(date)" >> $GITHUB_ENV
 
       - name: 🧪 Execute Playwright Tests
         run: |
@@ -163,15 +175,22 @@ jobs:
             fi
           fi
 
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            CMD="$CMD --project=chromium"
+          fi
+
           echo "Executing command:"
           echo "$CMD"
           eval "$CMD"
         continue-on-error: true
 
-      - name: ⏱️ Calculate Duration
+      - name: ⏱️ Capture End Details
         if: always()
         run: |
           END_TIME=$(date +%s)
+
+          echo "END_DATE=$(date)" >> $GITHUB_ENV
+
           DURATION=$((END_TIME - START_TIME))
 
           echo "EXECUTION_DURATION=${DURATION}s" >> $GITHUB_ENV
