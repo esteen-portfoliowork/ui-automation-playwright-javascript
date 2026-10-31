@@ -165,6 +165,10 @@ jobs:
             fi
           fi
 
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            CMD="$CMD --project=chromium"
+          fi
+
           echo "Executing command:"
           echo "$CMD"
           eval "$CMD"
