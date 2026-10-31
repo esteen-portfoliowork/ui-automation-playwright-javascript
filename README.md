@@ -37,10 +37,14 @@ npx playwright test
 
 - Playwright UI Automation
 - Page Object Model (POM)
-- GitHub Actions CI/CD
+- Pull Request Validation
+- Manual Test Execution (workflow_dispatch)
+- GitHub Actions Execution Summary
 - Allure Reporting
 - Playwright HTML Reports
+- Automated PR Comments
 - Slack Notifications
+- Artifact Publishing
 - GitHub Pages Integration
 - Release Drafter
 - GitHub Release Management
@@ -124,7 +128,12 @@ GitHub Actions supports:
 
 - Pull Request Validation
 - Main Branch Validation
-- Manual Allure Publishing
+- Manual Playwright Execution
+- Dynamic Run Names
+- Artifact Publishing
+- Allure Report Generation
+- Slack Notifications
+- Automated Pull Request Comments
 - Release Asset Publishing
 
 ## Integrations
@@ -197,6 +206,49 @@ This repository uses:
 | integrated-apps.md | Integration inventory |
 | jira-tickets.md | Requirements traceability |
 | release-summary.md | Release overview |
+
+## Workflow Capabilities
+
+### Pull Request Validation
+
+Automatically executes Playwright validation when a pull request targets the main branch.
+
+### Manual Execution
+
+Supports workflow_dispatch with:
+
+- Browser Selection
+  - Chromium
+  - Firefox
+  - WebKit
+
+- Environment Selection
+  - DEV
+  - QA
+  - UAT
+  - PROD
+
+- Retry Configuration
+
+- Worker Configuration
+
+- Execution Mode
+  - Headless
+  - Headed
+
+### Reporting
+
+- GitHub Actions Summary
+- Playwright HTML Report
+- Allure Report
+- JSON Results
+- Test Statistics
+
+### Notifications
+
+- Slack Notifications
+- Pull Request Comments
+- Execution Status Tracking
 
 ## Future Enhancements
 
