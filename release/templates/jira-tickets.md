@@ -1,6 +1,6 @@
 # Jira Tickets
 
-Document Version: v0.2.0
+Document Version: v0.2.1
 
 | Jira ID | Type | Status | Description |
 |--------|----------|-------|-----------------------|
@@ -12,6 +12,6 @@ Document Version: v0.2.0
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.2.0 |
+| Release Version | v0.2.1 |
 | Release Date | 2026-11-01 |
 | Repository | UI Playwright - JavaScript |
