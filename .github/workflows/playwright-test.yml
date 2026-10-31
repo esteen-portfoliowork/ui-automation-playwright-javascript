@@ -207,16 +207,6 @@ jobs:
           echo "FAILED_TESTS=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_TESTS=$SKIPPED" >> $GITHUB_ENV
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🧪 Test Statistics" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Passed | $PASSED_TESTS |" >> $GITHUB_STEP_SUMMARY
-          echo "| Failed | $FAILED_TESTS |" >> $GITHUB_STEP_SUMMARY
-          echo "| Skipped | $SKIPPED_TESTS |" >> $GITHUB_STEP_SUMMARY
-
       - name: 📋 Collect PR Details
         if: github.event_name == 'pull_request'
         run: |
@@ -237,6 +227,12 @@ jobs:
           fi
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
+            ENVIRONMENT="N/A"
+          else
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
 
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "## 🔖 Pull Request Details" >> $GITHUB_STEP_SUMMARY
@@ -249,15 +245,19 @@ jobs:
             echo "| Author | ${{ env.PR_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
             echo "| Source Branch | ${{ github.head_ref }} |" >> $GITHUB_STEP_SUMMARY
             echo "| Target Branch | ${{ github.base_ref }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Commit SHA | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
 
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Execution Overview" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | ${{ github.event.inputs.environment || 'qa' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
           echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -266,12 +266,28 @@ jobs:
 
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | ${{ github.event.inputs.environment || 'qa' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
           echo "| Retry Count | ${{ github.event.inputs.retries || '0' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Workers | ${{ github.event.inputs.workers || 'default' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Execution Mode | ${{ github.event.inputs.execution_mode || 'headless' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Publish Report | ${{ github.event.inputs.publish_report || 'false' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node Version | ${{ env.NODE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runner OS | ${{ env.RUNNER_OS_NAME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Start Time | ${{ env.START_DATE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🧪 Test Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Passed | ${{ env.PASSED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failed | ${{ env.FAILED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped | ${{ env.SKIPPED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
@@ -288,10 +304,23 @@ jobs:
           echo "## 📦 Available Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "- playwright-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- allure-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- allure-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- test-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+
+            echo "- pr-failure-screenshots-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- pr-playwright-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- pr-allure-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- pr-allure-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- pr-test-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+
+          else
+
+            echo "- failure-screenshots-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- playwright-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- allure-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- allure-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- test-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+
+          fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
@@ -413,13 +442,13 @@ jobs:
               
               📊 Status: ${{ job.status }}
 
-              🔖 PR Number: #${{ github.event.pull_request.number }}
+              🔖 PR Number: #${{ env.PR_NUMBER }}
 
               📝 PR Title:
-              ${{ github.event.pull_request.title }}
+              ${{ env.PR_TITLE }}
 
               👤 Author:
-              ${{ github.event.pull_request.user.login }}
+              ${{ env.PR_AUTHOR }}
 
               🌿 Source Branch:
               ${{ github.head_ref }}
@@ -431,7 +460,7 @@ jobs:
               ${{ github.sha }}
 
               🔗 PR URL:
-              ${{ github.event.pull_request.html_url }}
+              ${{ env.PR_URL }}
 
               🎭 Playwright Version:
               ${{ env.PLAYWRIGHT_VERSION }}
