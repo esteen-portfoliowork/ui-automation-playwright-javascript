@@ -89,6 +89,12 @@ on:
           - "4"
           - "8"
 
+      publish_report:
+        description: "📢 Publish Report"
+        required: true
+        default: false
+        type: boolean
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -100,13 +106,14 @@ jobs:
       - name: 📋 Execution Configuration
         if: github.event_name == 'workflow_dispatch'
         run: |
-          echo "🌐 Browser           : ${{ inputs.browser }}"
-          echo "📁 Folder            : ${{ inputs.folder }}"
-          echo "🏷️ Tag               : ${{ inputs.tag }}"
-          echo "🌍 Environment       : ${{ inputs.environment }}"
-          echo "🖥️ Execution Mode    : ${{ inputs.execution_mode }}"
-          echo "🔄 Retries           : ${{ inputs.retries }}"
-          echo "⚡ Workers           : ${{ inputs.workers }}"
+          echo "🌐 Browser            : ${{ inputs.browser }}"
+          echo "📁 Folder             : ${{ inputs.folder }}"
+          echo "🏷️ Tag                : ${{ inputs.tag }}"
+          echo "🌍 Environment        : ${{ inputs.environment }}"
+          echo "🖥️ Execution Mode     : ${{ inputs.execution_mode }}"
+          echo "🔄 Retries            : ${{ inputs.retries }}"
+          echo "⚡ Workers            : ${{ inputs.workers }}"
+          echo "📢 Publish Report     : ${{ inputs.publish_report }}"
 
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
@@ -163,18 +170,47 @@ jobs:
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Environment | ${{ github.event.inputs.environment || 'qa' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Browser | ${{ github.event.inputs.browser || 'all' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Execution Mode | ${{ github.event.inputs.execution_mode || 'headless' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Retry Count | ${{ github.event.inputs.retries || '0' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Parallel Workers | ${{ github.event.inputs.workers || 'default' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Triggered By | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📊 Reports" >> $GITHUB_STEP_SUMMARY
+          echo "## 📈 Execution Metrics" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Playwright HTML Report: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | ${{ github.event.inputs.browser || 'all' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ github.event.inputs.environment || 'qa' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Retry Count | ${{ github.event.inputs.retries || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Workers | ${{ github.event.inputs.workers || 'default' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Execution Mode | ${{ github.event.inputs.execution_mode || 'headless' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Publish Report | ${{ github.event.inputs.publish_report || 'false' }} |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Report | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Playwright HTML Report | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+          echo "| Allure Report | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+          echo "| Allure Results | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Results | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failure Screenshots | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Available Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "- playwright-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- allure-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- allure-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- test-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Playwright Report: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Allure Report: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Failure Screenshots: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
+          
 
       - name: 📄 Upload Playwright Report
         if: always()
@@ -198,6 +234,14 @@ jobs:
         with:
           name: test-results-${{ github.run_number }}
           path: test-results/
+          if-no-files-found: ignore
+
+      - name: 📄 Upload JSON Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-json-${{ github.run_number }}
+          path: playwright-report/results.json
           if-no-files-found: ignore
 
       - name: 📊 Upload Allure Results
@@ -225,7 +269,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report
+          name: allure-report-${{ github.run_number }}
           path: allure-report/
           if-no-files-found: ignore
 
