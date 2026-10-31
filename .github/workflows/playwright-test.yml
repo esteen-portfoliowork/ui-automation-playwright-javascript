@@ -134,6 +134,9 @@ jobs:
       #     echo "Folder: ${{ github.event.inputs.folder }}"
       #     echo "Environment: ${{ github.event.inputs.environment }}"
 
+      - name: ⏱️ Capture Start Time
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+
       - name: 🧪 Execute Playwright Tests
         run: |
           CMD="npx playwright test"
@@ -159,6 +162,14 @@ jobs:
           echo "$CMD"
           eval "$CMD"
         continue-on-error: true
+
+      - name: ⏱️ Calculate Duration
+        if: always()
+        run: |
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+
+          echo "EXECUTION_DURATION=${DURATION}s" >> $GITHUB_ENV
 
       - name: 📋 Generate Execution Summary
         if: always()
