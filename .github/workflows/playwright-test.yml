@@ -346,6 +346,65 @@ jobs:
               🔗 Workflow:
               <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Open Workflow>
 
+      - name: 📋 Collect PR Details
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+          echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
+          echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
+
+      - name: 📣 Notify Slack - PR Validation
+        if: always() && github.event_name == 'pull_request'
+        uses: slackapi/slack-github-action@v4
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
+          payload: |
+            channel: "C0CDR49PPSL"
+            text: |
+              ✅ Pull Request Validation Completed
+              
+              📊 Status: ${{ job.status }}
+
+              🔖 PR Number: #${{ github.event.pull_request.number }}
+
+              📝 PR Title:
+              ${{ github.event.pull_request.title }}
+
+              👤 Author:
+              ${{ github.event.pull_request.user.login }}
+
+              🌿 Source Branch:
+              ${{ github.head_ref }}
+
+              🎯 Target Branch:
+              ${{ github.base_ref }}
+
+              🔒 Commit SHA:
+              ${{ github.sha }}
+
+              🔗 PR URL:
+              ${{ github.event.pull_request.html_url }}
+
+              🎭 Playwright Version:
+              ${{ env.PLAYWRIGHT_VERSION }}
+
+              📦 Node Version:
+              ${{ env.NODE_VERSION }}
+
+              💻 OS:
+              ${{ env.RUNNER_OS_NAME }}
+
+              🌐 Browser:
+              Chromium
+
+              ⏱️ Duration:
+              ${{ env.EXECUTION_DURATION }}
+
+              🔗 Workflow:
+              <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Open Workflow>
+
       # # Commented out as enahncement on Slack notification is in progress. Will be enabled once enhancement is done.
       # - name: 📣 Notify Slack
       #   if: always()
