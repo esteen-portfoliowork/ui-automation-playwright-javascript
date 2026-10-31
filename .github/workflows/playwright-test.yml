@@ -4,7 +4,9 @@ run-name: >
   ${{
     github.event_name == 'workflow_dispatch'
     && format('🎭 Manual Validation | {0} | {1}', github.event.inputs.environment, github.event.inputs.browser)
-    || format('✅ PR Validation #{0}', github.run_number)
+    || github.event_name == 'pull_request'
+    && format('✅ PR #{0} | {1}', github.event.pull_request.number, github.head_ref)
+    || format('✅ Push Validation #{0}', github.run_number)
   }}
 
 env:
