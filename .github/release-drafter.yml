@@ -2,67 +2,67 @@ name-template: 'UI Playwright - JavaScript Release v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 
 categories:
-  - title: '💥 Breaking Changes'
+  - title: '### 💥 Breaking Changes'
     labels:
       - breaking-change
 
-  - title: '🧪 Automated Tests'
+  - title: '### 🧪 Automated Tests'
     labels:
       - testcase
 
-  - title: '🏗 Framework Enhancements'
+  - title: '### 🏗 Framework Enhancements'
     labels:
       - framework
 
-  - title: '🔗 Integrations'
+  - title: '### 🔗 Integrations'
     labels:
       - integration
 
-  - title: '⚙️ CI/CD'
+  - title: '### ⚙️ CI/CD'
     labels:
       - cicd
 
-  - title: '📊 Reporting'
+  - title: '### 📊 Reporting'
     labels:
       - reporting
 
-  - title: '📢 Notifications'
+  - title: '### 📣 Notifications'
     labels:
       - notification
 
-  - title: '🔒 Security'
+  - title: '### 🔒 Security'
     labels:
       - security
 
-  - title: '📦 Dependencies'
+  - title: '### 📦 Dependencies'
     labels:
       - dependency
 
-  - title: '⚡ Performance'
+  - title: '### ⚡ Performance'
     labels:
       - performance
 
-  - title: '♻️ Refactored Code'
+  - title: '### ♻️ Refactored Code'
     labels:
       - refactor
 
-  - title: '💻 Code Improvements'
+  - title: '### 💻 Code Improvements'
     labels:
       - code
 
-  - title: '🐞 Bug Fixes'
+  - title: '### 🐞 Bug Fixes'
     labels:
       - bugfix
 
-  - title: '🔧 Maintenance'
+  - title: '### 🔧 Maintenance'
     labels:
       - maintenance
 
-  - title: '📚 Documentation'
+  - title: '### 📚 Documentation'
     labels:
       - documentation
 
-  - title: '🚀 Release Management'
+  - title: '### 🚀 Release Management'
     labels:
       - release
 
