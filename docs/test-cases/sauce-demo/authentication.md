@@ -95,7 +95,7 @@ Expected Result:
 - User remains on Login page
 - Error message is displayed
 
-## SD-005 Login with Locked Out Credential
+## SD-005 Login with Locked Out Credentials
 
 Module: Authentication
 
@@ -120,7 +120,7 @@ Expected Result:
 - User remains on Login page
 - Error message is displayed
 
-## SD-005 Logout Successfully
+## SD-006 Logout Successfully
 
 Module: Authentication
 

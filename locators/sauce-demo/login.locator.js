@@ -1,6 +1,6 @@
 // Arrange Alphabetically
 // Locators for SauceDemo - Login Page
-const LoginLocators = {
+export const LoginLocators = {
     errorMessage:
         '[data-test="error"]',
     loginButton:
@@ -10,5 +10,3 @@ const LoginLocators = {
     usernameInput:
         '[data-test="username"]'
 };
-
-module.exports = { LoginLocators };
