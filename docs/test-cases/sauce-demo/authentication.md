@@ -25,7 +25,7 @@ Expected Result:
 - User is redirected to Inventory page
 - Inventory page is displayed successfully
 
-## SD-002 Login with Invalid Credential
+## SD-002 Login with Invalid Credentials
 
 Module: Authentication
 
@@ -35,8 +35,8 @@ Precondition:
 - User is on Login page
 
 Test Data:
-Username: standard_user
-Password: secreet_sauce
+Username: invalid_user
+Password: invalid_password
 
 Tag: @regression , @authentication
 
@@ -71,7 +71,31 @@ Expected Result:
 - User remains on Login page
 - Error message is displayed
 
-## SD-004 Login with Locked Out Credential
+## SD-004 Login with Empty Password
+
+Module: Authentication
+
+Priority: High
+
+Precondition:
+- User is on Login page
+
+Test Data:
+Username: standard_user
+
+Tag: @regression , @authentication
+
+Steps:
+1. Navigate to Sauce Demo login page
+2. Enter username
+3. Leave password blank
+4. Click Login
+
+Expected Result:
+- User remains on Login page
+- Error message is displayed
+
+## SD-005 Login with Locked Out Credential
 
 Module: Authentication
 
