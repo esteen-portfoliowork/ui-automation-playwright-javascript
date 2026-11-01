@@ -44,6 +44,18 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
+      name: 'sauce-demo',
+      use: {
+        baseURL: 'https://www.saucedemo.com'
+      }
+    },
+    {
+      name: 'qa-playground',
+      use: {
+        baseURL: 'https://qaplayground.com'
+      }
+    },
+    {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       outputDir: 'test-results/chromium',
