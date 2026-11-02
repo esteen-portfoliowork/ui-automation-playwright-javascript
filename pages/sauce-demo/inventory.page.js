@@ -8,6 +8,42 @@ export class InventoryPage extends BasePage {
         super(page);
     }
 
+    getProduct(productName) {
+        return this.page
+            .locator(
+                InventoryLocators.inventoryItem
+            )
+            .filter({
+                hasText: productName
+            })
+            .first();
+    }
+
+    async getProductData(productName) {
+        const product =
+            this.getProduct(productName);
+
+        return {
+            name: await product
+                .locator(
+                    InventoryLocators.inventoryItemName
+                )
+                .textContent(),
+
+            description: await product
+                .locator(
+                    InventoryLocators.inventoryItemDescription
+                )
+                .textContent(),
+
+            price: await product
+                .locator(
+                    InventoryLocators.inventoryItemPrice
+                )
+                .textContent()
+        };
+    }
+
     async logout() {
         await this.click(
             InventoryLocators.burgerMenu
@@ -16,5 +52,17 @@ export class InventoryPage extends BasePage {
         await this.click(
             InventoryLocators.logoutLink
         );
+    }
+
+    async openProduct(productName) {
+        await this.page
+            .locator(
+                InventoryLocators.inventoryItemName
+            )
+            .filter({
+                hasText: productName
+            })
+            .first()
+            .click();
     }
 }

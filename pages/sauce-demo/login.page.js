@@ -14,8 +14,10 @@ export class LoginPage extends BasePage {
         await this.fill(
             LoginLocators.usernameInput, username
         );
+
         await this.fill(
             LoginLocators.passwordInput, password);
+            
         await this.click(
             LoginLocators.loginButton);
     }
