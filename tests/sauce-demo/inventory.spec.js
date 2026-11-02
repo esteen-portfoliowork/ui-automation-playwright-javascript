@@ -44,6 +44,9 @@ test.describe('SauceDemo - Inventory', () => {
     });
 
     test('SD-007 SD-008 View Inventory and Validate Product Information', 
+    {
+        tag: ['@smoke', '@regression', '@e2e', '@inventory', '@positive', '@sauce-demo']
+    },
     async () => {
 
         await loginPage.loginAsStandardUser();
@@ -62,7 +65,10 @@ test.describe('SauceDemo - Inventory', () => {
         );
     });
 
-    test('SD-009 Open Product Details',
+    test('SD-009 Open Product Details', 
+    {
+        tag: ['@regression', '@e2e', '@inventory', '@positive', '@sauce-demo']
+    },
     async () => {
 
         await loginPage.loginAsStandardUser();
@@ -74,7 +80,10 @@ test.describe('SauceDemo - Inventory', () => {
         await productDetailsValidation.validateProductDetailsDisplayed();
     });
 
-    test('SD-010 Validate Product Detail Information',
+    test('SD-010 Validate Product Detail Information', 
+    {
+        tag: ['@regression', '@e2e', '@inventory', '@positive', '@sauce-demo']
+    },
     async () => {
 
         await loginPage.loginAsStandardUser();

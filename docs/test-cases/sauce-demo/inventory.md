@@ -32,7 +32,7 @@ Precondition:
 - User is logged in successfully
 - Inventory page is displayed
 
-Tag: @smoke , @inventory
+Tag: @smoke, @regression, @e2e, @inventory, @positive
 
 Steps:
 1. Login to Sauce Demo using valid credentials
@@ -59,7 +59,7 @@ Precondition:
 Test Data:
 Product: Sauce Labs Backpack
 
-Tag: @smoke , @inventory
+Tag: @smoke, @regression, @e2e, @inventory, @positive
 
 Steps:
 1. Login to Sauce Demo using valid credentials
@@ -86,7 +86,7 @@ Precondition:
 Test Data:
 Product: Sauce Labs Backpack
 
-Tag: @smoke , @inventory
+Tag: @regression, @e2e, @inventory, @positive
 
 Steps:
 1. Login to Sauce Demo using valid credentials

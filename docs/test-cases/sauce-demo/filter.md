@@ -10,7 +10,7 @@ Precondition:
 - User is logged in successfully
 - Inventory page is displayed
 
-Tag: @smoke , @filter
+Tag: @regression, @e2e, @filter, @positive
 
 Steps:
 1. Login to Sauce Demo using valid credentials
@@ -32,7 +32,7 @@ Precondition:
 - User is logged in successfully
 - Inventory page is displayed
 
-Tag: @regression , @filter
+Tag: @regression, @e2e, @filter, @positive
 
 Steps:
 1. Login to Sauce Demo using valid credentials
@@ -54,7 +54,7 @@ Precondition:
 - User is logged in successfully
 - Inventory page is displayed
 
-Tag: @regression , @filter
+Tag: @regression, @e2e, @filter, @positive
 
 Steps:
 1. Login to Sauce Demo using valid credentials
@@ -76,7 +76,7 @@ Precondition:
 - User is logged in successfully
 - Inventory page is displayed
 
-Tag: @regression , @filter
+Tag: @regression, @e2e, @filter, @positive
 
 Steps:
 1. Login to Sauce Demo using valid credentials
