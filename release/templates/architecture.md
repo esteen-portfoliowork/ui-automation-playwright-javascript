@@ -1,6 +1,6 @@
 # Architecture
 
-Document Version: v0.2.1
+Document Version: v0.3.0
 
 ## Overview
 
@@ -46,8 +46,12 @@ Slack Notification
 
 - Smoke
 - Regression
-- API
 - End-to-End
+- Positive
+- Negative
+- Authentication
+- Inventory
+- Filter
 
 ## Reporting Components
 
@@ -72,6 +76,6 @@ Slack Notification
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.2.1 |
-| Release Date | 2026-11-01 |
+| Release Version | v0.3.0 |
+| Release Date | 2026-11-03 |
 | Repository | UI Playwright - JavaScript |

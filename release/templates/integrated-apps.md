@@ -1,6 +1,6 @@
 # UI Playwright Integrated Application
 
-Document Version: v0.2.1
+Document Version: v0.3.0
 
 ## Overview
 
@@ -43,7 +43,7 @@ This document summarizes integrations currently implemented within the UI Playwr
 | Application | Planned Enhancements |
 |------------|----------------------|
 | Jira | Integrate Jira ticket details into release notes and reporting. |
-| GitHub Actions | Add environment selection, browser selection, tag filtering, and advanced workflow parameters. |
+| GitHub Actions | Add advanced workflow parameters and execution enhancements. |
 | Slack | Enhance notifications with execution duration, test summaries, PR details, and report links. |
 | Jenkins | Add parameterized builds, scheduled executions, additional pipelines, and richer build summaries. |
 | GitLab | Validate synchronization status and support additional repository configurations. |
@@ -83,6 +83,6 @@ Create a fully integrated automation ecosystem where:
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.2.1 |
-| Release Date | 2026-11-01 |
+| Release Version | v0.3.0 |
+| Release Date | 2026-11-03 |
 | Repository | UI Playwright - JavaScript |

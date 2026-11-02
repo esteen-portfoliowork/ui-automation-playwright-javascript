@@ -33,10 +33,22 @@ npx playwright install
 npx playwright test
 ```
 
+### Run by Tag
+
+```bash
+npx playwright test --grep @smoke
+npx playwright test --grep @regression
+npx playwright test --grep @authentication
+npx playwright test --grep @inventory
+npx playwright test --grep @filter
+```
+
 ## Features
 
 - Playwright UI Automation
 - Page Object Model (POM)
+- Test Tagging Strategy
+- Tag-Based Test Execution
 - Pull Request Validation
 - Manual Test Execution (workflow_dispatch)
 - GitHub Actions Execution Summary
@@ -74,9 +86,18 @@ For detailed framework architecture and execution flow, see:
 ```text
 .
 ├── tests/
+│   └── sauce-demo/
 ├── pages/
+│   └── sauce-demo/
+├── validations/
+│   └── sauce-demo/
 ├── locators/
+│   └── sauce-demo/
 ├── data/
+│   └── sauce-demo/
+├── docs/
+│   └── test-cases/
+│       └── sauce-demo/
 ├── release/
 │   └── templates/
 ├── playwright.config.js
@@ -129,12 +150,11 @@ GitHub Actions supports:
 - Pull Request Validation
 - Main Branch Validation
 - Manual Playwright Execution
-- Dynamic Run Names
-- Artifact Publishing
-- Allure Report Generation
-- Slack Notifications
-- Automated Pull Request Comments
-- Release Asset Publishing
+- Tag-Based Test Execution
+- Browser Selection
+- Environment Selection
+- Retry Configuration
+- Worker Configuration
 
 ## Integrations
 
@@ -187,6 +207,57 @@ This repository uses:
 | Release Assets | 5 |
 | CI/CD Platforms | 2 |
 
+## Test Documentation
+
+Manual test cases are maintained within:
+
+```text
+docs/
+└── test-cases/
+    └── sauce-demo/
+```
+
+## Automated Test Coverage
+
+### Sauce Demo
+
+#### Authentication
+- SD-001 Login with Valid Credentials
+- SD-002 Login with Invalid Credentials
+- SD-003 Login with Empty Credentials
+- SD-004 Login with Empty Password
+- SD-005 Login with Locked Out Credentials
+- SD-006 Logout Successfully
+
+#### Inventory
+- SD-007 View Inventory
+- SD-008 Validate Product Information
+- SD-009 Open Product Details
+- SD-010 Validate Product Detail Information
+
+#### Filtering
+- SD-011 Filter Products by Name (A to Z)
+- SD-012 Filter Products by Name (Z to A)
+- SD-013 Filter Products by Price (Low to High)
+- SD-014 Filter Products by Price (High to Low)
+
+## Test Tags
+
+The framework supports tag-based execution.
+
+### Available Tags
+
+| Tag | Purpose |
+|------|---------|
+| @smoke | Critical validation suite |
+| @regression | Full regression suite |
+| @e2e | End-to-end test execution |
+| @authentication | Authentication module |
+| @inventory | Inventory module |
+| @filter | Product filtering module |
+| @positive | Positive scenarios |
+| @negative | Negative scenarios |
+
 ## Release Assets
 
 | Asset | Description |
@@ -196,16 +267,6 @@ This repository uses:
 | integrated-apps.md | Integration inventory and roadmap |
 | jira-tickets.md | User stories and requirements traceability |
 | release-summary.md | Release overview and capabilities |
-
-## Documentation
-
-| Document | Purpose |
-|-----------|-----------|
-| architecture.md | Framework architecture |
-| dependency-versions.md | Technology versions |
-| integrated-apps.md | Integration inventory |
-| jira-tickets.md | Requirements traceability |
-| release-summary.md | Release overview |
 
 ## Workflow Capabilities
 
@@ -221,6 +282,17 @@ Supports workflow_dispatch with:
   - Chromium
   - Firefox
   - WebKit
+
+- Tag Selection
+  - @all
+  - @smoke
+  - @regression
+  - @e2e
+  - @authentication
+  - @inventory
+  - @filter
+  - @positive
+  - @negative
 
 - Environment Selection
   - DEV
