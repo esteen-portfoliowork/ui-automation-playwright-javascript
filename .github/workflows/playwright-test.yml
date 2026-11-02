@@ -47,10 +47,20 @@ on:
           - tests
 
       tag:
-        description: "🏷️ Test Tag (ex: smoke)"
+        description: "🏷️ Test Tag Filter"
         required: false
-        default: ""
-        type: string
+        default: "@e2e"
+        type: choice
+        options:
+          - "@all"
+          - "@smoke"
+          - "@regression"
+          - "@e2e"
+          - "@authentication"
+          - "@inventory"
+          - "@filter"
+          - "@positive"
+          - "@negative"
 
       environment:
         description: "🌍 Environment"
@@ -166,7 +176,7 @@ jobs:
 
             CMD="$CMD ${{ inputs.folder }}"
 
-            if [ -n "${{ inputs.tag }}" ]; then
+            if [ "${{ inputs.tag }}" != "@all" ]; then
               CMD="$CMD --grep '${{ inputs.tag }}'"
             fi
 
