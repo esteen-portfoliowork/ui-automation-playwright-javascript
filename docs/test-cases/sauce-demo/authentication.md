@@ -13,7 +13,7 @@ Test Data:
 Username: standard_user
 Password: secret_sauce
 
-Tag: @smoke , @authentication
+Tag: @smoke, @regression, @e2e, @authentication, @positive
 
 Steps:
 1. Navigate to Sauce Demo login page
@@ -38,7 +38,7 @@ Test Data:
 Username: invalid_user
 Password: invalid_password
 
-Tag: @regression , @authentication
+Tag: @regression, @e2e, @authentication, @negative
 
 Steps:
 1. Navigate to Sauce Demo login page
@@ -59,7 +59,7 @@ Priority: High
 Precondition:
 - User is on Login page
 
-Tag: @regression , @authentication
+Tag: @regression, @e2e, @authentication, @negative
 
 Steps:
 1. Navigate to Sauce Demo login page
@@ -83,7 +83,7 @@ Precondition:
 Test Data:
 Username: standard_user
 
-Tag: @regression , @authentication
+Tag: @regression, @e2e, @authentication, @negative
 
 Steps:
 1. Navigate to Sauce Demo login page
@@ -108,7 +108,7 @@ Test Data:
 Username: locked_out_user
 Password: secret_sauce
 
-Tag: @regression , @authentication
+Tag: @regression, @e2e, @authentication, @negative
 
 Steps:
 1. Navigate to Sauce Demo login page
@@ -129,7 +129,7 @@ Priority: High
 Precondition:
 - User is logged in
 
-Tag: @regression , @authentication
+Tag: @smoke, @regression, @e2e, @authentication, @positive
 
 Steps:
 1. Click Menu
