@@ -1,7 +1,6 @@
 import { test } from '@playwright/test';
 import { LoginPage } from '../../pages/sauce-demo/login.page.js';
 import { InventoryPage } from '../../pages/sauce-demo/inventory.page.js';
-import { ProductDetailsPage } from '../../pages/sauce-demo/product-details.page.js';
 import { InventoryValidation } from '../../validations/sauce-demo/inventory.validation.js';
 import { ProductDetailsValidation } from '../../validations/sauce-demo/product-details.validation.js';
 import { products } from '../../data/sauce-demo/inventory.data.js';
@@ -9,7 +8,6 @@ import { products } from '../../data/sauce-demo/inventory.data.js';
 test.describe('SauceDemo - Inventory', () => {
     let loginPage;
     let inventoryPage;
-    let productDetailsPage;
 
     let inventoryValidation;
     let productDetailsValidation;
@@ -37,7 +35,6 @@ test.describe('SauceDemo - Inventory', () => {
 
         loginPage = new LoginPage(page);
         inventoryPage = new InventoryPage(page);
-        productDetailsPage = new ProductDetailsPage(page);
 
         inventoryValidation = new InventoryValidation(page);
         productDetailsValidation = new ProductDetailsValidation(page);
@@ -55,8 +52,13 @@ test.describe('SauceDemo - Inventory', () => {
 
         await inventoryValidation.validateProductsExist();
 
+        const product =
+            inventoryPage.getProduct(
+                productName
+            );
+
         await inventoryValidation.validateProductInformationDisplayed(
-            productName
+            product
         );
     });
 

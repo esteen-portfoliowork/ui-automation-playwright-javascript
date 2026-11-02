@@ -1,51 +1,12 @@
 // Arrange Alphabetically
 // Validations for SauceDemo - Inventory Page
 import { expect } from '@playwright/test';
-import { InventoryPage } from '../../pages/sauce-demo/inventory.page.js';
 import { InventoryLocators } from '../../locators/sauce-demo/inventory.locator.js';
 
 export class InventoryValidation {
     constructor(page) {
         this.page = page;
-        this.inventoryPage = new InventoryPage(page);
     }
-
-    // async validateAscendingNames(names) {
-    //     const sorted = [...names]
-    //         .sort();
-
-    //     expect(names)
-    //         .toEqual(sorted);
-    // }
-
-    // async validateAscendingPrices(prices) {
-    //     const sorted = [...prices]
-    //         .sort(
-    //             (a, b) => a - b
-    //         );
-
-    //     expect(prices)
-    //         .toEqual(sorted);
-    // }
-
-    // async validateDescendingNames(names) {
-    //     const sorted = [...names]
-    //         .sort()
-    //         .reverse();
-
-    //     expect(names)
-    //         .toEqual(sorted);
-    // }
-
-    // async validateDescendingPrices(prices) {
-    //     const sorted = [...prices]
-    //         .sort(
-    //             (a, b) => b - a
-    //         );
-
-    //     expect(prices)
-    //         .toEqual(sorted);
-    // }
 
     async validateAscendingOrder(items) {
         const sorted = [...items].sort(
@@ -107,11 +68,7 @@ export class InventoryValidation {
         ).not.toHaveCount(0);
     }
 
-    async validateProductInformationDisplayed(productName) {
-        const product =
-            this.inventoryPage
-                .getProduct(productName);
-        
+    async validateProductInformationDisplayed(product) {        
         await expect(
             product.locator(
                 InventoryLocators.inventoryItemName
@@ -144,5 +101,4 @@ export class InventoryValidation {
             expected
         );
     }
-
 }
