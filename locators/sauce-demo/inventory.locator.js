@@ -18,5 +18,7 @@ export const InventoryLocators = {
     logoutLink:
         '#logout_sidebar_link',
     productsTitle:
-        '[data-test="title"]'
+        '[data-test="title"]',
+    sortDropdown:
+        '[data-test="product-sort-container"]'
 }

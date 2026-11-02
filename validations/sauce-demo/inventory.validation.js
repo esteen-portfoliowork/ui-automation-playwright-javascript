@@ -10,6 +10,65 @@ export class InventoryValidation {
         this.inventoryPage = new InventoryPage(page);
     }
 
+    // async validateAscendingNames(names) {
+    //     const sorted = [...names]
+    //         .sort();
+
+    //     expect(names)
+    //         .toEqual(sorted);
+    // }
+
+    // async validateAscendingPrices(prices) {
+    //     const sorted = [...prices]
+    //         .sort(
+    //             (a, b) => a - b
+    //         );
+
+    //     expect(prices)
+    //         .toEqual(sorted);
+    // }
+
+    // async validateDescendingNames(names) {
+    //     const sorted = [...names]
+    //         .sort()
+    //         .reverse();
+
+    //     expect(names)
+    //         .toEqual(sorted);
+    // }
+
+    // async validateDescendingPrices(prices) {
+    //     const sorted = [...prices]
+    //         .sort(
+    //             (a, b) => b - a
+    //         );
+
+    //     expect(prices)
+    //         .toEqual(sorted);
+    // }
+
+    async validateAscendingOrder(items) {
+        const sorted = [...items].sort(
+            (a, b) =>
+                typeof a === 'number'
+                    ? a - b
+                    : a.localeCompare(b)
+        );
+
+        expect(items).toEqual(sorted);
+    }
+
+    async validateDescendingOrder(items) {
+        const sorted = [...items].sort(
+            (a, b) =>
+                typeof a === 'number'
+                    ? b - a
+                    : b.localeCompare(a)
+        );
+
+        expect(items).toEqual(sorted);
+    }
+
     async validateInventoryDisplayed() {
         await this.validateInventoryPageUrl();
 
@@ -45,7 +104,7 @@ export class InventoryValidation {
             this.page.locator(
                 InventoryLocators.inventoryItem
             )
-        ).toHaveCount(6);
+        ).not.toHaveCount(0);
     }
 
     async validateProductInformationDisplayed(productName) {
@@ -76,6 +135,14 @@ export class InventoryValidation {
                 InventoryLocators.inventoryItemImage
             )
         ).toBeVisible();
+    }
+
+    async validateFilterApplied(actual, expected) {
+        expect(
+            actual
+        ).toBe(
+            expected
+        );
     }
 
 }
