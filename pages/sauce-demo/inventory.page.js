@@ -44,6 +44,38 @@ export class InventoryPage extends BasePage {
         };
     }
 
+    async getProductNames() {
+        return await this.page
+            .locator(
+                InventoryLocators.inventoryItemName
+            )
+            .allTextContents();
+    }
+
+    async getProductPrices() {
+        const prices =
+            await this.page
+                .locator(
+                    InventoryLocators.inventoryItemPrice
+                )
+                .allTextContents();
+
+        return prices.map(
+            price =>
+                    Number.parseFloat(
+                        price.replace('$', '').trim()
+                    )
+        );
+    }
+
+    async getSelectedFilter() {
+        return await this.page
+            .locator(
+                InventoryLocators.sortDropdown
+            )
+            .inputValue();
+    }
+
     async logout() {
         await this.click(
             InventoryLocators.burgerMenu
@@ -64,5 +96,15 @@ export class InventoryPage extends BasePage {
             })
             .first()
             .click();
+    }
+
+    async selectFilter(optionValue) {
+        await this.page
+            .locator(
+                InventoryLocators.sortDropdown
+            )
+            .selectOption(
+                optionValue
+            );
     }
 }

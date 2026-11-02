@@ -58,7 +58,6 @@ test.describe('SauceDemo - Inventory', () => {
         await inventoryValidation.validateProductInformationDisplayed(
             productName
         );
-
     });
 
     test('SD-009 Open Product Details',
