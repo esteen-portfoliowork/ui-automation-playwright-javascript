@@ -30,7 +30,7 @@ export class LoginPage extends BasePage {
     }
 
     async navigateToLogin() {
-        await this.page.goto(
+        await this.navigate(
             AppUrls.sauceDemo.login
         );
     }
