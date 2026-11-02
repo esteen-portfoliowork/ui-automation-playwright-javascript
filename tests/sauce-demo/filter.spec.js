@@ -41,6 +41,7 @@ test.describe('SauceDemo - Filter', () => {
         {
             id: 'SD-011',
             title: 'Filter Products by Name (A to Z)',
+            tag: ['@regression', '@e2e', '@filter', '@positive', '@sauce-demo'],
             filter: filterOptions.nameAscending,
             getter: 'getProductNames',
             validator: 'validateAscendingOrder'
@@ -48,6 +49,7 @@ test.describe('SauceDemo - Filter', () => {
         {
             id: 'SD-012',
             title: 'Filter Products by Name (Z to A)',
+            tag: ['@regression', '@e2e', '@filter', '@positive', '@sauce-demo'],
             filter: filterOptions.nameDescending,
             getter: 'getProductNames',
             validator: 'validateDescendingOrder'
@@ -55,6 +57,7 @@ test.describe('SauceDemo - Filter', () => {
         {
             id: 'SD-013',
             title: 'Filter Products by Price (Low to High)',
+            tag: ['@regression', '@e2e', '@filter', '@positive', '@sauce-demo'],
             filter: filterOptions.priceAscending,
             getter: 'getProductPrices',
             validator: 'validateAscendingOrder'
@@ -62,6 +65,7 @@ test.describe('SauceDemo - Filter', () => {
         {
             id: 'SD-014',
             title: 'Filter Products by Price (High to Low)',
+            tag: ['@regression', '@e2e', '@filter', '@positive', '@sauce-demo'],
             filter: filterOptions.priceDescending,
             getter: 'getProductPrices',
             validator: 'validateDescendingOrder'
@@ -70,6 +74,9 @@ test.describe('SauceDemo - Filter', () => {
 
     filterTests.forEach(testData => {
         test(`${testData.id} ${testData.title}`,
+        {
+            tag: testData.tag
+        },
         async () => {
             await loginPage.loginAsStandardUser();
 

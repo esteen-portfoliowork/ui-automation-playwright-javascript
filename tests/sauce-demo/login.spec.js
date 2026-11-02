@@ -40,7 +40,10 @@ test.describe('SauceDemo - Authentication', () => {
 
     });
 
-    test('SD-001 Login with Valid Credentials', 
+    test('SD-001 Login with Valid Credentials',
+    {
+        tag: ['@smoke', '@regression', '@e2e', '@authentication', '@positive', '@sauce-demo']
+    },
     async () => {
         
         await loginPage.login(
@@ -52,7 +55,10 @@ test.describe('SauceDemo - Authentication', () => {
 
     });
 
-    test('SD-002 Login with Invalid Credentials', 
+    test('SD-002 Login with Invalid Credentials',
+    {
+        tag: ['@regression', '@e2e', '@authentication', '@negative', '@sauce-demo']
+    },
     async () => {
         
         await loginPage.login(
@@ -68,6 +74,9 @@ test.describe('SauceDemo - Authentication', () => {
     });
 
     test('SD-003 Login with Empty Credentials', 
+    {
+        tag: ['@regression', '@e2e', '@authentication', '@negative', '@sauce-demo']
+    },
     async () => {
         
         await loginPage.login();
@@ -80,6 +89,9 @@ test.describe('SauceDemo - Authentication', () => {
     });
 
     test('SD-004 Login with Empty Password', 
+    {
+        tag: ['@regression', '@e2e', '@authentication', '@negative', '@sauce-demo']
+    },
     async () => {
         
         await loginPage.login(
@@ -94,6 +106,9 @@ test.describe('SauceDemo - Authentication', () => {
     });
 
     test('SD-005 Login with Locked Out Credentials', 
+    {
+        tag: ['@regression', '@e2e', '@authentication', '@negative', '@sauce-demo']
+    },
     async () => {
         
         await loginPage.login(
@@ -109,6 +124,9 @@ test.describe('SauceDemo - Authentication', () => {
     });
 
     test('SD-006 Logout Successfully', 
+    {
+        tag: ['@smoke', '@regression', '@e2e', '@authentication', '@positive', '@sauce-demo']
+    },
     async () => {
         
         await loginPage.loginAsStandardUser();
