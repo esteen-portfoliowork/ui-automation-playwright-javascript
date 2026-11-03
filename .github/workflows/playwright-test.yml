@@ -219,30 +219,18 @@ jobs:
         run: |
           if [ -f "playwright-report/results.json" ]; then
 
-            PASSED=$(jq '
-              [
-                .suites[].suites[].specs[]
-                | select(.ok == true)
-              ] | length
-            ' playwright-report/results.json)
-
-            TOTAL=$(jq '
-              [
-                .suites[].suites[].specs[]
-              ] | length
-            ' playwright-report/results.json)
-
+            PASSED=$(jq '[.suites[].suites[].specs[] | select(.ok == true)] | length' playwright-report/results.json)
+            TOTAL=$(jq '[.suites[].suites[].specs[]] | length' playwright-report/results.json)
             FAILED=$((TOTAL - PASSED))
-
-            SKIPPED=0
-            FLAKY=0
+            FLAKY=$(jq '[.. | objects | select(has("status")) | select(.status=="flaky")] | length' playwright-report/results.json)
+            SKIPPED=$(jq '[.. | objects | select(has("status")) | select(.status=="skipped")] | length' playwright-report/results.json)
 
           else
 
             PASSED=0
             FAILED=0
-            SKIPPED=0
             FLAKY=0
+            SKIPPED=0
             TOTAL=0
 
           fi
@@ -375,6 +363,22 @@ jobs:
           echo "| Runner OS | ${{ env.RUNNER_OS_NAME }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Start Time | ${{ env.START_DATE }} |" >> $GITHUB_STEP_SUMMARY
           echo "| End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Execution Analytics Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Total Tests | ${{ env.TOTAL_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | ${{ env.PASSED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | ${{ env.FAILED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📈 Pass Rate | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📉 Failure Rate | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔄 Flaky Rate | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🧪 Test Statistics" >> $GITHUB_STEP_SUMMARY
