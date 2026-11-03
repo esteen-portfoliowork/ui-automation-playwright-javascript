@@ -219,25 +219,29 @@ jobs:
         run: |
           if [ -f "playwright-report/results.json" ]; then
 
-            PASSED=$(jq '.. | .status? | select(.=="passed")' playwright-report/results.json | wc -l)
+            PASSED=$(grep -o '"outcome":"expected"' playwright-report/results.json | wc -l)
 
-            FAILED=$(jq '.. | .status? | select(.=="failed")' playwright-report/results.json | wc -l)
+            FLAKY=$(grep -o '"outcome":"flaky"' playwright-report/results.json | wc -l)
 
-            SKIPPED=$(jq '.. | .status? | select(.=="skipped")' playwright-report/results.json | wc -l)
+            FAILED=$(grep -o '"outcome":"unexpected"' playwright-report/results.json | wc -l)
+
+            SKIPPED=$(grep -o '"outcome":"skipped"' playwright-report/results.json | wc -l)
 
           else
 
             PASSED=0
             FAILED=0
             SKIPPED=0
+            FLAKY=0
 
           fi
 
-          TOTAL=$((PASSED + FAILED + SKIPPED))
+          TOTAL=$((PASSED + FAILED + SKIPPED + FLAKY))
 
           echo "PASSED_TESTS=$PASSED" >> $GITHUB_ENV
           echo "FAILED_TESTS=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_TESTS=$SKIPPED" >> $GITHUB_ENV
+          echo "FLAKY_TESTS=$FLAKY" >> $GITHUB_ENV
           echo "TOTAL_TESTS=$TOTAL" >> $GITHUB_ENV
 
       - name: 📋 Collect PR Details
