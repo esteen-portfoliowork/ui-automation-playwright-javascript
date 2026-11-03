@@ -398,10 +398,13 @@ jobs:
 
           echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Passed | ${{ env.PASSED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Failed | ${{ env.FAILED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Skipped | ${{ env.SKIPPED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Total | ${{ env.TOTAL_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count | %" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|----------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Total | ${{ env.TOTAL_TESTS }} | 100% |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
