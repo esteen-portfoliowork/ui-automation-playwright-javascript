@@ -235,11 +235,25 @@ jobs:
 
           fi
 
+          if [ "$TOTAL" -gt 0 ]; then
+            PASS_RATE=$(awk "BEGIN { printf \"%.2f\", ($PASSED/$TOTAL)*100 }")
+            FAILURE_RATE=$(awk "BEGIN { printf \"%.2f\", ($FAILED/$TOTAL)*100 }")
+            FLAKY_RATE=$(awk "BEGIN { printf \"%.2f\", ($FLAKY/$TOTAL)*100 }")
+          else
+            PASS_RATE=0
+            FAILURE_RATE=0
+            FLAKY_RATE=0
+          fi
+
           echo "PASSED_TESTS=$PASSED" >> $GITHUB_ENV
           echo "FAILED_TESTS=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_TESTS=$SKIPPED" >> $GITHUB_ENV
           echo "FLAKY_TESTS=$FLAKY" >> $GITHUB_ENV
           echo "TOTAL_TESTS=$TOTAL" >> $GITHUB_ENV
+
+          echo "PASS_RATE=$PASS_RATE" >> $GITHUB_ENV
+          echo "FAILURE_RATE=$FAILURE_RATE" >> $GITHUB_ENV
+          echo "FLAKY_RATE=$FLAKY_RATE" >> $GITHUB_ENV
 
       - name: 📋 Collect PR Details
         if: github.event_name == 'pull_request'
@@ -294,11 +308,11 @@ jobs:
       - name: 📊 Verify Counts
         if: always()
         run: |
-          echo "Passed : $PASSED_TESTS"
-          echo "Failed : $FAILED_TESTS"
-          echo "Flaky  : $FLAKY_TESTS"
-          echo "Skipped: $SKIPPED_TESTS"
-          echo "Total  : $TOTAL_TESTS"
+          echo "Passed : ${{ env.PASSED_TESTS }}"
+          echo "Failed : ${{ env.FAILED_TESTS }}"
+          echo "Flaky  : ${{ env.FLAKY_TESTS }}"
+          echo "Skipped: ${{ env.SKIPPED_TESTS }}"
+          echo "Total  : ${{ env.TOTAL_TESTS }}"
 
       - name: 📋 Generate Execution Summary
         if: always()
@@ -365,8 +379,14 @@ jobs:
           echo "| End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📊 Execution Analytics Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Test Execution Analytics" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "> Automated Playwright execution metrics and test health overview." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Key Metrics" >> $GITHUB_STEP_SUMMARY
 
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|----------|" >> $GITHUB_STEP_SUMMARY
@@ -384,9 +404,9 @@ jobs:
           echo "## 🚦 Execution Health" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ "${{ env.FAILED_TESTS }}" -eq 0 ] && [ "${{ env.FLAKY_TESTS }}" -eq 0 ]; then
+          if [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -eq 0 ]; then
             echo "🟢 Excellent - All tests passed." >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ env.FAILED_TESTS }}" -eq 0 ]; then
+          elif [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -gt 0 ]; then
             echo "🟡 Stable with Flaky Tests Detected." >> $GITHUB_STEP_SUMMARY
           else
             echo "🔴 Failures Detected. Investigation Required." >> $GITHUB_STEP_SUMMARY
@@ -396,8 +416,6 @@ jobs:
           echo "## 🧪 Test Statistics" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Count | %" >> $GITHUB_STEP_SUMMARY
           echo "|----------|----------|----------|" >> $GITHUB_STEP_SUMMARY
           echo "| ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
