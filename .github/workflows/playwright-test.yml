@@ -330,6 +330,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "$FAILED_TESTS" -eq 0 ]; then
             echo "## ✅ Build Status: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**${PASSED_TESTS}/${TOTAL_TESTS} tests passed**" >> $GITHUB_STEP_SUMMARY
           else
             echo "## ❌ Build Status: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
