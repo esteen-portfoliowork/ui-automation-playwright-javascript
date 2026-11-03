@@ -255,6 +255,14 @@ jobs:
           echo "FAILURE_RATE=$FAILURE_RATE" >> $GITHUB_ENV
           echo "FLAKY_RATE=$FLAKY_RATE" >> $GITHUB_ENV
 
+          if [ "$TOTAL" -gt 0 ]; then
+            QUALITY_SCORE=$(awk "BEGIN { printf \"%.0f\", (($PASSED + ($FLAKY*0.5))/$TOTAL)*100 }")
+          else
+            QUALITY_SCORE=0
+          fi
+
+          echo "QUALITY_SCORE=$QUALITY_SCORE" >> $GITHUB_ENV
+
       - name: 📋 Collect PR Details
         if: github.event_name == 'pull_request'
         run: |
@@ -318,6 +326,14 @@ jobs:
         if: always()
         run: |
           echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$FAILED_TESTS" -eq 0 ]; then
+            echo "## ✅ Build Status: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Build Status: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BROWSER="chromium"
@@ -388,6 +404,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🎯 Key Metrics" >> $GITHUB_STEP_SUMMARY
 
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📈 Pass Rate Visualization" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "██████████ ${{ env.PASS_RATE }}%" >> $GITHUB_STEP_SUMMARY
+
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|----------|" >> $GITHUB_STEP_SUMMARY
           echo "| 🧪 Total Tests | ${{ env.TOTAL_TESTS }} |" >> $GITHUB_STEP_SUMMARY
@@ -399,6 +420,8 @@ jobs:
           echo "| 📉 Failure Rate | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| 🔄 Flaky Rate | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏆 Quality Score | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🌐 Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🚦 Execution Health" >> $GITHUB_STEP_SUMMARY
