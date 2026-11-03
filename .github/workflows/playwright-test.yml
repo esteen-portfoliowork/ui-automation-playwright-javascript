@@ -248,19 +248,28 @@ jobs:
           echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
           echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
 
-      # - name: 🔍 Debug Playwright Report
-      #   if: always()
-      #   run: |
-      #     echo "Checking report..."
+      - name: 🔍 Debug Playwright Report
+        if: always()
+        run: |
+          echo "Checking report..."
 
-      #     ls -R playwright-report || true
+          ls -R playwright-report || true
 
-      #     if [ -f playwright-report/results.json ]; then
-      #       echo "results.json exists"
-      #       head -50 playwright-report/results.json
-      #     else
-      #       echo "results.json NOT FOUND"
-      #     fi
+          if [ -f playwright-report/results.json ]; then
+            echo "results.json exists"
+
+            echo "===== FIRST 100 LINES ====="
+            head -100 playwright-report/results.json
+
+            echo "===== TEST STATUS ENTRIES ====="
+            jq '.. | .status? // empty' playwright-report/results.json
+
+            echo "===== FLAKY TESTS ====="
+            jq '.. | .outcome? // empty' playwright-report/results.json
+            
+          else
+            echo "results.json NOT FOUND"
+          fi
 
       - name: 📋 Generate Execution Summary
         if: always()
