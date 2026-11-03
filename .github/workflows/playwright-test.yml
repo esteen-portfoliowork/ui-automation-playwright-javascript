@@ -213,9 +213,21 @@ jobs:
       - name: 📊 Extract Test Statistics
         if: always()
         run: |
-          PASSED=$(grep -o '"status":"passed"' playwright-report/results.json | wc -l || true)
-          FAILED=$(grep -o '"status":"failed"' playwright-report/results.json | wc -l || true)
-          SKIPPED=$(grep -o '"status":"skipped"' playwright-report/results.json | wc -l || true)
+          if [ -f "playwright-report/results.json" ]; then
+
+            PASSED=$(jq '.. | .status? | select(.=="passed")' playwright-report/results.json | wc -l)
+
+            FAILED=$(jq '.. | .status? | select(.=="failed")' playwright-report/results.json | wc -l)
+
+            SKIPPED=$(jq '.. | .status? | select(.=="skipped")' playwright-report/results.json | wc -l)
+
+          else
+
+            PASSED=0
+            FAILED=0
+            SKIPPED=0
+
+          fi
 
           echo "PASSED_TESTS=$PASSED" >> $GITHUB_ENV
           echo "FAILED_TESTS=$FAILED" >> $GITHUB_ENV
@@ -228,6 +240,20 @@ jobs:
           echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
           echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
           echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
+
+      # - name: 🔍 Debug Playwright Report
+      #   if: always()
+      #   run: |
+      #     echo "Checking report..."
+
+      #     ls -R playwright-report || true
+
+      #     if [ -f playwright-report/results.json ]; then
+      #       echo "results.json exists"
+      #       head -50 playwright-report/results.json
+      #     else
+      #       echo "results.json NOT FOUND"
+      #     fi
 
       - name: 📋 Generate Execution Summary
         if: always()
