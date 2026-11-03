@@ -214,6 +214,16 @@ jobs:
 
           echo "EXECUTION_DURATION=${DURATION}s" >> $GITHUB_ENV
 
+      - name: Debug Playwright Structure
+        if: always()
+        run: |
+          jq '
+            ..
+            | objects
+            | select(has("file"))
+            | {file,title,status}
+          ' playwright-report/results.json | head -100
+
       - name: 📊 Extract Test Statistics
         if: always()
         run: |
@@ -262,6 +272,18 @@ jobs:
           fi
 
           echo "QUALITY_SCORE=$QUALITY_SCORE" >> $GITHUB_ENV
+
+          echo "" > module-breakdown.md
+
+          if [ -f "playwright-report/results.json" ]; then
+
+            echo "| Application | Module | Passed | Failed |" >> module-breakdown.md
+            echo "|-------------|--------|--------|--------|" >> module-breakdown.md
+
+            echo "| Application | Passed | Failed |" > application-summary.md
+            echo "|-------------|--------|--------|" >> application-summary.md
+
+          fi
 
       - name: 📋 Collect PR Details
         if: github.event_name == 'pull_request'
