@@ -281,14 +281,17 @@ jobs:
             echo "results.json NOT FOUND"
           fi
 
-      - name: 🔍 Find Test Structure
+      - name: 🔍 Find Outcome Structure
         if: always()
         run: |
-          echo "===== OUTCOMES ====="
-          grep -o '"outcome":"[^"]*"' playwright-report/results.json | sort | uniq -c
+          echo "===== SEARCH outcome ====="
+          grep -n "outcome" playwright-report/results.json | head -20
 
-          echo "===== TEST TITLES ====="
-          grep -o '"title":"[^"]*"' playwright-report/results.json | head -50
+          echo "===== SEARCH status ====="
+          grep -n "status" playwright-report/results.json | head -20
+
+          echo "===== SEARCH title ====="
+          grep -n "title" playwright-report/results.json | head -20
 
       - name: 📋 Generate Execution Summary
         if: always()
