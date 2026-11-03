@@ -275,7 +275,17 @@ jobs:
 
           # fi
 
-      # - name: Debug Playwright Structure
+      - name: 🔍 Debug Actual Test Statuses
+        if: always()
+        run: |
+          jq '
+            ..
+            | objects
+            | select(has("status"))
+            | {file,status,title}
+          ' playwright-report/results.json | head -200
+
+      # - name: 🔍 Debug Playwright Structure
         # if: always()
         # run: |
         #   jq '
@@ -450,7 +460,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🎯 Key Metrics" >> $GITHUB_STEP_SUMMARY
 
-          echo "### 📈 Pass Rate" >> $GITHUB_STEP_SUMMARY
+          echo "#### 📈 Pass Rate" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "${{ env.PASS_RATE }}%" >> $GITHUB_STEP_SUMMARY
 
