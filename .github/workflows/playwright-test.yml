@@ -229,6 +229,21 @@ jobs:
           echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
           echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
 
+      # Remove once issue is fixed
+      - name: 🔍 Debug Playwright Report
+        if: always()
+        run: |
+          echo "Checking report..."
+
+          ls -R playwright-report || true
+
+          if [ -f playwright-report/results.json ]; then
+            echo "results.json exists"
+            head -50 playwright-report/results.json
+          else
+            echo "results.json NOT FOUND"
+          fi
+
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
