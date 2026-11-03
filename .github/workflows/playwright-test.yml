@@ -337,6 +337,9 @@ jobs:
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
 
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}." >> $GITHUB_STEP_SUMMARY
+
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BROWSER="chromium"
           else
