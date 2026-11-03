@@ -313,15 +313,6 @@ jobs:
       #       | {title,status,outcome}
       #     ' playwright-report/results.json | head -200
 
-      - name: 📊 Verify Counts
-        if: always()
-        run: |
-          echo "Passed : ${{ env.PASSED_TESTS }}"
-          echo "Failed : ${{ env.FAILED_TESTS }}"
-          echo "Flaky  : ${{ env.FLAKY_TESTS }}"
-          echo "Skipped: ${{ env.SKIPPED_TESTS }}"
-          echo "Total  : ${{ env.TOTAL_TESTS }}"
-
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
