@@ -313,15 +313,6 @@ jobs:
       #       | {title,status,outcome}
       #     ' playwright-report/results.json | head -200
 
-      - name: 📊 Verify Counts
-        if: always()
-        run: |
-          echo "Passed : ${{ env.PASSED_TESTS }}"
-          echo "Failed : ${{ env.FAILED_TESTS }}"
-          echo "Flaky  : ${{ env.FLAKY_TESTS }}"
-          echo "Skipped: ${{ env.SKIPPED_TESTS }}"
-          echo "Total  : ${{ env.TOTAL_TESTS }}"
-
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
@@ -330,10 +321,15 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "$FAILED_TESTS" -eq 0 ]; then
             echo "## ✅ Build Status: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**${PASSED_TESTS}/${TOTAL_TESTS} tests passed**" >> $GITHUB_STEP_SUMMARY
           else
             echo "## ❌ Build Status: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}." >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BROWSER="chromium"
