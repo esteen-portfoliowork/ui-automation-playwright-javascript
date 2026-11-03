@@ -229,6 +229,8 @@ jobs:
 
           fi
 
+          TOTAL=$((PASSED + FAILED + SKIPPED))
+
           echo "PASSED_TESTS=$PASSED" >> $GITHUB_ENV
           echo "FAILED_TESTS=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_TESTS=$SKIPPED" >> $GITHUB_ENV
