@@ -258,6 +258,9 @@ jobs:
           if [ -f playwright-report/results.json ]; then
             echo "results.json exists"
 
+            echo "===== OUTCOME COUNTS ====="
+            jq -r '.. | .outcome? // empty' playwright-report/results.json | sort | uniq -c
+
             echo "===== FIRST 100 LINES ====="
             head -100 playwright-report/results.json
 
@@ -265,6 +268,9 @@ jobs:
             jq '.. | .status? // empty' playwright-report/results.json
 
             echo "===== FLAKY TESTS ====="
+            jq '.. | .outcome? // empty' playwright-report/results.json
+
+            echo "===== TEST OUTCOMES ====="
             jq '.. | .outcome? // empty' playwright-report/results.json
             
           else
