@@ -219,25 +219,38 @@ jobs:
         run: |
           if [ -f "playwright-report/results.json" ]; then
 
-            PASSED=$(jq '.. | .status? | select(.=="passed")' playwright-report/results.json | wc -l)
+            PASSED=$(jq '
+              [
+                .suites[].suites[].specs[]
+                | select(.ok == true)
+              ] | length
+            ' playwright-report/results.json)
 
-            FAILED=$(jq '.. | .status? | select(.=="failed")' playwright-report/results.json | wc -l)
+            TOTAL=$(jq '
+              [
+                .suites[].suites[].specs[]
+              ] | length
+            ' playwright-report/results.json)
 
-            SKIPPED=$(jq '.. | .status? | select(.=="skipped")' playwright-report/results.json | wc -l)
+            FAILED=$((TOTAL - PASSED))
+
+            SKIPPED=0
+            FLAKY=0
 
           else
 
             PASSED=0
             FAILED=0
             SKIPPED=0
+            FLAKY=0
+            TOTAL=0
 
           fi
-
-          TOTAL=$((PASSED + FAILED + SKIPPED))
 
           echo "PASSED_TESTS=$PASSED" >> $GITHUB_ENV
           echo "FAILED_TESTS=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_TESTS=$SKIPPED" >> $GITHUB_ENV
+          echo "FLAKY_TESTS=$FLAKY" >> $GITHUB_ENV
           echo "TOTAL_TESTS=$TOTAL" >> $GITHUB_ENV
 
       - name: 📋 Collect PR Details
@@ -257,10 +270,47 @@ jobs:
 
       #     if [ -f playwright-report/results.json ]; then
       #       echo "results.json exists"
-      #       head -50 playwright-report/results.json
+
+      #       echo "===== FIRST 100 LINES ====="
+      #       head -100 playwright-report/results.json
+
+      #       echo "===== TEST STATUS ENTRIES ====="
+      #       jq '.. | .status? // empty' playwright-report/results.json
+            
       #     else
       #       echo "results.json NOT FOUND"
       #     fi
+
+      # - name: 🔍 Find Outcome Structure
+      #   if: always()
+      #   run: |
+      #     echo "===== SEARCH outcome ====="
+      #     grep -n "outcome" playwright-report/results.json | head -20
+
+      #     echo "===== SEARCH status ====="
+      #     grep -n "status" playwright-report/results.json | head -20
+
+      #     echo "===== SEARCH title ====="
+      #     grep -n "title" playwright-report/results.json | head -20
+
+      # - name: 🔍 Inspect Test Node
+      #   if: always()
+      #   run: |
+      #     jq '
+      #       ..
+      #       | objects
+      #       | select(has("title"))
+      #       | {title,status,outcome}
+      #     ' playwright-report/results.json | head -200
+
+      - name: 📊 Verify Counts
+        if: always()
+        run: |
+          echo "Passed : $PASSED_TESTS"
+          echo "Failed : $FAILED_TESTS"
+          echo "Flaky  : $FLAKY_TESTS"
+          echo "Skipped: $SKIPPED_TESTS"
+          echo "Total  : $TOTAL_TESTS"
 
       - name: 📋 Generate Execution Summary
         if: always()
