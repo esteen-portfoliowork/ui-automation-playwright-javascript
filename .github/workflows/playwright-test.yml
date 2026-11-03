@@ -319,6 +319,14 @@ jobs:
         run: |
           echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
 
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$FAILED_TESTS" -eq 0 ]; then
+            echo "## ✅ Build Status: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Build Status: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BROWSER="chromium"
           else
