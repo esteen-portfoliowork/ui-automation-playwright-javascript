@@ -385,6 +385,84 @@ jobs:
 
       #     done < test-data.tsv
 
+      - name: 📦 Generate Breakdown Data
+        if: always()
+        run: |
+          echo "| Application | Module | ✅ Passed | ❌ Failed |" > module-breakdown.md
+          echo "|-------------|--------|-----------|-----------|" >> module-breakdown.md
+
+          jq -r '.suites[].suites[] | select(.file != null) | [
+            .file,
+            ([.specs[] | select(.ok == true)] | length),
+            ([.specs[] | select(.ok == false)] | length)
+          ] | @tsv' playwright-report/results.json | while IFS=$'\t' read -r FILE PASSED FAILED
+          do
+
+            APP=$(echo "$FILE" | cut -d'/' -f1)
+            MODULE=$(basename "$FILE" .spec.js)
+
+            case "$APP" in
+              sauce-demo)
+                APP_NAME="SauceDemo"
+                ;;
+              orangehr)
+                APP_NAME="OrangeHR"
+                ;;
+              qa-playground)
+                APP_NAME="QA Playground"
+                ;;
+              *)
+                APP_NAME="$APP"
+                ;;
+            esac
+
+            MODULE_NAME=$(echo "$MODULE" | sed 's/-/ /g')
+
+            echo "| $APP_NAME | $MODULE_NAME | $PASSED | $FAILED |" >> module-breakdown.md
+
+          done
+
+          echo "| Application | ✅ Passed | ❌ Failed |" > application-summary.md
+          echo "|-------------|-----------|-----------|" >> application-summary.md
+
+          jq -r '.suites[].suites[] | select(.file != null) | [
+            (.file | split("/")[0]),
+            ([.specs[] | select(.ok == true)] | length),
+            ([.specs[] | select(.ok == false)] | length)
+          ]
+          | @tsv
+          ' playwright-report/results.json |
+          awk -F'\t' '
+          {
+            passed[$1]+=$2;
+            failed[$1]+=$3;
+          }
+          END{
+            for(app in passed)
+              print app "\t" passed[app] "\t" failed[app];
+          }' |
+          while IFS=$'\t' read -r APP PASSED FAILED
+          do
+
+            case "$APP" in
+              sauce-demo)
+                APP_NAME="SauceDemo"
+                ;;
+              orangehr)
+                APP_NAME="OrangeHR"
+                ;;
+              qa-playground)
+                APP_NAME="QA Playground"
+                ;;
+              *)
+                APP_NAME="$APP"
+                ;;
+            esac
+
+            echo "| $APP_NAME | $PASSED | $FAILED |" >> application-summary.md
+
+          done
+
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
@@ -514,27 +592,17 @@ jobs:
           echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| 🧪 Total | ${{ env.TOTAL_TESTS }} | 100% |" >> $GITHUB_STEP_SUMMARY
 
-          # Placeholder values for Application and Module reporting.
-          # Will be automated in a future enhancement.
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🌐 Application Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Application | ✅ Passed | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------------|-----------|-----------|" >> $GITHUB_STEP_SUMMARY
-
-          echo "| SauceDemo | 13 | 0 |" >> $GITHUB_STEP_SUMMARY
+          cat application-summary.md >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Application | Module | ✅ Passed | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------------|--------|-----------|-----------|" >> $GITHUB_STEP_SUMMARY
-
-          echo "| SauceDemo | Authentication | 6 | 0 |" >> $GITHUB_STEP_SUMMARY
-          echo "| SauceDemo | Inventory | 3 | 0 |" >> $GITHUB_STEP_SUMMARY
-          echo "| SauceDemo | Filter | 4 | 0 |" >> $GITHUB_STEP_SUMMARY
+          cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
