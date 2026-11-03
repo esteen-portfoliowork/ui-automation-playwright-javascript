@@ -263,39 +263,16 @@ jobs:
 
           echo "QUALITY_SCORE=$QUALITY_SCORE" >> $GITHUB_ENV
 
-          # echo "" > module-breakdown.md
-
-          # if [ -f "playwright-report/results.json" ]; then
-
-          #   echo "| Application | Module | Passed | Failed |" >> module-breakdown.md
-          #   echo "|-------------|--------|--------|--------|" >> module-breakdown.md
-
-          #   echo "| Application | Passed | Failed |" > application-summary.md
-          #   echo "|-------------|--------|--------|" >> application-summary.md
-
-          # fi
-
-      - name: 🔍 Debug Actual Test Statuses
-        if: always()
-        run: |
-          jq '
-            .suites[]
-            | ..
-            | objects
-            | select(has("file"))
-          ' playwright-report/results.json | head -300
-
-      # Remove once fixed
-      - name: 🔍 Debug Specs
-        if: always()
-        run: |
-          jq '
-            .suites[].suites[]
-            | {
-                file,
-                specs
-              }
-          ' playwright-report/results.json
+      # - name: 🔍 Debug Specs
+      #   if: always()
+      #   run: |
+      #     jq '
+      #       .suites[].suites[]
+      #       | {
+      #           file,
+      #           specs
+      #         }
+      #     ' playwright-report/results.json
 
       # - name: 🔍 Debug Playwright Structure
         # if: always()
@@ -357,35 +334,7 @@ jobs:
       #       | {title,status,outcome}
       #     ' playwright-report/results.json | head -200
 
-      # - name: 📦 Build Module Breakdown
-      #   if: always()
-      #   run: |
-
-      #     echo "| Application | Module | Passed | Failed |" > module-breakdown.md
-      #     echo "|-------------|--------|--------|--------|" >> module-breakdown.md
-
-      #     echo "| Application | Passed | Failed |" > app-summary.md
-      #     echo "|-------------|--------|--------|" >> app-summary.md
-
-      #     jq -r '
-      #       ..
-      #       | objects
-      #       | select(has("file"))
-      #       | [.file, .status]
-      #       | @tsv
-      #     ' playwright-report/results.json > test-data.tsv
-
-      #     while IFS=$'\t' read -r FILE STATUS
-      #     do
-
-      #       APP=$(echo "$FILE" | cut -d'/' -f2)
-      #       MODULE=$(echo "$FILE" | cut -d'/' -f3)
-
-      #       echo "$APP|$MODULE|$STATUS"
-
-      #     done < test-data.tsv
-
-      - name: 📦 Generate Breakdown Data
+      - name: 📦 Build Breakdown Data
         if: always()
         run: |
           get_app_name() {
