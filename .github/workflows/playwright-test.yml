@@ -279,11 +279,23 @@ jobs:
         if: always()
         run: |
           jq '
-            ..
+            .suites[]
+            | ..
             | objects
-            | select(has("status"))
-            | {file,status,title}
-          ' playwright-report/results.json | head -200
+            | select(has("file"))
+          ' playwright-report/results.json | head -300
+
+      # Remove once fixed
+      - name: 🔍 Debug Specs
+        if: always()
+        run: |
+          jq '
+            .suites[].suites[]
+            | {
+                file,
+                specs
+              }
+          ' playwright-report/results.json
 
       # - name: 🔍 Debug Playwright Structure
         # if: always()
