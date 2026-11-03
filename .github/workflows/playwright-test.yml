@@ -416,6 +416,7 @@ jobs:
           echo "| 🔄 Flaky Rate | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 🏆 Quality Score | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🌐 Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🚦 Execution Health" >> $GITHUB_STEP_SUMMARY
