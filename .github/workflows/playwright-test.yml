@@ -381,6 +381,18 @@ jobs:
           echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚦 Execution Health" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ env.FAILED_TESTS }}" -eq 0 ] && [ "${{ env.FLAKY_TESTS }}" -eq 0 ]; then
+            echo "🟢 Excellent - All tests passed." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ env.FAILED_TESTS }}" -eq 0 ]; then
+            echo "🟡 Stable with Flaky Tests Detected." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🔴 Failures Detected. Investigation Required." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🧪 Test Statistics" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
