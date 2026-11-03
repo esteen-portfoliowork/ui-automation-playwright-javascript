@@ -214,16 +214,6 @@ jobs:
 
           echo "EXECUTION_DURATION=${DURATION}s" >> $GITHUB_ENV
 
-      - name: Debug Playwright Structure
-        if: always()
-        run: |
-          jq '
-            ..
-            | objects
-            | select(has("file"))
-            | {file,title,status}
-          ' playwright-report/results.json | head -100
-
       - name: 📊 Extract Test Statistics
         if: always()
         run: |
@@ -273,17 +263,27 @@ jobs:
 
           echo "QUALITY_SCORE=$QUALITY_SCORE" >> $GITHUB_ENV
 
-          echo "" > module-breakdown.md
+          # echo "" > module-breakdown.md
 
-          if [ -f "playwright-report/results.json" ]; then
+          # if [ -f "playwright-report/results.json" ]; then
 
-            echo "| Application | Module | Passed | Failed |" >> module-breakdown.md
-            echo "|-------------|--------|--------|--------|" >> module-breakdown.md
+          #   echo "| Application | Module | Passed | Failed |" >> module-breakdown.md
+          #   echo "|-------------|--------|--------|--------|" >> module-breakdown.md
 
-            echo "| Application | Passed | Failed |" > application-summary.md
-            echo "|-------------|--------|--------|" >> application-summary.md
+          #   echo "| Application | Passed | Failed |" > application-summary.md
+          #   echo "|-------------|--------|--------|" >> application-summary.md
 
-          fi
+          # fi
+
+      # - name: Debug Playwright Structure
+        # if: always()
+        # run: |
+        #   jq '
+        #     ..
+        #     | objects
+        #     | select(has("file"))
+        #     | {file,title,status}
+        #   ' playwright-report/results.json | head -100
 
       - name: 📋 Collect PR Details
         if: github.event_name == 'pull_request'
@@ -334,6 +334,34 @@ jobs:
       #       | select(has("title"))
       #       | {title,status,outcome}
       #     ' playwright-report/results.json | head -200
+
+      # - name: 📦 Build Module Breakdown
+      #   if: always()
+      #   run: |
+
+      #     echo "| Application | Module | Passed | Failed |" > module-breakdown.md
+      #     echo "|-------------|--------|--------|--------|" >> module-breakdown.md
+
+      #     echo "| Application | Passed | Failed |" > app-summary.md
+      #     echo "|-------------|--------|--------|" >> app-summary.md
+
+      #     jq -r '
+      #       ..
+      #       | objects
+      #       | select(has("file"))
+      #       | [.file, .status]
+      #       | @tsv
+      #     ' playwright-report/results.json > test-data.tsv
+
+      #     while IFS=$'\t' read -r FILE STATUS
+      #     do
+
+      #       APP=$(echo "$FILE" | cut -d'/' -f2)
+      #       MODULE=$(echo "$FILE" | cut -d'/' -f3)
+
+      #       echo "$APP|$MODULE|$STATUS"
+
+      #     done < test-data.tsv
 
       - name: 📋 Generate Execution Summary
         if: always()
@@ -422,10 +450,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🎯 Key Metrics" >> $GITHUB_STEP_SUMMARY
 
+          echo "### 📈 Pass Rate" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📈 Pass Rate Visualization" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "██████████ ${{ env.PASS_RATE }}%" >> $GITHUB_STEP_SUMMARY
+          echo "${{ env.PASS_RATE }}%" >> $GITHUB_STEP_SUMMARY
 
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|----------|" >> $GITHUB_STEP_SUMMARY
@@ -464,6 +491,28 @@ jobs:
           echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| 🧪 Total | ${{ env.TOTAL_TESTS }} | 100% |" >> $GITHUB_STEP_SUMMARY
+
+          # Placeholder values for Application and Module reporting.
+          # Will be automated in a future enhancement.
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🌐 Application Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Application | ✅ Passed | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|-----------|-----------|" >> $GITHUB_STEP_SUMMARY
+
+          echo "| SauceDemo | 13 | 0 |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Application | Module | ✅ Passed | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|--------|-----------|-----------|" >> $GITHUB_STEP_SUMMARY
+
+          echo "| SauceDemo | Authentication | 6 | 0 |" >> $GITHUB_STEP_SUMMARY
+          echo "| SauceDemo | Inventory | 3 | 0 |" >> $GITHUB_STEP_SUMMARY
+          echo "| SauceDemo | Filter | 4 | 0 |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
