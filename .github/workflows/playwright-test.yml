@@ -220,10 +220,10 @@ jobs:
           if [ -f "playwright-report/results.json" ]; then
 
             PASSED=$(jq '[.suites[].suites[].specs[] | select(.ok == true)] | length' playwright-report/results.json)
-            TOTAL=$(jq '[.suites[].suites[].specs[]] | length' playwright-report/results.json)
-            FAILED=$((TOTAL - PASSED))
+            FAILED=$(jq '[.. | objects | select(has("status")) | select(.status=="unexpected")] | length' playwright-report/results.json)
             FLAKY=$(jq '[.. | objects | select(has("status")) | select(.status=="flaky")] | length' playwright-report/results.json)
             SKIPPED=$(jq '[.. | objects | select(has("status")) | select(.status=="skipped")] | length' playwright-report/results.json)
+            TOTAL=$((PASSED + FAILED + FLAKY + SKIPPED))
 
           else
 
