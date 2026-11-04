@@ -597,6 +597,7 @@ jobs:
           name: ${{ github.event_name == 'pull_request' && format('pr-playwright-report-{0}', github.run_number) || format('playwright-report-{0}', github.run_number) }}
           path: playwright-report/
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: 📸 Upload Failure Screenshots
         if: always()
@@ -606,6 +607,7 @@ jobs:
           # name: failure-screenshots-${{ github.run_number }}
           path: test-results/
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: 📦 Upload Test Results
         if: always()
@@ -614,6 +616,7 @@ jobs:
           name: ${{ github.event_name == 'pull_request' && format('pr-test-results-{0}', github.run_number) || format('test-results-{0}', github.run_number) }}
           path: test-results/
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: 📄 Upload JSON Results
         if: always()
@@ -622,6 +625,7 @@ jobs:
           name: ${{ github.event_name == 'pull_request' && format('pr-playwright-json-{0}', github.run_number) || format('playwright-json-{0}', github.run_number) }}
           path: playwright-report/results.json
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: 📊 Upload Allure Results
         if: always()
@@ -630,6 +634,7 @@ jobs:
           name: ${{ github.event_name == 'pull_request' && format('pr-allure-results-{0}', github.run_number) || format('allure-results-{0}', github.run_number) }}
           path: allure-results/
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: 🛠️ Install Allure CLI
         if: always()
@@ -651,6 +656,7 @@ jobs:
           name: ${{ github.event_name == 'pull_request' && format('pr-allure-report-{0}', github.run_number) || format('allure-report-{0}', github.run_number) }}
           path: allure-report/
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: 📣 Notify Slack - Manual Validation
         if: always() && github.event_name == 'workflow_dispatch'
