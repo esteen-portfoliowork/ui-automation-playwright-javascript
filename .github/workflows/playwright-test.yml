@@ -135,6 +135,15 @@ jobs:
           echo "⚡ Workers            : ${{ inputs.workers }}"
           echo "📢 Publish Report     : ${{ inputs.publish_report }}"
 
+      - name: 🏷️ Capture Executed Tag
+        if: always()
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "EXECUTED_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          else
+            echo "EXECUTED_TAG=@all" >> $GITHUB_ENV
+          fi
+
       - name: 💻 Get Runner OS
         run: |
           echo "RUNNER_OS_NAME=$RUNNER_OS" >> $GITHUB_ENV
