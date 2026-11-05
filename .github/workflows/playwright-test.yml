@@ -799,6 +799,21 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Create PR Info
+        id: pr_info
+        if: github.event_name == 'pull_request'
+        run: |
+          {
+            echo 'INFO<<EOF'
+            echo "*🤖 Auto Merge:* Pending"
+            echo "*🔀 PR:* #${{ github.event.pull_request.number }}"
+            echo "*🔗 Pull Request:* ${{ github.event.pull_request.html_url }}"
+            echo "*👤 Author:* ${{ github.event.pull_request.user.login }}"
+            echo "*🌿 Branch:* ${{ github.head_ref }}"
+            echo "*🏷 Labels:* ${{ steps.labels.outputs.LABELS }}"
+            echo EOF
+          } >> $GITHUB_OUTPUT
+
       - name: 🎨 Prepare Slack Status
         if: always()
         run: |
@@ -914,20 +929,9 @@ jobs:
                   text: "${{ env.SLACK_EMOJI }} Pull Request Validation"
 
               - type: section
-                fields:
-                  - type: mrkdwn
-                    text: "*PR Number:*\n#${{ env.PR_NUMBER }}"
-                  - type: mrkdwn
-                    text: "*Author:*\n${{ env.PR_AUTHOR }}"
-                  - type: mrkdwn
-                    text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
-                  - type: mrkdwn
-                    text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
-                  - type: mrkdwn
-                    text: "*PR Title:*\n${{ env.PR_TITLE }}"
-
-                  - type: mrkdwn
-                    text: "*Branch:*\n${{ github.head_ref }}"
+                text:
+                  type: mrkdwn
+                  text: "${{ env.APPLICATION_BREAKDOWN }}"
 
               - type: section
                 text:
@@ -963,6 +967,71 @@ jobs:
                 elements:
                   - type: mrkdwn
                     text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
+
+      # - name: 📣 Notify Slack - PR Validation
+      #   if: always() && github.event_name == 'pull_request'
+      #   uses: slackapi/slack-github-action@v4
+      #   with:
+      #     method: chat.postMessage
+      #     token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
+      #     payload: |
+      #       channel: "C0CDR49PPSL"
+
+      #       blocks:
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "${{ env.SLACK_EMOJI }} Pull Request Validation"
+
+      #         - type: section
+      #           fields:
+      #             - type: mrkdwn
+      #               text: "*PR Number:*\n#${{ env.PR_NUMBER }}"
+      #             - type: mrkdwn
+      #               text: "*Author:*\n${{ env.PR_AUTHOR }}"
+      #             - type: mrkdwn
+      #               text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
+      #             - type: mrkdwn
+      #               text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
+      #             - type: mrkdwn
+      #               text: "*PR Title:*\n${{ env.PR_TITLE }}"
+      #             - type: mrkdwn
+      #               text: "*Branch:*\n${{ github.head_ref }}"
+
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*📊 Execution Statistics*"
+
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
+
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*🌐 Application Summary:*\n${{ env.APPLICATION_BREAKDOWN }}"
+
+      #         - type: section
+      #           fields:
+      #             - type: mrkdwn
+      #               text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*❌ Failed*\n${{ env.FAILED_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*🧪 Total*\n${{ env.TOTAL_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
+      #             - type: mrkdwn
+      #               text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
+
+      #         - type: context
+      #           elements:
+      #             - type: mrkdwn
+      #               text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
 
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
