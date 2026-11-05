@@ -849,6 +849,11 @@ jobs:
                     text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
                   - type: mrkdwn
                     text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
+                  - type: mrkdwn
+                    text: "*PR Title:*\n${{ env.PR_TITLE }}"
+
+                  - type: mrkdwn
+                    text: "*Branch:*\n${{ github.head_ref }}"
 
               - type: section
                 text:
