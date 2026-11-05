@@ -754,6 +754,7 @@ jobs:
               📁 Folder: ${{ github.event.inputs.folder }}
               🏷️ Tag: ${{ github.event.inputs.tag || 'N/A' }}
               🖥️ Mode: ${{ github.event.inputs.execution_mode }}
+              🏷️ Executed Tag: ${{ env.EXECUTED_TAG }}
 
               🔄 Retries: ${{ github.event.inputs.retries }}
               ⚡ Workers: ${{ github.event.inputs.workers }}
