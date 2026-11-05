@@ -945,11 +945,6 @@ jobs:
                   text: "*🌐 Application Summary:*\n${{ env.APPLICATION_BREAKDOWN }}"
 
               - type: section
-                text:
-                  type: mrkdwn
-                  text: "*📦 Module Breakdown:*\n${{ env.MODULE_BREAKDOWN }}"
-
-              - type: section
                 fields:
                   - type: mrkdwn
                     text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
