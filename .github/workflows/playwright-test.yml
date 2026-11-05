@@ -871,14 +871,12 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*🌐 Application Summary*
-                  ${{ env.APPLICATION_BREAKDOWN }}"
+                  text: "*🌐 Application Summary:*\n${{ env.APPLICATION_BREAKDOWN }}"
 
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*📦 Module Breakdown*
-                  ${{ env.MODULE_BREAKDOWN }}"
+                  text: "*📦 Module Breakdown:*\n${{ env.MODULE_BREAKDOWN }}"
 
               - type: section
                 fields:
