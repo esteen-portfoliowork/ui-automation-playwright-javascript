@@ -389,6 +389,24 @@ jobs:
             echo "| $APP_NAME | $MODULE_NAME | $PASSED | $FAILED |" >> module-breakdown.md
           done
 
+          {
+            echo "MODULE_BREAKDOWN<<EOF"
+
+            awk -F'|' '
+            NF > 4 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $3)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+              if ($2 != "Module" && $2 != "--------")
+                printf "• %s: ✅ %s | ❌ %s\n", $2, $4, $5
+            }
+            ' module-breakdown.md | head -10
+
+            echo EOF
+          } >> $GITHUB_ENV
+
           echo "| Application | ✅ Passed | ❌ Failed |" > application-summary.md
           echo "|-------------|-----------|-----------|" >> application-summary.md
 
