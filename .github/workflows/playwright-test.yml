@@ -585,6 +585,12 @@ jobs:
           cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          cat tag-summary.md >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Report | Status |" >> $GITHUB_STEP_SUMMARY
