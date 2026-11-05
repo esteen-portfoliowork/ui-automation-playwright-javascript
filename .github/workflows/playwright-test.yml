@@ -800,6 +800,11 @@ jobs:
                   text: "*📊 Execution Statistics*"
 
               - type: section
+                text:
+                  type: mrkdwn
+                  text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
+
+              - type: section
                 fields:
                   - type: mrkdwn
                     text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
@@ -849,6 +854,11 @@ jobs:
                 text:
                   type: mrkdwn
                   text: "*📊 Execution Statistics*"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
 
               - type: section
                 fields:
