@@ -135,6 +135,17 @@ jobs:
           echo "⚡ Workers            : ${{ inputs.workers }}"
           echo "📢 Publish Report     : ${{ inputs.publish_report }}"
 
+      - name: 🏷️ Capture Executed Tag
+        if: always()
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "EXECUTED_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "EXECUTED_TAG=PR Validation (All Tests)" >> $GITHUB_ENV
+          else
+            echo "EXECUTED_TAG=Push Validation (All Tests)" >> $GITHUB_ENV
+          fi
+
       - name: 💻 Get Runner OS
         run: |
           echo "RUNNER_OS_NAME=$RUNNER_OS" >> $GITHUB_ENV
@@ -405,12 +416,69 @@ jobs:
           do
             APP_NAME=$(get_app_name "$APP")
             echo "| $APP_NAME | $PASSED | $FAILED |" >> application-summary.md
+
+            done
+
+          echo "| Tag | Total | ✅ Passed | ❌ Failed | ⏭️ Skipped | 📈 Pass Rate |" > tag-summary.md
+          echo "|-----|-------|-----------|-----------|------------|--------------|" >> tag-summary.md
+
+          # Exclude application tags from tag analytics
+          jq -r '
+            .suites[].suites[]
+            | .specs[]
+            | . as $spec
+            | .tags[]
+            | select(
+                . != "sauce-demo" and
+                . != "orangehr" and
+                . != "qa-playground"
+              )
+            | [
+                .,
+                (if $spec.ok then 1 else 0 end),
+                (if $spec.ok then 0 else 1 end)
+              ]
+            | @tsv
+          ' playwright-report/results.json |
+          awk -F $'\t' '
+          {
+            total[$1]++
+            passed[$1] += $2
+            failed[$1] += $3
+          }
+          END {
+            for (tag in total) {
+              skipped = 0
+              rate = (passed[tag] / total[tag]) * 100
+
+              printf "%s\t%d\t%d\t%d\t%d\t%.2f\n",
+                tag,
+                total[tag],
+                passed[tag],
+                failed[tag],
+                skipped,
+                rate
+            }
+          }
+          ' |
+          sort |
+          while IFS=$'\t' read -r TAG TOTAL PASSED FAILED SKIPPED RATE
+          do
+              echo "| @$TAG | $TOTAL | $PASSED | $FAILED | $SKIPPED | $RATE% |" >> tag-summary.md
           done
 
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
           echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏷️ Execution Scope" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "$FAILED_TESTS" -eq 0 ]; then
@@ -463,6 +531,7 @@ jobs:
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
           echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
+          echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -547,6 +616,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f tag-summary.md ]; then
+            cat tag-summary.md >> $GITHUB_STEP_SUMMARY
+          fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
