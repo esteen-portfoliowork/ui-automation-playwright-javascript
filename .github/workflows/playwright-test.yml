@@ -748,6 +748,17 @@ jobs:
             echo "SLACK_COLOR=danger" >> $GITHUB_ENV
           fi
 
+      - name: 🚦 Prepare Execution Health
+        if: always()
+        run: |
+          if [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -eq 0 ]; then
+            echo "EXECUTION_HEALTH=🟢 Excellent - All Tests Passed" >> $GITHUB_ENV
+          elif [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -gt 0 ]; then
+            echo "EXECUTION_HEALTH=🟡 Stable with Flaky Tests" >> $GITHUB_ENV
+          else
+            echo "EXECUTION_HEALTH=🔴 Failures Detected" >> $GITHUB_ENV
+          fi
+
       - name: 📣 Notify Slack - Manual Validation
         if: always() && github.event_name == 'workflow_dispatch'
         uses: slackapi/slack-github-action@v4
@@ -772,6 +783,11 @@ jobs:
                     text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
                   - type: mrkdwn
                     text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
+                  - type: mrkdwn
+                    text: "*Triggered By:*\n${{ github.actor }}"
+
+                  - type: mrkdwn
+                    text: "*Branch:*\n${{ github.ref_name }}"
 
               - type: section
                 text:
@@ -782,6 +798,11 @@ jobs:
                 text:
                   type: mrkdwn
                   text: "*📊 Execution Statistics*"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
 
               - type: section
                 fields:
@@ -828,11 +849,21 @@ jobs:
                     text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
                   - type: mrkdwn
                     text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
+                  - type: mrkdwn
+                    text: "*PR Title:*\n${{ env.PR_TITLE }}"
+
+                  - type: mrkdwn
+                    text: "*Branch:*\n${{ github.head_ref }}"
 
               - type: section
                 text:
                   type: mrkdwn
                   text: "*📊 Execution Statistics*"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
 
               - type: section
                 fields:
