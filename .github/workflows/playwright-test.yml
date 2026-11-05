@@ -389,20 +389,39 @@ jobs:
             echo "| $APP_NAME | $MODULE_NAME | $PASSED | $FAILED |" >> module-breakdown.md
           done
 
-          {
-            echo "MODULE_BREAKDOWN<<EOF"
+          DISPLAY_LIMIT=5
 
+          TOTAL_MODULES=$(
             awk -F'|' '
             NF > 4 {
               gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $3)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
-              gsub(/^[ \t]+|[ \t]+$/, "", $5)
 
               if ($2 != "Module" && $2 != "--------")
-                printf "• %s: ✅ %s | ❌ %s\n", $2, $4, $5
+                count++
             }
-            ' module-breakdown.md | head -10
+            END {
+              print count
+            }
+            ' module-breakdown.md
+          )
+
+          {
+            echo "MODULE_BREAKDOWN<<EOF"
+
+            if [ -f module-breakdown.md ]; then
+
+              awk -F'|' '
+              ...
+              ' module-breakdown.md | head -"$DISPLAY_LIMIT"
+
+              if [ "$TOTAL_MODULES" -gt "$DISPLAY_LIMIT" ]; then
+                echo ""
+                echo "...and $((TOTAL_MODULES - DISPLAY_LIMIT)) more modules"
+              fi
+
+            else
+              echo "No module data available"
+            fi
 
             echo EOF
           } >> $GITHUB_ENV
@@ -840,17 +859,17 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
+                  text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
+
+              - type: section
+                text:
+                  type: mrkdwn
                   text: "*🌐 Application Summary*\n${{ env.APPLICATION_BREAKDOWN }}"
 
               - type: section
                 text:
                   type: mrkdwn
                   text: "*📦 Module Breakdown*\n${{ env.MODULE_BREAKDOWN }}"
-
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
 
               - type: section
                 fields:
@@ -911,17 +930,17 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
+                  text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
+
+              - type: section
+                text:
+                  type: mrkdwn
                   text: "*🌐 Application Summary*\n${{ env.APPLICATION_BREAKDOWN }}"
 
               - type: section
                 text:
                   type: mrkdwn
                   text: "*📦 Module Breakdown*\n${{ env.MODULE_BREAKDOWN }}"
-
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
 
               - type: section
                 fields:
@@ -1046,29 +1065,3 @@ jobs:
 
               core.info('Created new PR comment');
             }
-
-
-      # # Commented out as enahncement on Slack notification is in progress. Will be enabled once enhancement is done.
-      # - name: 📣 Notify Slack
-      #   if: always()
-      #   uses: slackapi/slack-github-action@v4
-      #   with:
-      #     method: chat.postMessage
-      #     token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
-      #     payload: |
-      #       channel: "C0CDR49PPSL"
-      #       text: |
-      #         🚀 Playwright Execution Finished
-
-      #         📊 Status: ${{ job.status }}
-      #         🌿 Branch: ${{ github.ref_name }}
-      #         👤 Actor: ${{ github.actor }}
-
-      #         🔗 Workflow:
-      #         https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-      #         📄 Playwright Report:
-      #         Download from workflow artifacts
-
-      #         📊 Allure Report:
-      #         Download from workflow artifacts
