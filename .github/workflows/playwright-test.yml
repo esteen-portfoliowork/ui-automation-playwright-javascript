@@ -845,6 +845,11 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
+                  text: "*📦 Module Breakdown*\n${{ env.MODULE_BREAKDOWN }}"
+
+              - type: section
+                text:
+                  type: mrkdwn
                   text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
 
               - type: section
@@ -907,6 +912,11 @@ jobs:
                 text:
                   type: mrkdwn
                   text: "*🌐 Application Summary*\n${{ env.APPLICATION_BREAKDOWN }}"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*📦 Module Breakdown*\n${{ env.MODULE_BREAKDOWN }}"
 
               - type: section
                 text:
