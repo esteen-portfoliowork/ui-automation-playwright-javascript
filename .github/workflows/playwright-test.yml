@@ -421,16 +421,20 @@ jobs:
           {
             echo "APPLICATION_BREAKDOWN<<EOF"
 
-            awk -F'|' '
-            NF > 3 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $3)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+            if [ -f application-summary.md ]; then
+              awk -F'|' '
+              NF > 3 {
+                gsub(/^[ \t]+|[ \t]+$/, "", $2)
+                gsub(/^[ \t]+|[ \t]+$/, "", $3)
+                gsub(/^[ \t]+|[ \t]+$/, "", $4)
 
-              if ($2 != "Application" && $2 != "-------------")
-                printf "• %s: ✅ %s | ❌ %s\n", $2, $3, $4
-            }
-            ' application-summary.md
+                if ($2 != "Application" && $2 != "-------------")
+                  printf "• %s: ✅ %s | ❌ %s\n", $2, $3, $4
+              }
+              ' application-summary.md
+            else
+              echo "No application data available"
+            fi
 
             echo EOF
           } >> $GITHUB_ENV
