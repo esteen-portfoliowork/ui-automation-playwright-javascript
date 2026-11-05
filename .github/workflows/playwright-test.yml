@@ -140,8 +140,10 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "EXECUTED_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "EXECUTED_TAG=PR Validation (All Tests)" >> $GITHUB_ENV
           else
-            echo "EXECUTED_TAG=@all" >> $GITHUB_ENV
+            echo "EXECUTED_TAG=Push Validation (All Tests)" >> $GITHUB_ENV
           fi
 
       - name: 💻 Get Runner OS
@@ -420,6 +422,7 @@ jobs:
           echo "| Tag | Total | ✅ Passed | ❌ Failed | ⏭️ Skipped | 📈 Pass Rate |" > tag-summary.md
           echo "|-----|-------|-----------|-----------|------------|--------------|" >> tag-summary.md
 
+          # Exclude application tags from tag analytics
           jq -r ' .suites[].suites[] | .specs[] | . as $spec | .tags[] | select(
             . != "sauce-demo" and
             . != "orangehr" and
