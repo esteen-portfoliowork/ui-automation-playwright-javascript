@@ -511,6 +511,7 @@ jobs:
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
           echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
+          echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -600,7 +601,9 @@ jobs:
           echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          cat tag-summary.md >> $GITHUB_STEP_SUMMARY
+          if [ -f tag-summary.md ]; then
+            cat tag-summary.md >> $GITHUB_STEP_SUMMARY
+          fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
