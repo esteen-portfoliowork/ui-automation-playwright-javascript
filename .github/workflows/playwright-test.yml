@@ -735,6 +735,19 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: 🎨 Prepare Slack Status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "SLACK_STATUS=PASSED" >> $GITHUB_ENV
+            echo "SLACK_EMOJI=🟢" >> $GITHUB_ENV
+            echo "SLACK_COLOR=good" >> $GITHUB_ENV
+          else
+            echo "SLACK_STATUS=FAILED" >> $GITHUB_ENV
+            echo "SLACK_EMOJI=🔴" >> $GITHUB_ENV
+            echo "SLACK_COLOR=danger" >> $GITHUB_ENV
+          fi
+
       - name: 📣 Notify Slack - Manual Validation
         if: always() && github.event_name == 'workflow_dispatch'
         uses: slackapi/slack-github-action@v4
@@ -743,36 +756,52 @@ jobs:
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
             channel: "C0CDR49PPSL"
-            text: |
-              🎭 Manual Playwright Validation Completed
+            blocks:
+              - type: header
+                text:
+                  type: plain_text
+                  text: "${{ env.SLACK_EMOJI }} Manual Playwright Validation"
 
-              📊 Status: ${{ job.status }}
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*Environment:*\n${{ github.event.inputs.environment }}"
+                  - type: mrkdwn
+                    text: "*Browser:*\n${{ github.event.inputs.browser }}"
+                  - type: mrkdwn
+                    text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
+                  - type: mrkdwn
+                    text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
 
-              🚀 Trigger: Manual Validation (workflow_dispatch)
-              🌍 Environment: ${{ github.event.inputs.environment }}
-              🌐 Browser: ${{ github.event.inputs.browser }}
-              📁 Folder: ${{ github.event.inputs.folder }}
-              🏷️ Tag: ${{ github.event.inputs.tag || 'N/A' }}
-              🖥️ Mode: ${{ github.event.inputs.execution_mode }}
-              🏷️ Executed Tag: ${{ env.EXECUTED_TAG }}
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*Status:* ${{ env.SLACK_EMOJI }} ${{ env.SLACK_STATUS }}"
 
-              🔄 Retries: ${{ github.event.inputs.retries }}
-              ⚡ Workers: ${{ github.event.inputs.workers }}
-              📢 Publish Report: ${{ github.event.inputs.publish_report }}
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*📊 Execution Statistics*"
 
-              🎭 Playwright Version: ${{ env.PLAYWRIGHT_VERSION }}
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
+                  - type: mrkdwn
+                    text: "*❌ Failed*\n${{ env.FAILED_TESTS }}"
+                  - type: mrkdwn
+                    text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
+                  - type: mrkdwn
+                    text: "*🧪 Total*\n${{ env.TOTAL_TESTS }}"
+                  - type: mrkdwn
+                    text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
+                  - type: mrkdwn
+                    text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
 
-              👤 Triggered By: ${{ github.actor }}
-              🌿 Branch: ${{ github.ref_name }}
-
-              ⏱️ Duration: ${{ env.EXECUTION_DURATION }}
-
-              📄 Playwright HTML Report
-              📊 Allure Report
-              📦 Workflow Artifacts
-
-              🔗 Workflow:
-              <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Open Workflow>
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
 
       - name: 📣 Notify Slack - PR Validation
         if: always() && github.event_name == 'pull_request'
@@ -782,48 +811,48 @@ jobs:
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
             channel: "C0CDR49PPSL"
-            text: |
-              ✅ Pull Request Validation Completed
-              
-              📊 Status: ${{ job.status }}
 
-              🔖 PR Number: #${{ env.PR_NUMBER }}
+            blocks:
+              - type: header
+                text:
+                  type: plain_text
+                  text: "${{ env.SLACK_EMOJI }} Pull Request Validation"
 
-              📝 PR Title:
-              ${{ env.PR_TITLE }}
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*PR Number:*\n#${{ env.PR_NUMBER }}"
+                  - type: mrkdwn
+                    text: "*Author:*\n${{ env.PR_AUTHOR }}"
+                  - type: mrkdwn
+                    text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
+                  - type: mrkdwn
+                    text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
 
-              👤 Author:
-              ${{ env.PR_AUTHOR }}
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*📊 Execution Statistics*"
 
-              🌿 Source Branch:
-              ${{ github.head_ref }}
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
+                  - type: mrkdwn
+                    text: "*❌ Failed*\n${{ env.FAILED_TESTS }}"
+                  - type: mrkdwn
+                    text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
+                  - type: mrkdwn
+                    text: "*🧪 Total*\n${{ env.TOTAL_TESTS }}"
+                  - type: mrkdwn
+                    text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
+                  - type: mrkdwn
+                    text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
 
-              🎯 Target Branch:
-              ${{ github.base_ref }}
-
-              🔒 Commit SHA:
-              ${{ github.sha }}
-
-              🔗 PR URL:
-              ${{ env.PR_URL }}
-
-              🎭 Playwright Version:
-              ${{ env.PLAYWRIGHT_VERSION }}
-
-              📦 Node Version:
-              ${{ env.NODE_VERSION }}
-
-              💻 OS:
-              ${{ env.RUNNER_OS_NAME }}
-
-              🌐 Browser:
-              Chromium
-
-              ⏱️ Duration:
-              ${{ env.EXECUTION_DURATION }}
-
-              🔗 Workflow:
-              <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Open Workflow>
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
 
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
