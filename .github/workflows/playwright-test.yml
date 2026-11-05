@@ -735,6 +735,19 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: 🎨 Prepare Slack Status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "SLACK_STATUS=PASSED" >> $GITHUB_ENV
+            echo "SLACK_EMOJI=🟢" >> $GITHUB_ENV
+            echo "SLACK_COLOR=good" >> $GITHUB_ENV
+          else
+            echo "SLACK_STATUS=FAILED" >> $GITHUB_ENV
+            echo "SLACK_EMOJI=🔴" >> $GITHUB_ENV
+            echo "SLACK_COLOR=danger" >> $GITHUB_ENV
+          fi
+
       - name: 📣 Notify Slack - Manual Validation
         if: always() && github.event_name == 'workflow_dispatch'
         uses: slackapi/slack-github-action@v4
