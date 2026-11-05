@@ -449,6 +449,14 @@ jobs:
           echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏷️ Execution Scope" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
           if [ "$FAILED_TESTS" -eq 0 ]; then
             echo "## ✅ Build Status: PASSED" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
