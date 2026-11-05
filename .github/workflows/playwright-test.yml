@@ -783,6 +783,11 @@ jobs:
                     text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
                   - type: mrkdwn
                     text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
+                  - type: mrkdwn
+                    text: "*Triggered By:*\n${{ github.actor }}"
+
+                  - type: mrkdwn
+                    text: "*Branch:*\n${{ github.ref_name }}"
 
               - type: section
                 text:
