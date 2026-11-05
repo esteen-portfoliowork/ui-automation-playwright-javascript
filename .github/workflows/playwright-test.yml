@@ -396,7 +396,7 @@ jobs:
             NF > 4 {
               gsub(/^[ \t]+|[ \t]+$/, "", $2)
 
-              if ($2 != "Module" && $2 != "--------")
+              if ($2 != "Module" && $2 != "-------------")
                 count++
             }
             END {
@@ -416,7 +416,7 @@ jobs:
                 gsub(/^[ \t]+|[ \t]+$/, "", $4)
                 gsub(/^[ \t]+|[ \t]+$/, "", $5)
 
-                if ($2 != "Module" && $2 != "--------")
+                if ($2 != "Module" && $2 != "-------------")
                   printf "• %s: ✅ %s | ❌ %s\n", $2, $4, $5
               }
               ' module-breakdown.md | head -"$DISPLAY_LIMIT"
@@ -871,12 +871,14 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*🌐 Application Summary*\n${{ env.APPLICATION_BREAKDOWN }}"
+                  text: "*🌐 Application Summary*
+                  ${{ env.APPLICATION_BREAKDOWN }}"
 
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*📦 Module Breakdown*\n${{ env.MODULE_BREAKDOWN }}"
+                  text: "*📦 Module Breakdown*
+                  ${{ env.MODULE_BREAKDOWN }}"
 
               - type: section
                 fields:
@@ -942,12 +944,14 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*🌐 Application Summary*\n${{ env.APPLICATION_BREAKDOWN }}"
+                  text: "*🌐 Application Summary*
+                  ${{ env.APPLICATION_BREAKDOWN }}"
 
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*📦 Module Breakdown*\n${{ env.MODULE_BREAKDOWN }}"
+                  text: "*📦 Module Breakdown*
+                  ${{ env.MODULE_BREAKDOWN }}"
 
               - type: section
                 fields:
