@@ -423,28 +423,45 @@ jobs:
           echo "|-----|-------|-----------|-----------|------------|--------------|" >> tag-summary.md
 
           # Exclude application tags from tag analytics
-          jq -r ' .suites[].suites[] | .specs[] | . as $spec | .tags[] | select(
-            . != "sauce-demo" and
-            . != "orangehr" and
-            . != "qa-playground"
-          ) | [
-            .,
-            (if $spec.ok then 1 else 0 end),
-            (if $spec.ok then 0 else 1 end)
-          ] | @tsv ' playwright-report/results.json | awk -F'\''\t'\'' ' {
+          jq -r '
+            .suites[].suites[]
+            | .specs[]
+            | . as $spec
+            | .tags[]
+            | select(
+                . != "sauce-demo" and
+                . != "orangehr" and
+                . != "qa-playground"
+              )
+            | [
+                .,
+                (if $spec.ok then 1 else 0 end),
+                (if $spec.ok then 0 else 1 end)
+              ]
+            | @tsv
+          ' playwright-report/results.json |
+          awk -F $'\t' '
+          {
             total[$1]++
-            passed[$1]+=$2
-            failed[$1]+=$3
+            passed[$1] += $2
+            failed[$1] += $3
           }
           END {
-            for(tag in total){
-                skipped=0
-                rate=(passed[tag]/total[tag])*100
+            for (tag in total) {
+              skipped = 0
+              rate = (passed[tag] / total[tag]) * 100
 
-                printf "%s\t%d\t%d\t%d\t%d\t%.2f\n",
-                tag,total[tag],passed[tag],failed[tag],skipped,rate
+              printf "%s\t%d\t%d\t%d\t%d\t%.2f\n",
+                tag,
+                total[tag],
+                passed[tag],
+                failed[tag],
+                skipped,
+                rate
             }
-          } ' | sort |
+          }
+          ' |
+          sort |
           while IFS=$'\t' read -r TAG TOTAL PASSED FAILED SKIPPED RATE
           do
               echo "| @$TAG | $TOTAL | $PASSED | $FAILED | $SKIPPED | $RATE% |" >> tag-summary.md
