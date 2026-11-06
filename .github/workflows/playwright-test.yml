@@ -951,10 +951,14 @@ jobs:
                   - type: mrkdwn
                     text: "*Target Branch*\n${{ env.PR_BASE_BRANCH }}"
 
+              - type: divider
+
               - type: section
                 text:
                   type: mrkdwn
                   text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
+
+              - type: divider
 
               - type: section
                 fields:
@@ -970,16 +974,22 @@ jobs:
                   - type: mrkdwn
                     text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
 
+              - type: divider
+
               - type: section
                 text:
                   type: mrkdwn
                   text: "*🌐 Application Summary*\n${{ steps.slack_data.outputs.APPLICATION }}"
+
+              - type: divider
 
               - type: section
                 text:
                   type: mrkdwn
                   text: "*📦 Module Breakdown*\n${{ steps.slack_data.outputs.MODULES }}"
 
+              - type: divider
+              
               - type: section
                 text:
                   type: mrkdwn
