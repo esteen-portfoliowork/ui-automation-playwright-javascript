@@ -565,6 +565,47 @@ jobs:
               echo "| @$TAG | $TOTAL | $PASSED | $FAILED | $SKIPPED | $RATE% |" >> tag-summary.md
           done
 
+      - name: 📣 Build Slack Data
+        id: slack_data
+        if: always()
+        run: |
+          APPLICATION=$(awk -F'|' '
+            NF > 3 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $3)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+
+              if ($2 != "Application" && $2 != "-------------")
+                printf "• %s: ✅ %s ❌ %s ", $2, $3, $4
+            }
+          ' application-summary.md)
+
+          MODULES=$(awk -F'|' '
+            NF > 4 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+              if ($2 != "Module" && $2 != "-------------")
+                printf "• %s: ✅ %s ❌ %s ", $2, $4, $5
+            }
+          ' module-breakdown.md | head -5)
+
+          TAGS=$(awk -F'|' '
+            NF > 5 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+              if ($2 != "Tag" && $2 != "-----")
+                printf "• %s: ✅ %s ❌ %s ", $2, $4, $5
+            }
+          ' tag-summary.md | head -5)
+
+          echo "APPLICATION=$APPLICATION" >> $GITHUB_OUTPUT
+          echo "MODULES=$MODULES" >> $GITHUB_OUTPUT
+          echo "TAGS=$TAGS" >> $GITHUB_OUTPUT
+
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
@@ -874,45 +915,41 @@ jobs:
             echo "EXECUTION_HEALTH=🔴 Failures Detected" >> $GITHUB_ENV
           fi
 
-      - name: 📣 Notify Slack - Manual Validation
-        if: always() && github.event_name == 'workflow_dispatch'
+      - name: 📣 Notify Slack - PR Validation
+        if: always() && github.event_name == 'pull_request'
         uses: slackapi/slack-github-action@v4
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
             channel: "C0CDR49PPSL"
+
             blocks:
+
               - type: header
                 text:
                   type: plain_text
-                  text: "${{ env.SLACK_EMOJI }} Manual Playwright Validation"
+                  text: "${{ env.SLACK_EMOJI }} Pull Request Validation"
 
               - type: section
                 fields:
                   - type: mrkdwn
-                    text: "*Environment:*\n${{ github.event.inputs.environment }}"
-                  - type: mrkdwn
-                    text: "*Browser:*\n${{ github.event.inputs.browser }}"
-                  - type: mrkdwn
-                    text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
-                  - type: mrkdwn
-                    text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
-                  - type: mrkdwn
-                    text: "*Triggered By:*\n${{ github.actor }}"
+                    text: "*PR Number*\n#${{ env.PR_NUMBER }}"
 
                   - type: mrkdwn
-                    text: "*Branch:*\n${{ github.ref_name }}"
+                    text: "*Author*\n${{ env.PR_AUTHOR }}"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "*Status:* ${{ env.SLACK_EMOJI }} ${{ env.SLACK_STATUS }}"
+                  - type: mrkdwn
+                    text: "*Title*\n${{ env.PR_TITLE }}"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "*📊 Execution Statistics*"
+                  - type: mrkdwn
+                    text: "*Duration*\n${{ env.EXECUTION_DURATION }}"
+
+                  - type: mrkdwn
+                    text: "*Source Branch*\n${{ env.PR_BRANCH }}"
+
+                  - type: mrkdwn
+                    text: "*Target Branch*\n${{ env.PR_BASE_BRANCH }}"
 
               - type: section
                 text:
@@ -920,34 +957,108 @@ jobs:
                   text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
 
               - type: section
-                text:
-                  type: mrkdwn
-                  text: "*🌐 Application Summary:*\n${{ env.APPLICATION_BREAKDOWN }}"
-
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "*📦 Module Breakdown:*\n${{ env.MODULE_BREAKDOWN }}"
-
-              - type: section
                 fields:
                   - type: mrkdwn
                     text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
+
                   - type: mrkdwn
                     text: "*❌ Failed*\n${{ env.FAILED_TESTS }}"
+
                   - type: mrkdwn
                     text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
-                  - type: mrkdwn
-                    text: "*🧪 Total*\n${{ env.TOTAL_TESTS }}"
+
                   - type: mrkdwn
                     text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
-                  - type: mrkdwn
-                    text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
 
-              - type: context
-                elements:
-                  - type: mrkdwn
-                    text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*🌐 Application Summary*\n${{ steps.slack_data.outputs.APPLICATION }}"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*📦 Module Breakdown*\n${{ steps.slack_data.outputs.MODULES }}"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*🏷️ Tag Summary*\n${{ steps.slack_data.outputs.TAGS }}"
+
+      # - name: 📣 Notify Slack - Manual Validation
+      #   if: always() && github.event_name == 'workflow_dispatch'
+      #   uses: slackapi/slack-github-action@v4
+      #   with:
+      #     method: chat.postMessage
+      #     token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
+      #     payload: |
+      #       channel: "C0CDR49PPSL"
+      #       blocks:
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "${{ env.SLACK_EMOJI }} Manual Playwright Validation"
+
+      #         - type: section
+      #           fields:
+      #             - type: mrkdwn
+      #               text: "*Environment:*\n${{ github.event.inputs.environment }}"
+      #             - type: mrkdwn
+      #               text: "*Browser:*\n${{ github.event.inputs.browser }}"
+      #             - type: mrkdwn
+      #               text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
+      #             - type: mrkdwn
+      #               text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
+      #             - type: mrkdwn
+      #               text: "*Triggered By:*\n${{ github.actor }}"
+
+      #             - type: mrkdwn
+      #               text: "*Branch:*\n${{ github.ref_name }}"
+
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*Status:* ${{ env.SLACK_EMOJI }} ${{ env.SLACK_STATUS }}"
+
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*📊 Execution Statistics*"
+
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
+
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*🌐 Application Summary:*\n${{ env.APPLICATION_BREAKDOWN }}"
+
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*📦 Module Breakdown:*\n${{ env.MODULE_BREAKDOWN }}"
+
+      #         - type: section
+      #           fields:
+      #             - type: mrkdwn
+      #               text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*❌ Failed*\n${{ env.FAILED_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*🧪 Total*\n${{ env.TOTAL_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
+      #             - type: mrkdwn
+      #               text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
+
+      #         - type: context
+      #           elements:
+      #             - type: mrkdwn
+      #               text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
 
       # - name: 📣 Notify Slack - PR Validation
       #   if: always() && github.event_name == 'pull_request'
@@ -1004,68 +1115,68 @@ jobs:
       #             - type: mrkdwn
       #               text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
 
-      - name: 📣 Notify Slack - PR Validation
-        if: always() && github.event_name == 'pull_request'
-        uses: slackapi/slack-github-action@v4
-        with:
-          method: chat.postMessage
-          token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
-          payload: |
-            channel: "C0CDR49PPSL"
-            blocks:
-            {
-              "text": "Playwright Validation",
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "${{ env.SLACK_EMOJI }} Pull Request Validation"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ steps.pr_info.outputs.INFO }}"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*🌐 Application Summary*\n${{ steps.breakdown.outputs.APPLICATION_BREAKDOWN }}"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*📦 Module Breakdown*\n${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*🏷️ Tag Summary*\n${{ steps.breakdown.outputs.TAG_BREAKDOWN }}"
-                  }
-                }
-              ]
-            }
+      # - name: 📣 Notify Slack - PR Validation
+      #   if: always() && github.event_name == 'pull_request'
+      #   uses: slackapi/slack-github-action@v4
+      #   with:
+      #     method: chat.postMessage
+      #     token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
+      #     payload: |
+      #       channel: "C0CDR49PPSL"
+      #       blocks:
+      #       {
+      #         "text": "Playwright Validation",
+      #         "blocks": [
+      #           {
+      #             "type": "header",
+      #             "text": {
+      #               "type": "plain_text",
+      #               "text": "${{ env.SLACK_EMOJI }} Pull Request Validation"
+      #             }
+      #           },
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "${{ steps.pr_info.outputs.INFO }}"
+      #             }
+      #           },
+      #           {
+      #             "type": "divider"
+      #           },
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
+      #             }
+      #           },
+      #           {
+      #             "type": "divider"
+      #           },
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "*🌐 Application Summary*\n${{ steps.breakdown.outputs.APPLICATION_BREAKDOWN }}"
+      #             }
+      #           },
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "*📦 Module Breakdown*\n${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}"
+      #             }
+      #           },
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "*🏷️ Tag Summary*\n${{ steps.breakdown.outputs.TAG_BREAKDOWN }}"
+      #             }
+      #           }
+      #         ]
+      #       }
           # payload: |
           #   channel: "C0CDR49PPSL"
 
