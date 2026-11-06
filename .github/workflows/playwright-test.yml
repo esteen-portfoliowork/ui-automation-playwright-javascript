@@ -250,10 +250,12 @@ jobs:
             PASS_RATE=$(awk "BEGIN { printf \"%.2f\", ($PASSED/$TOTAL)*100 }")
             FAILURE_RATE=$(awk "BEGIN { printf \"%.2f\", ($FAILED/$TOTAL)*100 }")
             FLAKY_RATE=$(awk "BEGIN { printf \"%.2f\", ($FLAKY/$TOTAL)*100 }")
+            SKIPPED_RATE=$(awk "BEGIN { printf \"%.2f\", ($SKIPPED/$TOTAL)*100 }")
           else
             PASS_RATE=0
             FAILURE_RATE=0
             FLAKY_RATE=0
+            SKIPPED_RATE=0
           fi
 
           echo "PASSED_TESTS=$PASSED" >> $GITHUB_ENV
@@ -265,7 +267,7 @@ jobs:
           echo "PASS_RATE=$PASS_RATE" >> $GITHUB_ENV
           echo "FAILURE_RATE=$FAILURE_RATE" >> $GITHUB_ENV
           echo "FLAKY_RATE=$FLAKY_RATE" >> $GITHUB_ENV
-
+          echo "SKIPPED_RATE=$SKIPPED_RATE" >> $GITHUB_ENV
           if [ "$TOTAL" -gt 0 ]; then
             QUALITY_SCORE=$(awk "BEGIN { printf \"%.0f\", (($PASSED + ($FLAKY*0.5))/$TOTAL)*100 }")
           else
@@ -302,6 +304,9 @@ jobs:
           echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
           echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
           echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
+          echo "PR_BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
+          echo "PR_BASE_BRANCH=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
+          echo "PR_LABELS=${{ join(github.event.pull_request.labels.*.name, ', ') }}" >> $GITHUB_ENV
 
       # - name: 🔍 Debug Playwright Report
       #   if: always()
@@ -346,6 +351,7 @@ jobs:
       #     ' playwright-report/results.json | head -200
 
       - name: 📦 Build Breakdown Data
+        id: breakdown
         if: always()
         run: |
           get_app_name() {
@@ -389,6 +395,50 @@ jobs:
             echo "| $APP_NAME | $MODULE_NAME | $PASSED | $FAILED |" >> module-breakdown.md
           done
 
+          DISPLAY_LIMIT=5
+
+          TOTAL_MODULES=$(
+            awk -F'|' '
+            NF > 4 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+
+              if ($2 != "Module" && $2 != "-------------")
+                count++
+            }
+            END {
+              print count
+            }
+            ' module-breakdown.md
+          )
+
+          {
+            echo "MODULE_BREAKDOWN<<EOF"
+
+            if [ -f module-breakdown.md ]; then
+
+              awk -F'|' '
+              NF > 4 {
+                gsub(/^[ \t]+|[ \t]+$/, "", $2)
+                gsub(/^[ \t]+|[ \t]+$/, "", $4)
+                gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+                if ($2 != "Module" && $2 != "-------------")
+                  printf "• %s: ✅ %s | ❌ %s\n", $2, $4, $5
+              }
+              ' module-breakdown.md | head -"$DISPLAY_LIMIT"
+
+              if [ "$TOTAL_MODULES" -gt "$DISPLAY_LIMIT" ]; then
+                echo ""
+                echo "...and $((TOTAL_MODULES - DISPLAY_LIMIT)) more modules"
+              fi
+
+            else
+              echo "No module data available"
+            fi
+
+            echo EOF
+          } >> $GITHUB_ENV
+
           echo "| Application | ✅ Passed | ❌ Failed |" > application-summary.md
           echo "|-------------|-----------|-----------|" >> application-summary.md
 
@@ -421,23 +471,53 @@ jobs:
           {
             echo "APPLICATION_BREAKDOWN<<EOF"
 
-            if [ -f application-summary.md ]; then
-              awk -F'|' '
-              NF > 3 {
-                gsub(/^[ \t]+|[ \t]+$/, "", $2)
-                gsub(/^[ \t]+|[ \t]+$/, "", $3)
-                gsub(/^[ \t]+|[ \t]+$/, "", $4)
+            awk -F'|' '
+            NF > 3 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $3)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
 
-                if ($2 != "Application" && $2 != "-------------")
-                  printf "• %s: ✅ %s | ❌ %s\n", $2, $3, $4
-              }
-              ' application-summary.md
-            else
-              echo "No application data available"
-            fi
+              if ($2 != "Application" && $2 != "-------------")
+                printf "• %s: ✅ %s | ❌ %s\n", $2, $3, $4
+            }
+            ' application-summary.md
 
             echo EOF
-          } >> $GITHUB_ENV
+          } >> $GITHUB_OUTPUT
+
+          {
+            echo "MODULE_BREAKDOWN<<EOF"
+
+            awk -F'|' '
+            NF > 4 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+              if ($2 != "Module" && $2 != "-------------")
+                printf "• %s: ✅ %s | ❌ %s\n", $2, $4, $5
+            }
+            ' module-breakdown.md | head -5
+
+            echo EOF
+          } >> $GITHUB_OUTPUT
+
+          {
+            echo "TAG_BREAKDOWN<<EOF"
+
+            awk -F'|' '
+            NF > 5 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+              if ($2 != "Tag" && $2 != "-----")
+                printf "• %s: ✅ %s | ❌ %s\n", $2, $4, $5
+            }
+            ' tag-summary.md | head -5
+
+            echo EOF
+          } >> $GITHUB_OUTPUT
 
           echo "| Tag | Total | ✅ Passed | ❌ Failed | ⏭️ Skipped | 📈 Pass Rate |" > tag-summary.md
           echo "|-----|-------|-----------|-----------|------------|--------------|" >> tag-summary.md
@@ -486,6 +566,47 @@ jobs:
           do
               echo "| @$TAG | $TOTAL | $PASSED | $FAILED | $SKIPPED | $RATE% |" >> tag-summary.md
           done
+
+      - name: 📣 Build Slack Data
+        id: slack_data
+        if: always()
+        run: |
+          APPLICATION=$(awk -F'|' '
+            NF > 3 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $3)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+
+              if ($2 != "Application" && $2 != "-------------")
+                printf "• %s: ✅ %s ❌ %s ", $2, $3, $4
+            }
+          ' application-summary.md)
+
+          MODULES=$(awk -F'|' '
+            NF > 4 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+              if ($2 != "Module" && $2 != "-------------")
+                printf "• %s: ✅ %s ❌ %s ", $2, $4, $5
+            }
+          ' module-breakdown.md | head -5)
+
+          TAGS=$(awk -F'|' '
+            NF > 5 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+              if ($2 != "Tag" && $2 != "-----")
+                printf "• %s: ✅ %s ❌ %s ", $2, $4, $5
+            }
+          ' tag-summary.md | head -5)
+
+          echo "APPLICATION=$APPLICATION" >> $GITHUB_OUTPUT
+          echo "MODULES=$MODULES" >> $GITHUB_OUTPUT
+          echo "TAGS=$TAGS" >> $GITHUB_OUTPUT
 
       - name: 📋 Generate Execution Summary
         if: always()
@@ -755,6 +876,23 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Create PR Info
+        id: pr_info
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          {
+            echo 'INFO<<EOF'
+            echo "*🤖 Auto Merge:* Pending"
+            echo "*🔀 PR:* #${{ github.event.pull_request.number }}"
+            echo "*🔀 Title:* ${{ github.event.pull_request.title }}"
+            echo "*🔗 Pull Request:* ${{ github.event.pull_request.html_url }}"
+            echo "*👤 Author:* ${{ github.event.pull_request.user.login }}"
+            echo "*🌿 Source Branch:* ${{ github.event.pull_request.head.ref }}"
+            echo "*🌿 Target Branch:* ${{ github.head_ref }}"
+            echo "*🏷 Labels:* ${{ steps.labels.outputs.LABELS }}"
+            echo EOF
+          } >> $GITHUB_OUTPUT
+
       - name: 🎨 Prepare Slack Status
         if: always()
         run: |
@@ -787,11 +925,14 @@ jobs:
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
             channel: "C0CDR49PPSL"
+
             blocks:
               - type: header
                 text:
                   type: plain_text
                   text: "${{ env.SLACK_EMOJI }} Manual Playwright Validation"
+
+              - type: divider
 
               - type: section
                 fields:
@@ -814,15 +955,12 @@ jobs:
                   type: mrkdwn
                   text: "*Status:* ${{ env.SLACK_EMOJI }} ${{ env.SLACK_STATUS }}"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "*📊 Execution Statistics*"
+              - type: divider
 
-              - type: section
+              - type: header
                 text:
-                  type: mrkdwn
-                  text: "*🌐 Application Summary*\n${{ env.APPLICATION_BREAKDOWN }}"
+                  type: plain_text
+                  text: "📊 Execution Statistics"
 
               - type: section
                 text:
@@ -833,16 +971,81 @@ jobs:
                 fields:
                   - type: mrkdwn
                     text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
+
                   - type: mrkdwn
                     text: "*❌ Failed*\n${{ env.FAILED_TESTS }}"
+
                   - type: mrkdwn
                     text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
+                  
                   - type: mrkdwn
-                    text: "*🧪 Total*\n${{ env.TOTAL_TESTS }}"
+                    text: "*⚠️ Flaky*\n${{ env.FLAKY_TESTS }}"
+
+                  - type: mrkdwn
+                    text: "*🧪 Total Tests*\n${{ env.TOTAL_TESTS }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "🎯 Key Metrics"
+
+              - type: section
+                fields:
+
                   - type: mrkdwn
                     text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
+
+                  - type: mrkdwn
+                    text: "*📉 Failure Rate*\n${{ env.FAILURE_RATE }}%"
+
+                  - type: mrkdwn
+                    text: "*🔄 Skipped Rate*\n${{ env.SKIPPED_RATE }}%"
+
+                  - type: mrkdwn
+                    text: "*🎲 Flaky Rate*\n${{ env.FLAKY_RATE }}%"
+
                   - type: mrkdwn
                     text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "🌐 Application Summary"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "${{ steps.slack_data.outputs.APPLICATION }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "📦 Module Breakdown"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "${{ steps.slack_data.outputs.MODULES }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "*🏷️ Tag Summary*"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "${{ steps.slack_data.outputs.TAGS }}"
+
+              - type: divider
 
               - type: context
                 elements:
@@ -864,31 +1067,63 @@ jobs:
                   type: plain_text
                   text: "${{ env.SLACK_EMOJI }} Pull Request Validation"
 
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "📋 Pull Request Details"
+
               - type: section
                 fields:
                   - type: mrkdwn
-                    text: "*PR Number:*\n#${{ env.PR_NUMBER }}"
-                  - type: mrkdwn
-                    text: "*Author:*\n${{ env.PR_AUTHOR }}"
-                  - type: mrkdwn
-                    text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
-                  - type: mrkdwn
-                    text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
-                  - type: mrkdwn
-                    text: "*PR Title:*\n${{ env.PR_TITLE }}"
+                    text: "*🔢 PR Number*\n#${{ env.PR_NUMBER }}"
 
                   - type: mrkdwn
-                    text: "*Branch:*\n${{ github.head_ref }}"
+                    text: "*👤 Author*\n${{ env.PR_AUTHOR }}"
+
+                  - type: mrkdwn
+                    text: "*📝 Title*\n${{ env.PR_TITLE }}"
+
+                  - type: mrkdwn
+                    text: "*⏱️ Duration*\n${{ env.EXECUTION_DURATION }}"
+
+                  - type: mrkdwn
+                    text: "*🔗 PR URL*\n${{ env.PR_URL }}"
+
+                  - type: mrkdwn
+                    text: "*🏷️ Label*\n${{ env.PR_LABELS }}"
+
+                  - type: mrkdwn
+                    text: "*🌿 Source Branch*\n${{ env.PR_BRANCH }}"
+
+                  - type: mrkdwn
+                    text: "*🎯 Target Branch*\n${{ env.PR_BASE_BRANCH }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "📋 Execution Overview"
 
               - type: section
-                text:
-                  type: mrkdwn
-                  text: "*📊 Execution Statistics*"
+                fields:
+                  - type: mrkdwn
+                    text: "*🔖 Environment:*\n${{ github.event.inputs.environment }}"
 
-              - type: section
+                  - type: mrkdwn
+                    text: "*🌐 Browser:*\n${{ github.event.inputs.browser }}"
+
+                  - type: mrkdwn
+                    text: "*🏷️ Executed Tag:*\n${{ env.EXECUTED_TAG }}"
+
+              - type: divider
+
+              - type: header
                 text:
-                  type: mrkdwn
-                  text: "*🌐 Application Summary*\n${{ env.APPLICATION_BREAKDOWN }}"
+                  type: plain_text
+                  text: "📊 Execution Statistics"
 
               - type: section
                 text:
@@ -899,16 +1134,81 @@ jobs:
                 fields:
                   - type: mrkdwn
                     text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
+
                   - type: mrkdwn
                     text: "*❌ Failed*\n${{ env.FAILED_TESTS }}"
+
                   - type: mrkdwn
                     text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
+                  
                   - type: mrkdwn
-                    text: "*🧪 Total*\n${{ env.TOTAL_TESTS }}"
+                    text: "*⚠️ Flaky*\n${{ env.FLAKY_TESTS }}"
+
+                  - type: mrkdwn
+                    text: "*🧪 Total Tests*\n${{ env.TOTAL_TESTS }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "🎯 Key Metrics"
+
+              - type: section
+                fields:
+
                   - type: mrkdwn
                     text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
+
+                  - type: mrkdwn
+                    text: "*📉 Failure Rate*\n${{ env.FAILURE_RATE }}%"
+
+                  - type: mrkdwn
+                    text: "*🔄 Skipped Rate*\n${{ env.SKIPPED_RATE }}%"
+
+                  - type: mrkdwn
+                    text: "*🎲 Flaky Rate*\n${{ env.FLAKY_RATE }}%"
+
                   - type: mrkdwn
                     text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "🌐 Application Summary"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "${{ steps.slack_data.outputs.APPLICATION }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "📦 Module Breakdown"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "${{ steps.slack_data.outputs.MODULES }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "*🏷️ Tag Summary*"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "${{ steps.slack_data.outputs.TAGS }}"
+
+              - type: divider
 
               - type: context
                 elements:
@@ -1018,29 +1318,3 @@ jobs:
 
               core.info('Created new PR comment');
             }
-
-
-      # # Commented out as enahncement on Slack notification is in progress. Will be enabled once enhancement is done.
-      # - name: 📣 Notify Slack
-      #   if: always()
-      #   uses: slackapi/slack-github-action@v4
-      #   with:
-      #     method: chat.postMessage
-      #     token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
-      #     payload: |
-      #       channel: "C0CDR49PPSL"
-      #       text: |
-      #         🚀 Playwright Execution Finished
-
-      #         📊 Status: ${{ job.status }}
-      #         🌿 Branch: ${{ github.ref_name }}
-      #         👤 Actor: ${{ github.actor }}
-
-      #         🔗 Workflow:
-      #         https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-      #         📄 Playwright Report:
-      #         Download from workflow artifacts
-
-      #         📊 Allure Report:
-      #         Download from workflow artifacts
