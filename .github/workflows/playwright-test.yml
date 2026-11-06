@@ -975,7 +975,13 @@ jobs:
               - type: section
                 fields:
                   - type: mrkdwn
-                    text: "*🌐 Environment*\n$BROWSER"
+                    text: "*🔖 Environment:*\n${{ github.event.inputs.environment }}"
+
+                  - type: mrkdwn
+                    text: "*🌐 Browser:*\n${{ github.event.inputs.browser }}"
+
+                  - type: mrkdwn
+                    text: "*🏷️ Executed Tag:*\n${{ env.EXECUTED_TAG }}"
 
               - type: divider
 
