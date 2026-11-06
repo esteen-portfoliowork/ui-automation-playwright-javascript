@@ -402,7 +402,12 @@ jobs:
             NF > 4 {
               gsub(/^[ \t]+|[ \t]+$/, "", $2)
 
-              if ($2 != "Module" && $2 != "-------------")
+              if (
+                $2 != "Application" &&
+                $2 != "Module" &&
+                $2 != "-------------" &&
+                $5 > 0
+              )
                 count++
             }
             END {
@@ -594,9 +599,7 @@ jobs:
             }
           ' module-breakdown.md | head -5)
 
-          {
-            echo "FAILED_MODULES<<EOF"
-
+          FAILED_MODULES=$(
             awk -F'|' '
             NF > 4 {
 
@@ -607,16 +610,12 @@ jobs:
                   $2 != "-------------" &&
                   $5 > 0)
 
-                printf "• %s | %s failure(s)\n",
-                $2,
-                $5
-
+                printf "• %s (%s failure) ", $2, $5
             }
             ' module-breakdown.md
+            )
 
-            echo EOF
-
-          } >> $GITHUB_OUTPUT
+            echo "FAILED_MODULES=$FAILED_MODULES" >> $GITHUB_OUTPUT
 
           FAILED_COUNT=$(
           jq '
@@ -629,24 +628,18 @@ jobs:
           ' playwright-report/results.json
           )
 
-          {
-            echo "FAILED_TESTS<<EOF"
+          FAILED_TESTS=$(
+          jq -r '
+          .suites[].suites[]
+          | .specs[]
+          | select(.ok == false)
+          | .title
+          ' playwright-report/results.json |
+          head -5 |
+          paste -sd " | " -
+          )
 
-            jq -r '
-              .suites[].suites[]
-              | .specs[]
-              | select(.ok == false)
-              | "• " + .title
-            ' playwright-report/results.json | head -"$DISPLAY_LIMIT"
-
-            if [ "$FAILED_COUNT" -gt "$DISPLAY_LIMIT" ]; then
-              echo ""
-              echo "...and $((FAILED_COUNT - $DISPLAY_LIMIT)) more failures"
-            fi
-
-            echo EOF
-
-          } >> $GITHUB_OUTPUT
+          echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_OUTPUT
 
           # Tags
           TAGS=$(awk -F'|' '
@@ -1107,17 +1100,20 @@ jobs:
 
               - type: divider
 
-              - type: divider
-
               - type: header
                 text:
                   type: plain_text
                   text: "❌ Failed Modules"
 
               - type: section
-                text:
-                  type: mrkdwn
-                  text: "${{ steps.slack_data.outputs.FAILED_MODULES }}"
+                fields:
+                  - type: mrkdwn
+                    text: "*Failed Modules*\n${{ steps.slack_data.outputs.FAILED_MODULES }}"
+
+                  - type: mrkdwn
+                    text: "*Failed Count*\n${{ steps.slack_data.outputs.FAILED_COUNT }}"
+
+              - type: divider
 
               - type: header
                 text:
@@ -1300,9 +1296,12 @@ jobs:
                   text: "❌ Failed Modules"
 
               - type: section
-                text:
-                  type: mrkdwn
-                  text: "${{ steps.slack_data.outputs.FAILED_MODULES }}"
+                fields:
+                  - type: mrkdwn
+                    text: "*Failed Modules*\n${{ steps.slack_data.outputs.FAILED_MODULES }}"
+
+                  - type: mrkdwn
+                    text: "*Failed Count*\n${{ steps.slack_data.outputs.FAILED_COUNT }}"
 
               - type: divider
 
