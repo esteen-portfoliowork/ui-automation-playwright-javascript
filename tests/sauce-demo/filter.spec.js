@@ -69,7 +69,15 @@ test.describe('SauceDemo - Filter', () => {
             filter: filterOptions.priceDescending,
             getter: 'getProductPrices',
             validator: 'validateDescendingOrder'
-        }
+        },
+        {
+            id: 'SD-015-FAIL',
+            title: 'Filter Products by Name (A to Z)',
+            tag: ['@regression', '@e2e', '@filter', '@positive', '@sauce-demo'],
+            filter: filterOptions.nameAscending,
+            getter: 'getProductNames',
+            validator: 'validateDescendingOrder'
+        },
     ];
 
     filterTests.forEach(testData => {

@@ -571,6 +571,7 @@ jobs:
         id: slack_data
         if: always()
         run: |
+          # Application Summary
           APPLICATION=$(awk -F'|' '
             NF > 3 {
               gsub(/^[ \t]+|[ \t]+$/, "", $2)
@@ -593,6 +594,61 @@ jobs:
             }
           ' module-breakdown.md | head -5)
 
+          {
+            echo "FAILED_MODULES<<EOF"
+
+            awk -F'|' '
+            NF > 4 {
+
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+              if ($2 != "Module" &&
+                  $2 != "-------------" &&
+                  $5 > 0)
+
+                printf "• %s | %s failure(s)\n",
+                $2,
+                $5
+
+            }
+            ' module-breakdown.md
+
+            echo EOF
+
+          } >> $GITHUB_OUTPUT
+
+          FAILED_COUNT=$(
+          jq '
+          [
+            .suites[].suites[]
+            | .specs[]
+            | select(.ok == false)
+          ]
+          | length
+          ' playwright-report/results.json
+          )
+
+          {
+            echo "FAILED_TESTS<<EOF"
+
+            jq -r '
+              .suites[].suites[]
+              | .specs[]
+              | select(.ok == false)
+              | "• " + .title
+            ' playwright-report/results.json | head -"$DISPLAY_LIMIT"
+
+            if [ "$FAILED_COUNT" -gt "$DISPLAY_LIMIT" ]; then
+              echo ""
+              echo "...and $((FAILED_COUNT - $DISPLAY_LIMIT)) more failures"
+            fi
+
+            echo EOF
+
+          } >> $GITHUB_OUTPUT
+
+          # Tags
           TAGS=$(awk -F'|' '
             NF > 5 {
               gsub(/^[ \t]+|[ \t]+$/, "", $2)
@@ -606,6 +662,7 @@ jobs:
 
           echo "APPLICATION=$APPLICATION" >> $GITHUB_OUTPUT
           echo "MODULES=$MODULES" >> $GITHUB_OUTPUT
+          echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_OUTPUT
           echo "TAGS=$TAGS" >> $GITHUB_OUTPUT
 
       - name: 📋 Generate Execution Summary
@@ -1050,6 +1107,18 @@ jobs:
 
               - type: divider
 
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "❌ Failed Modules"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "${{ steps.slack_data.outputs.FAILED_MODULES }}"
+
               - type: header
                 text:
                   type: plain_text
@@ -1059,6 +1128,18 @@ jobs:
                 text:
                   type: mrkdwn
                   text: "${{ steps.slack_data.outputs.TAGS }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "❌ Failed Tests"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*Failed Count:* ${{ steps.slack_data.outputs.FAILED_COUNT }}\n${{ steps.slack_data.outputs.FAILED_TESTS }}"
 
               - type: divider
 
@@ -1216,12 +1297,36 @@ jobs:
               - type: header
                 text:
                   type: plain_text
+                  text: "❌ Failed Modules"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "${{ steps.slack_data.outputs.FAILED_MODULES }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
                   text: "*🏷️ Tag Summary*"
 
               - type: section
                 text:
                   type: mrkdwn
                   text: "${{ steps.slack_data.outputs.TAGS }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "❌ Failed Tests"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*Failed Count:* ${{ steps.slack_data.outputs.FAILED_COUNT }}\n${{ steps.slack_data.outputs.FAILED_TESTS }}"
 
               - type: divider
 
