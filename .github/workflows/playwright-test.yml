@@ -724,7 +724,7 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
 
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "## 🔖 Pull Request Details" >> $GITHUB_STEP_SUMMARY
+            echo "## 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
 
             echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
@@ -968,17 +968,17 @@ jobs:
             echo EOF
           } >> $GITHUB_OUTPUT
 
-      - name: 🎨 Prepare Slack Status
+      - name: 🎨 Prepare Build Status
         if: always()
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            echo "SLACK_STATUS=PASSED" >> $GITHUB_ENV
-            echo "SLACK_EMOJI=🟢" >> $GITHUB_ENV
-            echo "SLACK_COLOR=good" >> $GITHUB_ENV
+            echo "BUILD_STATUS=PASSED" >> $GITHUB_ENV
+            echo "BUILD_EMOJI=🟢" >> $GITHUB_ENV
+            echo "BUILD_COLOR=good" >> $GITHUB_ENV
           else
-            echo "SLACK_STATUS=FAILED" >> $GITHUB_ENV
-            echo "SLACK_EMOJI=🔴" >> $GITHUB_ENV
-            echo "SLACK_COLOR=danger" >> $GITHUB_ENV
+            echo "BUILD_STATUS=FAILED" >> $GITHUB_ENV
+            echo "BUILD_EMOJI=🔴" >> $GITHUB_ENV
+            echo "BUILD_COLOR=danger" >> $GITHUB_ENV
           fi
 
       - name: 🚦 Prepare Execution Health
@@ -1005,7 +1005,7 @@ jobs:
               - type: header
                 text:
                   type: plain_text
-                  text: "${{ env.SLACK_EMOJI }} Manual Playwright Validation"
+                  text: "${{ env.BUILD_EMOJI }} Manual Playwright Validation"
 
               - type: divider
 
@@ -1043,7 +1043,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*Status:* ${{ env.SLACK_EMOJI }} ${{ env.SLACK_STATUS }}"
+                  text: "*Status:* ${{ env.BUILD_EMOJI }} ${{ env.BUILD_STATUS }}"
 
               - type: divider
 
@@ -1182,7 +1182,7 @@ jobs:
               - type: header
                 text:
                   type: plain_text
-                  text: "${{ env.SLACK_EMOJI }} Pull Request Validation"
+                  text: "${{ env.BUILD_EMOJI }} Pull Request Validation"
 
               - type: divider
 
@@ -1374,23 +1374,61 @@ jobs:
             TITLE="❌ Playwright Validation Failed"
           fi
 
+          if [ "${{ steps.slack_data.outputs.FAILED_MODULE_COUNT }}" = "0" ]; then
+
+            FAILED_MODULE_SECTION="✅ No failed modules."
+
+          else
+
+            FAILED_MODULE_SECTION="
+          ## ❌ Failed Modules
+
+          ${{ steps.slack_data.outputs.FAILED_MODULES }}
+          "
+
+          fi
+
+          if [ "${{ env.FAILED_TESTS }}" = "0" ]; then
+
+            FAILURE_SECTION="✅ No failed tests detected."
+
+          else
+
+            FAILURE_SECTION="
+          ## ❌ Failed Tests
+
+          ${{ steps.slack_data.outputs.FAILED_TESTS }}
+          "
+
+          fi
+
           cat <<EOF > pr-comment.md
           <!-- playwright-validation-report -->
 
           # $TITLE
 
-          ## Pull Request Details
+          ## 📋 Pull Request Details
 
           | Item | Value |
           |--------|--------|
           | PR Number | #${{ env.PR_NUMBER }} |
           | PR Title | ${{ env.PR_TITLE }} |
+          | Link | ${{ env.PR_URL }} |
           | Author | ${{ env.PR_AUTHOR }} |
           | Source Branch | ${{ github.head_ref }} |
           | Target Branch | ${{ github.base_ref }} |
+          | Label | ${{ env.PR_LABELS }} |
           | Status | $STATUS |
 
-          ## Execution Metrics
+          ## 🚦 Validation Status
+
+          | Status | Result |
+          |----------|----------|
+          | Build Status | ${{ env.BUILD_EMOJI }} |
+          | Health | ${{ env.EXECUTION_HEALTH }} |
+          | Duration | ${{ env.EXECUTION_DURATION }} |
+
+          ## 📊 Execution Metrics
 
           | Metric | Value |
           |--------|--------|
@@ -1400,16 +1438,25 @@ jobs:
           | Node Version | ${{ env.NODE_VERSION }} |
           | Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |
 
-          ## Test Statistics
+          ## 🧪 Test Results
 
           | Metric | Count |
           |--------|--------|
           | Passed | ${{ env.PASSED_TESTS }} |
           | Failed | ${{ env.FAILED_TESTS }} |
           | Skipped | ${{ env.SKIPPED_TESTS }} |
+          | Flaky | ${{ env.FLAKY_TESTS }} |
           | Total | ${{ env.TOTAL_TESTS }} |
 
-          ## Reports
+          ## ❌ Failed Modules
+
+          ${{ steps.slack_data.outputs.FAILED_MODULES }}
+
+          ## ❌ Failed Tests
+
+          ${{ steps.slack_data.outputs.FAILED_TESTS }}
+
+          ## 🔗 Reports
 
           - Playwright HTML Report
           - Allure Report
