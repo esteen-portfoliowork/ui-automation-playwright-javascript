@@ -973,6 +973,12 @@ jobs:
 
                   - type: mrkdwn
                     text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
+                  
+                  - type: mrkdwn
+                    text: "*⚠️ Flaky*\n${{ env.FLAKY_TESTS }}"
+
+                  - type: mrkdwn
+                    text: "*🧪 Total Tests*\n${{ env.TOTAL_TESTS }}"
 
                   - type: mrkdwn
                     text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
