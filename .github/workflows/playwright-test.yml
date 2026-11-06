@@ -1011,6 +1011,8 @@ jobs:
           method: chat.postMessage
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
+            channel: "C0CDR49PPSL"
+            blocks:
             {
               "text": "Playwright Validation",
               "blocks": [
