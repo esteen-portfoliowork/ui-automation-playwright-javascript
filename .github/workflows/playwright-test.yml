@@ -931,7 +931,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "${{ env.APPLICATION_BREAKDOWN }}"
+                  text: "${{ steps.pr_info.outputs.INFO }}"
 
               - type: section
                 text:
