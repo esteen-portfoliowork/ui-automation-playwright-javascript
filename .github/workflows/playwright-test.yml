@@ -925,7 +925,6 @@ jobs:
             channel: "C0CDR49PPSL"
 
             blocks:
-
               - type: header
                 text:
                   type: plain_text
@@ -946,6 +945,12 @@ jobs:
                     text: "*Duration*\n${{ env.EXECUTION_DURATION }}"
 
                   - type: mrkdwn
+                    text: "*PR URL*\n${{ env.PR_URL }}"
+
+                  - type: mrkdwn
+                    text: "*Label*\n${{ env.PR_LABELS }}"
+
+                  - type: mrkdwn
                     text: "*Source Branch*\n${{ env.PR_BRANCH }}"
 
                   - type: mrkdwn
@@ -957,8 +962,6 @@ jobs:
                 text:
                   type: mrkdwn
                   text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
-
-              - type: divider
 
               - type: section
                 fields:
@@ -989,7 +992,7 @@ jobs:
                   text: "*📦 Module Breakdown*\n${{ steps.slack_data.outputs.MODULES }}"
 
               - type: divider
-              
+
               - type: section
                 text:
                   type: mrkdwn
