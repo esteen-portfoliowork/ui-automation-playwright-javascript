@@ -395,14 +395,16 @@ jobs:
             echo "| $APP_NAME | $MODULE_NAME | $PASSED | $FAILED |" >> module-breakdown.md
           done
 
-          DISPLAY_LIMIT=5
+          # DISPLAY_LIMIT=5
 
           TOTAL_MODULES=$(
             awk -F'|' '
             NF > 4 {
               gsub(/^[ \t]+|[ \t]+$/, "", $2)
 
-              if ($2 != "Module" && $2 != "-------------")
+              FAILED=$5 + 0
+
+              if ($2 != "Application" && $2 != "Module" && $2 != "-------------" && FAILED > 0)
                 count++
             }
             END {
@@ -502,6 +504,9 @@ jobs:
             echo EOF
           } >> $GITHUB_OUTPUT
 
+          echo "| Tag | Total | ✅ Passed | ❌ Failed | ⏭️ Skipped | 📈 Pass Rate |" > tag-summary.md
+          echo "|-----|-------|-----------|-----------|------------|--------------|" >> tag-summary.md
+
           {
             echo "TAG_BREAKDOWN<<EOF"
 
@@ -518,9 +523,6 @@ jobs:
 
             echo EOF
           } >> $GITHUB_OUTPUT
-
-          echo "| Tag | Total | ✅ Passed | ❌ Failed | ⏭️ Skipped | 📈 Pass Rate |" > tag-summary.md
-          echo "|-----|-------|-----------|-----------|------------|--------------|" >> tag-summary.md
 
           # Exclude application tags from tag analytics
           jq -r '
@@ -571,6 +573,9 @@ jobs:
         id: slack_data
         if: always()
         run: |
+          DISPLAY_LIMIT=5
+          
+          # Application Summary
           APPLICATION=$(awk -F'|' '
             NF > 3 {
               gsub(/^[ \t]+|[ \t]+$/, "", $2)
@@ -593,6 +598,72 @@ jobs:
             }
           ' module-breakdown.md | head -5)
 
+          FAILED_MODULES=$(
+          awk -F'|' '
+          NF > 4 {
+
+            gsub(/^[ \t]+|[ \t]+$/, "", $2)
+            gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+            FAILED=$5+0
+
+            if ($2 != "Module" &&
+                $2 != "-------------" &&
+                FAILED > 0)
+
+              printf "• %s (%s failure) ", $2, FAILED
+          }
+          ' module-breakdown.md
+          )
+
+          FAILED_MODULE_COUNT=$(awk -F'|' '
+          NF > 4 {
+
+            gsub(/^[ \t]+|[ \t]+$/, "", $5)
+
+            FAILED=$5+0
+
+            if (FAILED > 0)
+              count++
+          }
+          END {
+            print count+0
+          }
+          ' module-breakdown.md)
+
+          if [ -z "$FAILED_MODULES" ]; then
+            FAILED_MODULES="✅ No failed modules"
+          fi
+
+          FAILED_COUNT=$(
+          jq '
+          [
+            .suites[].suites[]
+            | .specs[]
+            | select(.ok == false)
+          ]
+          | length
+          ' playwright-report/results.json
+          )
+
+          FAILED_TESTS=$(
+          jq -r '
+          .suites[].suites[]
+          | .specs[]
+          | select(.ok == false)
+          | .title
+          ' playwright-report/results.json |
+          head -5 |
+          paste -sd " | " -
+          )
+
+          if [ -z "$FAILED_TESTS" ]; then
+            FAILED_TESTS="✅ No failed tests"
+          fi
+
+          echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_OUTPUT
+
+          # Tags
           TAGS=$(awk -F'|' '
             NF > 5 {
               gsub(/^[ \t]+|[ \t]+$/, "", $2)
@@ -606,6 +677,10 @@ jobs:
 
           echo "APPLICATION=$APPLICATION" >> $GITHUB_OUTPUT
           echo "MODULES=$MODULES" >> $GITHUB_OUTPUT
+          echo "FAILED_MODULES=$FAILED_MODULES" >> $GITHUB_OUTPUT
+          echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_OUTPUT
+          echo "FAILED_MODULE_COUNT=$FAILED_MODULE_COUNT" >> $GITHUB_OUTPUT
+          echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_OUTPUT
           echo "TAGS=$TAGS" >> $GITHUB_OUTPUT
 
       - name: 📋 Generate Execution Summary
@@ -934,21 +1009,36 @@ jobs:
 
               - type: divider
 
+              - type: header
+                text:
+                  type: plain_text
+                  text: "📋 Execution Configuration"
+
               - type: section
                 fields:
                   - type: mrkdwn
-                    text: "*Environment:*\n${{ github.event.inputs.environment }}"
-                  - type: mrkdwn
-                    text: "*Browser:*\n${{ github.event.inputs.browser }}"
-                  - type: mrkdwn
-                    text: "*Executed Tag:*\n${{ env.EXECUTED_TAG }}"
-                  - type: mrkdwn
-                    text: "*Duration:*\n${{ env.EXECUTION_DURATION }}"
-                  - type: mrkdwn
-                    text: "*Triggered By:*\n${{ github.actor }}"
+                    text: "*🌐 Browser:*\n${{ inputs.browser }}"
 
                   - type: mrkdwn
-                    text: "*Branch:*\n${{ github.ref_name }}"
+                    text: "*📁 Folder:*\n${{ inputs.folder }}"
+
+                  - type: mrkdwn
+                    text: "*🏷️ Tag:*\n${{ inputs.tag }}"
+
+                  - type: mrkdwn
+                    text: "*🌍 Environment:*\n${{ inputs.environment }}"
+
+                  - type: mrkdwn
+                    text: "*🖥️ Execution Mode:*\n${{ inputs.execution_mode }}"
+
+                  - type: mrkdwn
+                    text: "*🔄 Retries:*\n${{ inputs.retries }}"
+
+                  - type: mrkdwn
+                    text: "*⚡ Workers:*\n${{ github.ref_name }}"
+
+                  - type: mrkdwn
+                    text: "*📢 Publish Report:*\n${{ inputs.publish_report }}"
 
               - type: section
                 text:
@@ -1038,12 +1128,39 @@ jobs:
               - type: header
                 text:
                   type: plain_text
+                  text: "❌ Failed Modules"
+
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*Failed Modules*\n${{ steps.slack_data.outputs.FAILED_MODULES }}"
+
+                  - type: mrkdwn
+                    text: "*Module Count*\n${{ steps.slack_data.outputs.FAILED_MODULE_COUNT }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
                   text: "*🏷️ Tag Summary*"
 
               - type: section
                 text:
                   type: mrkdwn
                   text: "${{ steps.slack_data.outputs.TAGS }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "❌ Failed Tests"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*Failed Count:* ${{ steps.slack_data.outputs.FAILED_COUNT }}\n${{ steps.slack_data.outputs.FAILED_TESTS }}"
 
               - type: divider
 
@@ -1201,12 +1318,39 @@ jobs:
               - type: header
                 text:
                   type: plain_text
+                  text: "❌ Failed Modules"
+
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*Failed Modules*\n${{ steps.slack_data.outputs.FAILED_MODULES }}"
+
+                  - type: mrkdwn
+                    text: "*Module Count*\n${{ steps.slack_data.outputs.FAILED_MODULE_COUNT }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
                   text: "*🏷️ Tag Summary*"
 
               - type: section
                 text:
                   type: mrkdwn
                   text: "${{ steps.slack_data.outputs.TAGS }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "❌ Failed Tests"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*Failed Count:* ${{ steps.slack_data.outputs.FAILED_COUNT }}\n${{ steps.slack_data.outputs.FAILED_TESTS }}"
 
               - type: divider
 
