@@ -1425,8 +1425,8 @@ jobs:
           | Status | Result |
           |----------|----------|
           | Build Status | ${{ env.BUILD_EMOJI }} |
-          | Health | env.EXECUTION_HEALTH |
-          | Duration | env.EXECUTION_DURATION |
+          | Health | ${{ env.EXECUTION_HEALTH }} |
+          | Duration | ${{ env.EXECUTION_DURATION }} |
 
           ## 📊 Execution Metrics
 
