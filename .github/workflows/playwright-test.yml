@@ -250,10 +250,12 @@ jobs:
             PASS_RATE=$(awk "BEGIN { printf \"%.2f\", ($PASSED/$TOTAL)*100 }")
             FAILURE_RATE=$(awk "BEGIN { printf \"%.2f\", ($FAILED/$TOTAL)*100 }")
             FLAKY_RATE=$(awk "BEGIN { printf \"%.2f\", ($FLAKY/$TOTAL)*100 }")
+            SKIPPED_RATE=$(awk "BEGIN { printf \"%.2f\", ($SKIPPED/$TOTAL)*100 }")
           else
             PASS_RATE=0
             FAILURE_RATE=0
             FLAKY_RATE=0
+            SKIPPED_RATE=0
           fi
 
           echo "PASSED_TESTS=$PASSED" >> $GITHUB_ENV
@@ -265,7 +267,7 @@ jobs:
           echo "PASS_RATE=$PASS_RATE" >> $GITHUB_ENV
           echo "FAILURE_RATE=$FAILURE_RATE" >> $GITHUB_ENV
           echo "FLAKY_RATE=$FLAKY_RATE" >> $GITHUB_ENV
-
+          echo "SKIPPED_RATE=$SKIPPED_RATE" >> $GITHUB_ENV
           if [ "$TOTAL" -gt 0 ]; then
             QUALITY_SCORE=$(awk "BEGIN { printf \"%.0f\", (($PASSED + ($FLAKY*0.5))/$TOTAL)*100 }")
           else
@@ -930,33 +932,57 @@ jobs:
                   type: plain_text
                   text: "${{ env.SLACK_EMOJI }} Pull Request Validation"
 
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "📋 Pull Request Details"
+
               - type: section
                 fields:
                   - type: mrkdwn
-                    text: "*PR Number*\n#${{ env.PR_NUMBER }}"
+                    text: "*🔢 PR Number*\n#${{ env.PR_NUMBER }}"
 
                   - type: mrkdwn
-                    text: "*Author*\n${{ env.PR_AUTHOR }}"
+                    text: "*👤 Author*\n${{ env.PR_AUTHOR }}"
 
                   - type: mrkdwn
-                    text: "*Title*\n${{ env.PR_TITLE }}"
+                    text: "*📝 Title*\n${{ env.PR_TITLE }}"
 
                   - type: mrkdwn
-                    text: "*Duration*\n${{ env.EXECUTION_DURATION }}"
+                    text: "*⏱️ Duration*\n${{ env.EXECUTION_DURATION }}"
 
                   - type: mrkdwn
-                    text: "*PR URL*\n${{ env.PR_URL }}"
+                    text: "*🔗 PR URL*\n${{ env.PR_URL }}"
 
                   - type: mrkdwn
-                    text: "*Label*\n${{ env.PR_LABELS }}"
+                    text: "*🏷️ Label*\n${{ env.PR_LABELS }}"
 
                   - type: mrkdwn
-                    text: "*Source Branch*\n${{ env.PR_BRANCH }}"
+                    text: "*🌿 Source Branch*\n${{ env.PR_BRANCH }}"
 
                   - type: mrkdwn
-                    text: "*Target Branch*\n${{ env.PR_BASE_BRANCH }}"
+                    text: "*🎯 Target Branch*\n${{ env.PR_BASE_BRANCH }}"
 
               - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "📋 Execution Overview"
+
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*🌐 Environment*\n$BROWSER"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "📊 Execution Statistics"
 
               - type: section
                 text:
@@ -980,29 +1006,73 @@ jobs:
                   - type: mrkdwn
                     text: "*🧪 Total Tests*\n${{ env.TOTAL_TESTS }}"
 
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "🎯 Key Metrics"
+
+              - type: section
+                fields:
+
                   - type: mrkdwn
                     text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
 
+                  - type: mrkdwn
+                    text: "*📉 Failure Rate*\n${{ env.FAILURE_RATE }}%"
+
+                  - type: mrkdwn
+                    text: "*🔄 Skipped Rate*\n${{ env.SKIPPED_RATE }}%"
+
+                  - type: mrkdwn
+                    text: "*🎲 Flaky Rate*\n${{ env.FLAKY_RATE }}%"
+
+                  - type: mrkdwn
+                    text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
+
               - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "🌐 Application Summary"
 
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*🌐 Application Summary*\n${{ steps.slack_data.outputs.APPLICATION }}"
+                  text: "${{ steps.slack_data.outputs.APPLICATION }}"
 
               - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "📦 Module Breakdown"
 
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*📦 Module Breakdown*\n${{ steps.slack_data.outputs.MODULES }}"
+                  text: "${{ steps.slack_data.outputs.MODULES }}"
 
               - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "*🏷️ Tag Summary*"
 
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*🏷️ Tag Summary*\n${{ steps.slack_data.outputs.TAGS }}"
+                  text: "${{ steps.slack_data.outputs.TAGS }}"
+
+              - type: divider
+
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
 
       # - name: 📣 Notify Slack - Manual Validation
       #   if: always() && github.event_name == 'workflow_dispatch'
