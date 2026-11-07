@@ -25,22 +25,22 @@ jobs:
         run: |
           mkdir -p generated-release-assets
 
-      - name: 🏗 Generate Architecture
+      - name: 📝 Generate Architecture
         run: |
           cp release/templates/architecture.md \
           generated-release-assets/architecture-${{ steps.version.outputs.version }}.md
 
-      - name: 📦 Generate Dependency Versions
+      - name: 📝 Generate Dependency Versions
         run: |
           cp release/templates/dependency-versions.md \
           generated-release-assets/dependency-versions-${{ steps.version.outputs.version }}.md
 
-      - name: 🔗 Generate Integrated Apps
+      - name: 📝 Generate Integrated Apps
         run: |
           cp release/templates/integrated-apps.md \
           generated-release-assets/integrated-apps-${{ steps.version.outputs.version }}.md
 
-      - name: 📋 Generate Jira Tickets
+      - name: 📝 Generate Jira Tickets
         run: |
           cp release/templates/jira-tickets.md \
           generated-release-assets/jira-tickets-${{ steps.version.outputs.version }}.md
@@ -49,6 +49,11 @@ jobs:
         run: |
           cp release/templates/release-summary.md \
           generated-release-assets/release-summary-${{ steps.version.outputs.version }}.md
+
+      - name: 📝 Generate Roadmap
+        run: |
+          cp release/templates/roadmap.md \
+          generated-release-assets/roadmap-${{ steps.version.outputs.version }}.md
 
       - name: 📎 Upload Release Assets
         uses: softprops/action-gh-release@v2

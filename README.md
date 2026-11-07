@@ -61,6 +61,18 @@ npx playwright test --grep @filter
 - Release Drafter
 - GitHub Release Management
 
+### Validation Reporting
+
+- GitHub Actions Dashboard
+- Execution Health Indicators
+- Test Quality Metrics
+- Module-Level Reporting
+- Application-Level Reporting
+- Tag-Level Reporting
+- Failed Test Analytics
+- Pull Request Validation Comments
+- Slack Execution Notifications
+
 ## Technology Stack
 
 - Playwright
@@ -203,7 +215,7 @@ This repository uses:
 | Automation Tool | Playwright |
 | Programming Language | JavaScript |
 | Supported Browsers | 3 |
-| Current Integrations | 8 |
+| Current Integrations | 9 |
 | Release Assets | 5 |
 | CI/CD Platforms | 2 |
 
@@ -267,6 +279,7 @@ The framework supports tag-based execution.
 | integrated-apps.md | Integration inventory and roadmap |
 | jira-tickets.md | User stories and requirements traceability |
 | release-summary.md | Release overview and capabilities |
+| roadmap.md | Planned roadmap |
 
 ## Workflow Capabilities
 
@@ -318,9 +331,31 @@ Supports workflow_dispatch with:
 
 ### Notifications
 
+- Slack execution notifications
+- Application-level execution reporting
+- Module-level execution reporting
+- Failed test reporting
+- Pull request validation comments
+
+Slack notifications include:
+
+- Execution status
+- Pass/fail metrics
+- Health indicators
+- Application summary
+- Module summary
+- Failed test details
+- Executed tag visibility
+
+## Execution Reporting
+
+The framework provides visibility through:
+
+- GitHub Actions Summary Dashboard
+- Pull Request Validation Comments
 - Slack Notifications
-- Pull Request Comments
-- Execution Status Tracking
+- Playwright HTML Reports
+- Allure Reports
 
 ## Future Enhancements
 

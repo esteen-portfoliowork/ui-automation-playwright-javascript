@@ -1,6 +1,6 @@
 # Architecture
 
-Document Version: v0.3.0
+Document Version: v0.4.0
 
 ## Overview
 
@@ -53,10 +53,34 @@ Slack Notification
 - Inventory
 - Filter
 
+## Reporting Architecture
+
+Playwright Execution
+        ↓
+Playwright JSON Results
+        ↓
+Validation Analytics Layer
+        ↓
+ ┌──────────────────────────────┐
+ │ GitHub Actions Summary       │
+ │ Slack Notifications          │
+ │ Pull Request Comments        │
+ │ Allure Reporting             │
+ └──────────────────────────────┘
+        ↓
+Release Assets
+
 ## Reporting Components
 
+- GitHub Actions Summary Dashboard
+- Slack Notification Dashboard
+- Pull Request Validation Comments
 - Playwright HTML Report
 - Allure Report
+- Test Analytics Reporting
+- Application Reporting
+- Module Reporting
+- Tag-Level Reporting
 
 ## Execution Flow
 
@@ -76,6 +100,6 @@ Slack Notification
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.3.0 |
-| Release Date | 2026-11-03 |
+| Release Version | v0.4.0 |
+| Release Date | 2026-11-08 |
 | Repository | UI Playwright - JavaScript |
