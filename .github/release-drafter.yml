@@ -101,6 +101,17 @@ template: |
 
   ---
 
+  ## 📈 Release Statistics
+
+  | Metric | Value |
+  |---------|---------|
+  | Automated Test Cases | 14 |
+  | Test Modules | 3 |
+  | Test Tags | 8 |
+  | Supported Browsers | 3 |
+
+  ---
+
   ## 🎯 Key Deliverables
 
   > Update this section before publishing the release.
@@ -128,6 +139,7 @@ template: |
   - integrated-apps.md
   - jira-tickets.md
   - release-summary.md
+  - roadmap.md
 
   These documents provide architectural references, dependency inventories, integrated application details, release summaries, and Jira traceability.
 
