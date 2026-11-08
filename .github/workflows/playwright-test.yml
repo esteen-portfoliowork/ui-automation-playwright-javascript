@@ -974,10 +974,12 @@ jobs:
           if [ "${{ job.status }}" = "success" ]; then
             echo "BUILD_STATUS=PASSED" >> $GITHUB_ENV
             echo "BUILD_EMOJI=🟢" >> $GITHUB_ENV
+            echo "BUILD_TEXT=✅ Build Status: PASSED" >> $GITHUB_ENV
             echo "BUILD_COLOR=good" >> $GITHUB_ENV
           else
             echo "BUILD_STATUS=FAILED" >> $GITHUB_ENV
             echo "BUILD_EMOJI=🔴" >> $GITHUB_ENV
+            echo "BUILD_TEXT=❌ Build Status: FAILED" >> $GITHUB_ENV
             echo "BUILD_COLOR=danger" >> $GITHUB_ENV
           fi
 
@@ -1002,6 +1004,8 @@ jobs:
           else
             echo "## ${{ env.BUILD_EMOJI }} Manual Validation" >> $GITHUB_STEP_SUMMARY
           fi
+          
+          echo "${{ env.BUILD_TEXT }}" >> $GITHUB_STEP_SUMMARY
 
       - name: 📣 Notify Slack - Manual Validation
         if: always() && github.event_name == 'workflow_dispatch'
