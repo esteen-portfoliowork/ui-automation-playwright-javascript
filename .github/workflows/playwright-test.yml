@@ -991,7 +991,7 @@ jobs:
           elif [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -gt 0 ]; then
             echo "EXECUTION_HEALTH=🟡 Stable with Flaky Tests" >> $GITHUB_ENV
           else
-            echo "EXECUTION_HEALTH=🔴 Failures Detected" >> $GITHUB_ENV
+            echo "EXECUTION_HEALTH=🔴 Failures Detected - Investigation Required" >> $GITHUB_ENV
           fi
 
       - name: 📋 Generate Execution Summary
@@ -1004,8 +1004,15 @@ jobs:
           else
             echo "## ${{ env.BUILD_EMOJI }} Manual Validation" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "${{ env.BUILD_TEXT }}" >> $GITHUB_STEP_SUMMARY
+
+          echo "## 🚦 Execution Health" >> $GITHUB_STEP_SUMMARY
+          echo "${{ env.EXECUTION_HEALTH }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
 
       - name: 📣 Notify Slack - Manual Validation
         if: always() && github.event_name == 'workflow_dispatch'
