@@ -683,205 +683,205 @@ jobs:
           echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_OUTPUT
           echo "TAGS=$TAGS" >> $GITHUB_OUTPUT
 
-      - name: 📋 Generate Execution Summary
-        if: always()
-        run: |
-          echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
+      # - name: 📋 Generate Execution Summary
+      #   if: always()
+      #   run: |
+      #     echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🏷️ Execution Scope" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 🏷️ Execution Scope" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+      #     echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "$FAILED_TESTS" -eq 0 ]; then
-            echo "## ✅ Build Status: PASSED" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**${PASSED_TESTS}/${TOTAL_TESTS} tests passed**" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "## ❌ Build Status: FAILED" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     if [ "$FAILED_TESTS" -eq 0 ]; then
+      #       echo "## ✅ Build Status: PASSED" >> $GITHUB_STEP_SUMMARY
+      #       echo "" >> $GITHUB_STEP_SUMMARY
+      #       echo "**${PASSED_TESTS}/${TOTAL_TESTS} tests passed**" >> $GITHUB_STEP_SUMMARY
+      #     else
+      #       echo "## ❌ Build Status: FAILED" >> $GITHUB_STEP_SUMMARY
+      #     fi
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "> Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}." >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "> Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}." >> $GITHUB_STEP_SUMMARY
 
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BROWSER="chromium"
-          else
-            BROWSER="${{ github.event.inputs.browser || 'all' }}"
-          fi
+      #     if [ "${{ github.event_name }}" = "pull_request" ]; then
+      #       BROWSER="chromium"
+      #     else
+      #       BROWSER="${{ github.event.inputs.browser || 'all' }}"
+      #     fi
 
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            ENVIRONMENT="N/A"
-          else
-            ENVIRONMENT="${{ github.event.inputs.environment }}"
-          fi
+      #     if [ "${{ github.event_name }}" = "pull_request" ]; then
+      #       ENVIRONMENT="N/A"
+      #     else
+      #       ENVIRONMENT="${{ github.event.inputs.environment }}"
+      #     fi
 
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+      #     if [ "${{ github.event_name }}" = "pull_request" ]; then
 
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "## 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+      #       echo "" >> $GITHUB_STEP_SUMMARY
+      #       echo "## 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
+      #       echo "" >> $GITHUB_STEP_SUMMARY
 
-            echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-            echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Author | ${{ env.PR_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Source Branch | ${{ github.head_ref }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Target Branch | ${{ github.base_ref }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Commit SHA | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
+      #       echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+      #       echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+      #       echo "| PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
+      #       echo "| PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
+      #       echo "| Author | ${{ env.PR_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
+      #       echo "| Source Branch | ${{ github.head_ref }} |" >> $GITHUB_STEP_SUMMARY
+      #       echo "| Target Branch | ${{ github.base_ref }} |" >> $GITHUB_STEP_SUMMARY
+      #       echo "| Commit SHA | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+      #       echo "| PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
 
-          fi
+      #     fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📋 Execution Overview" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 📋 Execution Overview" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
-          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
-          echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+      #     echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📈 Execution Metrics" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 📈 Execution Metrics" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
-          echo "| Retry Count | ${{ github.event.inputs.retries || '0' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Workers | ${{ github.event.inputs.workers || 'default' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Execution Mode | ${{ github.event.inputs.execution_mode || 'headless' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Publish Report | ${{ github.event.inputs.publish_report || 'false' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Node Version | ${{ env.NODE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Runner OS | ${{ env.RUNNER_OS_NAME }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Start Time | ${{ env.START_DATE }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+      #     echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Retry Count | ${{ github.event.inputs.retries || '0' }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Workers | ${{ github.event.inputs.workers || 'default' }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Execution Mode | ${{ github.event.inputs.execution_mode || 'headless' }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Publish Report | ${{ github.event.inputs.publish_report || 'false' }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Node Version | ${{ env.NODE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Runner OS | ${{ env.RUNNER_OS_NAME }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Start Time | ${{ env.START_DATE }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📊 Test Execution Analytics" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 📊 Test Execution Analytics" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "> Automated Playwright execution metrics and test health overview." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "> Automated Playwright execution metrics and test health overview." >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🎯 Key Metrics" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "### 🎯 Key Metrics" >> $GITHUB_STEP_SUMMARY
 
-          echo "#### 📈 Pass Rate" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "${{ env.PASS_RATE }}%" >> $GITHUB_STEP_SUMMARY
+      #     echo "#### 📈 Pass Rate" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "${{ env.PASS_RATE }}%" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|----------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🧪 Total Tests | ${{ env.TOTAL_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ✅ Passed | ${{ env.PASSED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ❌ Failed | ${{ env.FAILED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 📈 Pass Rate | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| 📉 Failure Rate | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔄 Flaky Rate | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🏆 Quality Score | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🌐 Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+      #     echo "|----------|----------|" >> $GITHUB_STEP_SUMMARY
+      #     echo "| 🧪 Total Tests | ${{ env.TOTAL_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| ✅ Passed | ${{ env.PASSED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| ❌ Failed | ${{ env.FAILED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| 📈 Pass Rate | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| 📉 Failure Rate | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| 🔄 Flaky Rate | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| 🏆 Quality Score | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| 🌐 Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🚦 Execution Health" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 🚦 Execution Health" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -eq 0 ]; then
-            echo "🟢 Excellent - All tests passed." >> $GITHUB_STEP_SUMMARY
-          elif [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -gt 0 ]; then
-            echo "🟡 Stable with Flaky Tests Detected." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "🔴 Failures Detected. Investigation Required." >> $GITHUB_STEP_SUMMARY
-          fi
+      #     if [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -eq 0 ]; then
+      #       echo "🟢 Excellent - All tests passed." >> $GITHUB_STEP_SUMMARY
+      #     elif [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -gt 0 ]; then
+      #       echo "🟡 Stable with Flaky Tests Detected." >> $GITHUB_STEP_SUMMARY
+      #     else
+      #       echo "🔴 Failures Detected. Investigation Required." >> $GITHUB_STEP_SUMMARY
+      #     fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🧪 Test Statistics" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 🧪 Test Statistics" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Metric | Count | %" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|----------|----------|" >> $GITHUB_STEP_SUMMARY
-          echo "| ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} | - |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🧪 Total | ${{ env.TOTAL_TESTS }} | 100% |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Metric | Count | %" >> $GITHUB_STEP_SUMMARY
+      #     echo "|----------|----------|----------|" >> $GITHUB_STEP_SUMMARY
+      #     echo "| ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} | - |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| 🧪 Total | ${{ env.TOTAL_TESTS }} | 100% |" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🌐 Application Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 🌐 Application Summary" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          cat application-summary.md >> $GITHUB_STEP_SUMMARY
+      #     cat application-summary.md >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
+      #     cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ -f tag-summary.md ]; then
-            cat tag-summary.md >> $GITHUB_STEP_SUMMARY
-          fi
+      #     if [ -f tag-summary.md ]; then
+      #       cat tag-summary.md >> $GITHUB_STEP_SUMMARY
+      #     fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Report | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Playwright HTML Report | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
-          echo "| Allure Report | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
-          echo "| Allure Results | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
-          echo "| Test Results | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
-          echo "| Failure Screenshots | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 📊 Generated Reports" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Report | Status |" >> $GITHUB_STEP_SUMMARY
+      #     echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Playwright HTML Report | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Allure Report | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Allure Results | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Test Results | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Failure Screenshots | ✅ Generated |" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📦 Available Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 📦 Available Artifacts" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+      #     if [ "${{ github.event_name }}" = "pull_request" ]; then
 
-            echo "- pr-failure-screenshots-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- pr-playwright-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- pr-playwright-json-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- pr-allure-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- pr-allure-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- pr-test-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- pr-failure-screenshots-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- pr-playwright-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- pr-playwright-json-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- pr-allure-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- pr-allure-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- pr-test-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
 
-          else
+      #     else
 
-            echo "- failure-screenshots-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- playwright-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- playwright-json-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- allure-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- allure-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- test-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- failure-screenshots-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- playwright-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- playwright-json-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- allure-report-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- allure-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+      #       echo "- test-results-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
 
-          fi
+      #     fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Playwright Report: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Allure Report: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Allure Results: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "- Playwright Report: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
+      #     echo "- Allure Report: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
+      #     echo "- Allure Results: Workflow Artifacts" >> $GITHUB_STEP_SUMMARY
 
       - name: 📄 Upload Playwright Report
         if: always()
@@ -990,6 +990,17 @@ jobs:
             echo "EXECUTION_HEALTH=🟡 Stable with Flaky Tests" >> $GITHUB_ENV
           else
             echo "EXECUTION_HEALTH=🔴 Failures Detected" >> $GITHUB_ENV
+          fi
+
+      - name: 📋 Generate Execution Summary
+        if: always()
+        run: |
+          echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "## ${{ env.BUILD_EMOJI }} Pull Request Validation" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ${{ env.BUILD_EMOJI }} Manual Validation" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: 📣 Notify Slack - Manual Validation
