@@ -1250,7 +1250,7 @@ jobs:
                   - - type: raw_text
                       text: "🏷️ Label"
                     - type: raw_text
-                      text: "${{ env.LABELS }}"
+                      text: "${{ env.PR_LABELS }}"
                   - - type: raw_text
                       text: "🔖 Commit SHA"
                     - type: raw_text
@@ -1262,7 +1262,7 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
-                  text: "📊 Execution Metrics"
+                  text: "📊 Execution Metrics ${{ env.EXECUTION_DURATION }}"
 
               - type: table
                 column_settings:
@@ -1314,7 +1314,7 @@ jobs:
                   - - type: raw_text
                       text: "⏱️ Duration"
                     - type: raw_text
-                      text: "${{ env.EXECUTION_DURATION }}"
+                      text: "-"
                     - type: raw_text
                       text: "-"
 
