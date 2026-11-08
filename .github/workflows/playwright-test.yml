@@ -239,7 +239,7 @@ jobs:
             .suites[].suites[].specs[]
             | select(.ok == true)
             | select(
-                (.tests[].results[].status // "") != "flaky"
+                any(.tests[].results[]?; .status=="flaky") | not
               )
           ]
           | length
@@ -279,6 +279,15 @@ jobs:
           ]
           | length
           ' playwright-report/results.json)
+
+          SUM=$((PASSED + FAILED + FLAKY + SKIPPED))
+
+          echo "Passed : $PASSED"
+          echo "Failed : $FAILED"
+          echo "Flaky  : $FLAKY"
+          echo "Skipped: $SKIPPED"
+          echo "Total  : $TOTAL"
+          echo "Sum    : $SUM"
 
           if [ "$TOTAL" -gt 0 ]; then
             PASS_RATE=$(awk "BEGIN { printf \"%.2f\", ($PASSED/$TOTAL)*100 }")
