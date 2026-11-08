@@ -878,8 +878,8 @@ jobs:
           echo "| 🎭 Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 📦 Node Version | ${{ env.NODE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 💻 Runner OS | ${{ env.RUNNER_OS_NAME }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ▶️ Start Time | ${{ env.START_DATE }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⏹️ End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ▶️ Start Time | ${{ env.START_TIME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏹️ End Time | ${{ env.END_TIME }} |" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -1170,6 +1170,58 @@ jobs:
                       text: "🌐 Browser"
                     - type: raw_text
                       text: "${{ env.BROWSER }}"
+                  - - type: raw_text
+                      text: "🏷️ Executed Tag"
+                    - type: raw_text
+                      text: "${{ env.EXECUTED_TAG }}"
+                  - - type: raw_text
+                      text: "🌍 Environment"
+                    - type: raw_text
+                      text: "${{ env.ENVIRONMENT }}"
+                  - - type: raw_text
+                      text: "🎭 Playwright Version"
+                    - type: raw_text
+                      text: "${{ env.PLAYWRIGHT_VERSION }}"
+                  - - type: raw_text
+                      text: "📦 Node Version"
+                    - type: raw_text
+                      text: "${{ env.NODE_VERSION }}"
+                  - - type: raw_text
+                      text: "💻 Runner OS"
+                    - type: raw_text
+                      text: "${{ env.RUNNER_OS_NAME }}"
+                  - - type: raw_text
+                      text: "▶️ Start Time"
+                    - type: raw_text
+                      text: "${{ env.START_TIME }}"
+                  - - type: raw_text
+                      text: "⏹️ End Time"
+                    - type: raw_text
+                      text: "${{ env.END_TIME }}"
+
+              - type: header
+                level: 3
+                text:
+                  type: plain_text
+                  text: "📋 Pull Request Details"
+
+              - type: table
+                column_settings:
+                  - is_wrapped: true
+                  - align: center
+                rows:
+                  - - type: raw_text
+                      text: "Item"
+                    - type: raw_text
+                      text: "Value"
+                  - - type: raw_text
+                      text: "🔢 PR Number"
+                    - type: raw_text
+                      text: "#${{ env.PR_NUMBER }}"
+                  - - type: raw_text
+                      text: "📝 PR Title"
+                    - type: raw_text
+                      text: "${{ env.PR_TITLE }}"
 
       # - name: 📣 Notify Slack - PR Validation
       #   if: always() && github.event_name == 'pull_request'
