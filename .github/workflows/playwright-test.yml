@@ -290,7 +290,7 @@ jobs:
           echo "Sum    : $SUM"
 
           if [ "$TOTAL" -gt 0 ]; then
-            PASS_RATE=$(awk "BEGIN { printf \"%.2f\", ($PASSED/$TOTAL)*100 }")
+            PASS_RATE=$(awk "BEGIN { printf \"%.2f\", (($PASSED + $FLAKY)/$TOTAL)*100 }")
             FAILURE_RATE=$(awk "BEGIN { printf \"%.2f\", ($FAILED/$TOTAL)*100 }")
             FLAKY_RATE=$(awk "BEGIN { printf \"%.2f\", ($FLAKY/$TOTAL)*100 }")
             SKIPPED_RATE=$(awk "BEGIN { printf \"%.2f\", ($SKIPPED/$TOTAL)*100 }")
