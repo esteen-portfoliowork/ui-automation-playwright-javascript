@@ -1318,6 +1318,54 @@ jobs:
                     - type: raw_text
                       text: "-"
 
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "🌐 Application Summary"
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "📦 Module Breakdown"
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "🏷️ Tag Execution Summary"
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "❌ Failed Module"
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "❌ Failed Tests"
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "🔗 Report Links"
+
       # - name: 📣 Notify Slack - PR Validation
       #   if: always() && github.event_name == 'pull_request'
       #   uses: slackapi/slack-github-action@v4
