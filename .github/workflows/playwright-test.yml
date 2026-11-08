@@ -912,19 +912,15 @@ jobs:
 
           echo "## 📊 Execution Metrics" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|----------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🧪 Total Tests | ${{ env.TOTAL_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ✅ Passed | ${{ env.PASSED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ❌ Failed | ${{ env.FAILED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 📈 Pass Rate | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| 📉 Failure Rate | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔄 Flaky Rate | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🎲 Skipped Rate | ${{ env.SKIPPED_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🏆 Quality Score | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value | % |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|----------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Total Tests | ${{ env.TOTAL_TESTS }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} | ${{ env.SKIPPED_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🌐 Application Summary" >> $GITHUB_STEP_SUMMARY
 
@@ -1277,50 +1273,50 @@ jobs:
                       text: "Metric"
                     - type: raw_text
                       text: "Value"
+                    - type: raw_text
+                      text: "%"
                   - - type: raw_text
                       text: "🧪 Total Tests"
                     - type: raw_text
                       text: "${{ env.TOTAL_TESTS }}"
+                    - type: raw_text
+                      text: "-"
                   - - type: raw_text
                       text: "✅ Passed"
                     - type: raw_text
                       text: "${{ env.PASSED_TESTS }}"
+                    - type: raw_text
+                      text: "${{ env.PASS_RATE }}%"
                   - - type: raw_text
                       text: "❌ Failed"
                     - type: raw_text
                       text: "${{ env.FAILED_TESTS }}"
+                    - type: raw_text
+                      text: "${{ env.FAILURE_RATE }}%"
                   - - type: raw_text
                       text: "⚠️ Flaky"
                     - type: raw_text
                       text: "${{ env.FLAKY_TESTS }}"
+                    - type: raw_text
+                      text: "${{ env.FLAKY_RATE }}%"
                   - - type: raw_text
                       text: "⏭️ Skipped"
                     - type: raw_text
                       text: "${{ env.SKIPPED_TESTS }}"
-                  - - type: raw_text
-                      text: "📈 Pass Rate"
                     - type: raw_text
-                      text: "${{ env.PASS_RATE }}%"
+                      text: "${{ env.SKIPPED_RATE }}%"
                   - - type: raw_text
-                      text: "📉 Failure Rate"
+                      text: "🏆 Quality Score"
                     - type: raw_text
-                      text: "${{ env.FAILURE_RATE }}%"
-                  - - type: raw_text
-                      text: "🔄 Flaky Rate"
+                      text: "-"
                     - type: raw_text
-                      text: "${{ env.FLAKY_RATE }}%"
-                  - - type: raw_text
-                      text: "🎲 Skipped Rate"
-                    - type: raw_text
-                      text: "${{ env.SKIPPED_RATE }}%S"
+                      text: "${{ env.QUALITY_SCORE }}"
                   - - type: raw_text
                       text: "⏱️ Duration"
                     - type: raw_text
                       text: "${{ env.EXECUTION_DURATION }}"
-                  - - type: raw_text
-                      text: "🏆 Quality Score"
                     - type: raw_text
-                      text: "${{ env.QUALITY_SCORE }}"
+                      text: "-"
 
       # - name: 📣 Notify Slack - PR Validation
       #   if: always() && github.event_name == 'pull_request'
