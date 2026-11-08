@@ -1024,25 +1024,25 @@ jobs:
 
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Browser | ${{ env.BROWSER }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🌐 Browser | ${{ env.BROWSER }} |" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "| Test Folder | ${{ github.event.inputs.folder }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Test Tag Filter | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 📁 Test Folder | ${{ github.event.inputs.folder }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🏷️ Test Tag Filter | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
           else
-            echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🏷️ Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "| Environment | ${{ env.ENVIRONMENT }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🌍 Environment | ${{ env.ENVIRONMENT }} |" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "| Execution Mode | ${{ github.event.inputs.execution_mode }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Retry Count | ${{ github.event.inputs.retries }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Parallel Workers | ${{ github.event.inputs.workers }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Publish Report | ${{ github.event.inputs.publish_report }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🖥️ Execution Mode | ${{ github.event.inputs.execution_mode }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔄 Retry Count | ${{ github.event.inputs.retries }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⚡ Parallel Workers | ${{ github.event.inputs.workers }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 📢 Publish Report | ${{ github.event.inputs.publish_report }} |" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "| Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Node Version | ${{ env.NODE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Runner OS | ${{ env.RUNNER_OS_NAME }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Start Time | ${{ env.START_DATE }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🎭 Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Node Version | ${{ env.NODE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 💻 Runner OS | ${{ env.RUNNER_OS_NAME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ▶️ Start Time | ${{ env.START_DATE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏹️ End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -1050,14 +1050,14 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
             echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Author | ${{ env.PR_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Source Branch | ${{ github.head_ref }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Target Branch | ${{ github.base_ref }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Label | ${{ env.PR_LABELS }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Commit SHA | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔢 PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 📝 PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔗 PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 👤 Author | ${{ env.PR_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🌿 Source Branch | ${{ github.head_ref }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🎯 Target Branch | ${{ github.base_ref }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🏷️ Label | ${{ env.PR_LABELS }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔖 Commit SHA | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "## 📊 Execution Metrics" >> $GITHUB_STEP_SUMMARY
@@ -1071,8 +1071,8 @@ jobs:
           echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 📈 Pass Rate | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| 📉 Failure Rate | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🎲 Flaky Rate | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔄 Skipped Rate | ${{ env.SKIPPED_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔄 Flaky Rate | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🎲 Skipped Rate | ${{ env.SKIPPED_RATE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 🏆 Quality Score | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
 
