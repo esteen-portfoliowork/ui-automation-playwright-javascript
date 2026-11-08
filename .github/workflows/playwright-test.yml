@@ -1113,6 +1113,7 @@ jobs:
 
             blocks:
               - type: header
+                level: 1
                 text:
                   type: plain_text
                   text: "🎭 Playwright Execution Summary"
@@ -1120,6 +1121,7 @@ jobs:
               - type: divider
 
               - type: header
+                level: 2
                 text:
                   type: plain_text
                   text: "${{ env.BUILD_EMOJI }} Pull Request Validation"
@@ -1132,6 +1134,7 @@ jobs:
               - type: divider
 
               - type: header
+                level: 2
                 text:
                   type: plain_text
                   text: "🚦 Execution Health"
@@ -1145,6 +1148,28 @@ jobs:
                 text:
                   type: plain_text
                   text: "Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}."
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "📋 Execution Overview"
+
+              - type: table
+                column_settings:
+                  - is_wrapped: true
+                  - align: center
+                rows:
+                  - - type: raw_text
+                      text: "Item"
+                    - type: raw_text
+                      text: "Value"
+                  - - type: raw_text
+                      text: "🌐 Browser"
+                    - type: raw_text
+                      text: "${{ env.BROWSER }}"
 
       # - name: 📣 Notify Slack - PR Validation
       #   if: always() && github.event_name == 'pull_request'
