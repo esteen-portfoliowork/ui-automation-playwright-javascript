@@ -135,15 +135,21 @@ jobs:
           echo "⚡ Workers            : ${{ inputs.workers }}"
           echo "📢 Publish Report     : ${{ inputs.publish_report }}"
 
-      - name: 🏷️ Capture Executed Tag
+      - name: 🎛️ Generate Variables
         if: always()
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "EXECUTED_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+            echo "BROWSER=${{ github.event.inputs.browser || 'all' }}" >> $GITHUB_ENV
+            echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "EXECUTED_TAG=PR Validation (All Tests)" >> $GITHUB_ENV
+            echo "BROWSER=chromium" >> $GITHUB_ENV
+            echo "ENVIRONMENT=N/A" >> $GITHUB_ENV
           else
             echo "EXECUTED_TAG=Push Validation (All Tests)" >> $GITHUB_ENV
+            echo "BROWSER=chromium" >> $GITHUB_ENV
+            echo "ENVIRONMENT=N/A" >> $GITHUB_ENV
           fi
 
       - name: 💻 Get Runner OS
@@ -1009,32 +1015,23 @@ jobs:
 
           echo "## 🚦 Execution Health" >> $GITHUB_STEP_SUMMARY
           echo "${{ env.EXECUTION_HEALTH }}" >> $GITHUB_STEP_SUMMARY
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BROWSER="chromium"
-          else
-            BROWSER="${{ github.event.inputs.browser || 'all' }}"
-          fi
-
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            ENVIRONMENT="N/A"
-          else
-            ENVIRONMENT="${{ github.event.inputs.environment }}"
-          fi
 
           echo "## 📋 Execution Overview" >> $GITHUB_STEP_SUMMARY
 
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | ${{ env.BROWSER }} |" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "| Test Folder | ${{ github.event.inputs.folder }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Test Tag Filter | ${{ github.event.inputs.tag }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Test Tag Filter | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ env.ENVIRONMENT }} |" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "| Execution Mode | ${{ github.event.inputs.execution_mode }} |" >> $GITHUB_STEP_SUMMARY
             echo "| Retry Count | ${{ github.event.inputs.retries }} |" >> $GITHUB_STEP_SUMMARY
@@ -1063,16 +1060,33 @@ jobs:
             echo "| Commit SHA | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📋 Execution Overview" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Execution Metrics" >> $GITHUB_STEP_SUMMARY
 
-          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
-          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
-          echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Total Tests | ${{ env.TOTAL_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | ${{ env.PASSED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | ${{ env.FAILED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚠️ Flaky | ${{ env.FLAKY_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📈 Pass Rate | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📉 Failure Rate | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🎲 Flaky Rate | ${{ env.FLAKY_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔄 Skipped Rate | ${{ env.SKIPPED_RATE }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏆 Quality Score | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
+
+          echo "## 🌐 Application Summary" >> $GITHUB_STEP_SUMMARY
+
+          echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
+
+          echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
+
+          echo "## ❌ Failed Module" >> $GITHUB_STEP_SUMMARY
+
+          echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
+
+          echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
 
 
       - name: 📣 Notify Slack - Manual Validation
