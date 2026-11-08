@@ -1017,7 +1017,7 @@ jobs:
                   - - type: raw_text
                       text: "🖥️ Execution Mode"
                     - type: raw_text
-                      text: "${{ egithub.event.inputs.execution_mode }}"
+                      text: "${{ github.event.inputs.execution_mode }}"
                   - - type: raw_text
                       text: "🔄 Retry Count"
                     - type: raw_text
