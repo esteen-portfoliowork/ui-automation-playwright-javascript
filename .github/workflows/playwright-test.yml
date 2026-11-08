@@ -1124,6 +1124,28 @@ jobs:
                   type: plain_text
                   text: "${{ env.BUILD_EMOJI }} Pull Request Validation"
 
+              - type: section
+                text:
+                  type: plain_text
+                  text: "${{ env.BUILD_TEXT }}"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
+                  text: "🚦 Execution Health"
+
+              - type: section
+                text:
+                  type: plain_text
+                  text: "${{ env.EXECUTION_HEALTH }}"
+
+              - type: section
+                text:
+                  type: plain_text
+                  text: "Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}."
+
       # - name: 📣 Notify Slack - PR Validation
       #   if: always() && github.event_name == 'pull_request'
       #   uses: slackapi/slack-github-action@v4
