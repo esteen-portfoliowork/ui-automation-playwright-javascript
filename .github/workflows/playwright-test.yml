@@ -340,6 +340,17 @@ jobs:
         #     | {file,title,status}
         #   ' playwright-report/results.json | head -100
 
+      - name: 🔍 Debug Spec Summary
+        if: always()
+        run: |
+          jq '
+          .suites[].suites[].specs[]
+          | {
+              title,
+              ok
+            }
+          ' playwright-report/results.json
+
       - name: 📋 Collect PR Details
         if: github.event_name == 'pull_request'
         run: |
@@ -878,8 +889,8 @@ jobs:
           echo "| 🎭 Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 📦 Node Version | ${{ env.NODE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 💻 Runner OS | ${{ env.RUNNER_OS_NAME }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ▶️ Start Time | ${{ env.START_TIME }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⏹️ End Time | ${{ env.END_TIME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ▶️ Start Time | ${{ env.START_DATE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏹️ End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -1193,11 +1204,11 @@ jobs:
                   - - type: raw_text
                       text: "▶️ Start Time"
                     - type: raw_text
-                      text: "${{ env.START_TIME }}"
+                      text: "${{ env.START_DATE }}"
                   - - type: raw_text
                       text: "⏹️ End Time"
                     - type: raw_text
-                      text: "${{ env.END_TIME }}"
+                      text: "${{ env.END_DATE }}"
 
               - type: header
                 level: 3
