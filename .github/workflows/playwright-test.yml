@@ -1115,182 +1115,204 @@ jobs:
               - type: header
                 text:
                   type: plain_text
+                  text: "🎭 Playwright Execution Summary"
+
+              - type: divider
+
+              - type: header
+                text:
+                  type: plain_text
                   text: "${{ env.BUILD_EMOJI }} Pull Request Validation"
 
-              - type: divider
+      # - name: 📣 Notify Slack - PR Validation
+      #   if: always() && github.event_name == 'pull_request'
+      #   uses: slackapi/slack-github-action@v4
+      #   with:
+      #     method: chat.postMessage
+      #     token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
+      #     payload: |
+      #       channel: "C0CDR49PPSL"
 
-              - type: header
-                text:
-                  type: plain_text
-                  text: "📋 Pull Request Details"
+      #       blocks:
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "${{ env.BUILD_EMOJI }} Pull Request Validation"
 
-              - type: section
-                fields:
-                  - type: mrkdwn
-                    text: "*🔢 PR Number*\n#${{ env.PR_NUMBER }}"
+      #         - type: divider
 
-                  - type: mrkdwn
-                    text: "*👤 Author*\n${{ env.PR_AUTHOR }}"
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "📋 Pull Request Details"
 
-                  - type: mrkdwn
-                    text: "*📝 Title*\n${{ env.PR_TITLE }}"
+      #         - type: section
+      #           fields:
+      #             - type: mrkdwn
+      #               text: "*🔢 PR Number*\n#${{ env.PR_NUMBER }}"
 
-                  - type: mrkdwn
-                    text: "*⏱️ Duration*\n${{ env.EXECUTION_DURATION }}"
+      #             - type: mrkdwn
+      #               text: "*👤 Author*\n${{ env.PR_AUTHOR }}"
 
-                  - type: mrkdwn
-                    text: "*🔗 PR URL*\n${{ env.PR_URL }}"
+      #             - type: mrkdwn
+      #               text: "*📝 Title*\n${{ env.PR_TITLE }}"
 
-                  - type: mrkdwn
-                    text: "*🏷️ Label*\n${{ env.PR_LABELS }}"
+      #             - type: mrkdwn
+      #               text: "*⏱️ Duration*\n${{ env.EXECUTION_DURATION }}"
 
-                  - type: mrkdwn
-                    text: "*🌿 Source Branch*\n${{ env.PR_BRANCH }}"
+      #             - type: mrkdwn
+      #               text: "*🔗 PR URL*\n${{ env.PR_URL }}"
 
-                  - type: mrkdwn
-                    text: "*🎯 Target Branch*\n${{ env.PR_BASE_BRANCH }}"
+      #             - type: mrkdwn
+      #               text: "*🏷️ Label*\n${{ env.PR_LABELS }}"
 
-              - type: divider
+      #             - type: mrkdwn
+      #               text: "*🌿 Source Branch*\n${{ env.PR_BRANCH }}"
 
-              - type: header
-                text:
-                  type: plain_text
-                  text: "📋 Execution Overview"
+      #             - type: mrkdwn
+      #               text: "*🎯 Target Branch*\n${{ env.PR_BASE_BRANCH }}"
 
-              - type: section
-                fields:
-                  - type: mrkdwn
-                    text: "*🔖 Environment:*\n${{ github.event.inputs.environment }}"
+      #         - type: divider
 
-                  - type: mrkdwn
-                    text: "*🌐 Browser:*\n${{ github.event.inputs.browser }}"
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "📋 Execution Overview"
 
-                  - type: mrkdwn
-                    text: "*🏷️ Executed Tag:*\n${{ env.EXECUTED_TAG }}"
+      #         - type: section
+      #           fields:
+      #             - type: mrkdwn
+      #               text: "*🔖 Environment:*\n${{ github.event.inputs.environment }}"
 
-              - type: divider
+      #             - type: mrkdwn
+      #               text: "*🌐 Browser:*\n${{ github.event.inputs.browser }}"
 
-              - type: header
-                text:
-                  type: plain_text
-                  text: "📊 Execution Statistics"
+      #             - type: mrkdwn
+      #               text: "*🏷️ Executed Tag:*\n${{ env.EXECUTED_TAG }}"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
+      #         - type: divider
 
-              - type: section
-                fields:
-                  - type: mrkdwn
-                    text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "📊 Execution Statistics"
 
-                  - type: mrkdwn
-                    text: "*❌ Failed*\n${{ env.FAILED_TESTS }}"
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*🚦 Health*\n${{ env.EXECUTION_HEALTH }}"
 
-                  - type: mrkdwn
-                    text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
+      #         - type: section
+      #           fields:
+      #             - type: mrkdwn
+      #               text: "*✅ Passed*\n${{ env.PASSED_TESTS }}"
+
+      #             - type: mrkdwn
+      #               text: "*❌ Failed*\n${{ env.FAILED_TESTS }}"
+
+      #             - type: mrkdwn
+      #               text: "*⏭️ Skipped*\n${{ env.SKIPPED_TESTS }}"
                   
-                  - type: mrkdwn
-                    text: "*⚠️ Flaky*\n${{ env.FLAKY_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*⚠️ Flaky*\n${{ env.FLAKY_TESTS }}"
 
-                  - type: mrkdwn
-                    text: "*🧪 Total Tests*\n${{ env.TOTAL_TESTS }}"
+      #             - type: mrkdwn
+      #               text: "*🧪 Total Tests*\n${{ env.TOTAL_TESTS }}"
 
-              - type: divider
+      #         - type: divider
 
-              - type: header
-                text:
-                  type: plain_text
-                  text: "🎯 Key Metrics"
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "🎯 Key Metrics"
 
-              - type: section
-                fields:
+      #         - type: section
+      #           fields:
 
-                  - type: mrkdwn
-                    text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
+      #             - type: mrkdwn
+      #               text: "*📈 Pass Rate*\n${{ env.PASS_RATE }}%"
 
-                  - type: mrkdwn
-                    text: "*📉 Failure Rate*\n${{ env.FAILURE_RATE }}%"
+      #             - type: mrkdwn
+      #               text: "*📉 Failure Rate*\n${{ env.FAILURE_RATE }}%"
 
-                  - type: mrkdwn
-                    text: "*🔄 Skipped Rate*\n${{ env.SKIPPED_RATE }}%"
+      #             - type: mrkdwn
+      #               text: "*🔄 Skipped Rate*\n${{ env.SKIPPED_RATE }}%"
 
-                  - type: mrkdwn
-                    text: "*🎲 Flaky Rate*\n${{ env.FLAKY_RATE }}%"
+      #             - type: mrkdwn
+      #               text: "*🎲 Flaky Rate*\n${{ env.FLAKY_RATE }}%"
 
-                  - type: mrkdwn
-                    text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
+      #             - type: mrkdwn
+      #               text: "*🏆 Quality Score*\n${{ env.QUALITY_SCORE }}%"
 
-              - type: divider
+      #         - type: divider
 
-              - type: header
-                text:
-                  type: plain_text
-                  text: "🌐 Application Summary"
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "🌐 Application Summary"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "${{ steps.slack_data.outputs.APPLICATION }}"
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "${{ steps.slack_data.outputs.APPLICATION }}"
 
-              - type: divider
+      #         - type: divider
 
-              - type: header
-                text:
-                  type: plain_text
-                  text: "📦 Module Breakdown"
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "📦 Module Breakdown"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "${{ steps.slack_data.outputs.MODULES }}"
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "${{ steps.slack_data.outputs.MODULES }}"
 
-              - type: divider
+      #         - type: divider
 
-              - type: header
-                text:
-                  type: plain_text
-                  text: "❌ Failed Modules"
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "❌ Failed Modules"
 
-              - type: section
-                fields:
-                  - type: mrkdwn
-                    text: "*Failed Modules*\n${{ steps.slack_data.outputs.FAILED_MODULES }}"
+      #         - type: section
+      #           fields:
+      #             - type: mrkdwn
+      #               text: "*Failed Modules*\n${{ steps.slack_data.outputs.FAILED_MODULES }}"
 
-                  - type: mrkdwn
-                    text: "*Module Count*\n${{ steps.slack_data.outputs.FAILED_MODULE_COUNT }}"
+      #             - type: mrkdwn
+      #               text: "*Module Count*\n${{ steps.slack_data.outputs.FAILED_MODULE_COUNT }}"
 
-              - type: divider
+      #         - type: divider
 
-              - type: header
-                text:
-                  type: plain_text
-                  text: "*🏷️ Tag Summary*"
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "*🏷️ Tag Summary*"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "${{ steps.slack_data.outputs.TAGS }}"
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "${{ steps.slack_data.outputs.TAGS }}"
 
-              - type: divider
+      #         - type: divider
 
-              - type: header
-                text:
-                  type: plain_text
-                  text: "❌ Failed Tests"
+      #         - type: header
+      #           text:
+      #             type: plain_text
+      #             text: "❌ Failed Tests"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "*Failed Count:* ${{ steps.slack_data.outputs.FAILED_COUNT }}\n${{ steps.slack_data.outputs.FAILED_TESTS }}"
+      #         - type: section
+      #           text:
+      #             type: mrkdwn
+      #             text: "*Failed Count:* ${{ steps.slack_data.outputs.FAILED_COUNT }}\n${{ steps.slack_data.outputs.FAILED_TESTS }}"
 
-              - type: divider
+      #         - type: divider
 
-              - type: context
-                elements:
-                  - type: mrkdwn
-                    text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
+      #         - type: context
+      #           elements:
+      #             - type: mrkdwn
+      #               text: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|🔗 Open Workflow>"
 
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
