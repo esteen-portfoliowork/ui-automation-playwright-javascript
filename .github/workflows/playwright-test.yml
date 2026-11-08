@@ -1262,7 +1262,7 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
-                  text: "📊 Execution Metrics ${{ env.EXECUTION_DURATION }}"
+                  text: "📊 Execution Metrics"
 
               - type: table
                 column_settings:
@@ -1314,7 +1314,7 @@ jobs:
                   - - type: raw_text
                       text: "⏱️ Duration"
                     - type: raw_text
-                      text: "-"
+                      text: "${{ env.EXECUTION_DURATION }}"
                     - type: raw_text
                       text: "-"
 
