@@ -1012,7 +1012,68 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BROWSER="chromium"
+          else
+            BROWSER="${{ github.event.inputs.browser || 'all' }}"
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            ENVIRONMENT="N/A"
+          else
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+          fi
+
+          echo "## 📋 Execution Overview" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "| Test Folder | ${{ github.event.inputs.folder }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Test Tag Filter | ${{ github.event.inputs.tag }} |" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "| Execution Mode | ${{ github.event.inputs.execution_mode }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Retry Count | ${{ github.event.inputs.retries }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Parallel Workers | ${{ github.event.inputs.workers }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Publish Report | ${{ github.event.inputs.publish_report }} |" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "| Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node Version | ${{ env.NODE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runner OS | ${{ env.RUNNER_OS_NAME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Start Time | ${{ env.START_DATE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| End Time | ${{ env.END_DATE }} |" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Author | ${{ env.PR_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Source Branch | ${{ github.head_ref }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Target Branch | ${{ github.base_ref }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Label | ${{ env.PR_LABELS }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Commit SHA | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Execution Overview" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | $ENVIRONMENT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | $BROWSER |" >> $GITHUB_STEP_SUMMARY
+          echo "| Executed Tag | ${{ env.EXECUTED_TAG }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+
 
       - name: 📣 Notify Slack - Manual Validation
         if: always() && github.event_name == 'workflow_dispatch'
