@@ -1435,6 +1435,48 @@ jobs:
           | Item | Value |
           |------|-------|
           | 🌐 Browser | ${{ env.BROWSER }} |
+          | 🏷️ Executed Tag | ${{ env.EXECUTED_TAG }} |
+          | 🌍 Environment | ${{ env.ENVIRONMENT }} |
+          | 🎭 Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |
+          | 📦 Node Version | ${{ env.NODE_VERSION }} |
+          | 💻 Runner OS | ${{ env.RUNNER_OS_NAME }} |
+          | ▶️ Start Time | ${{ env.START_DATE }} |
+          | ⏹️ End Time | ${{ env.END_DATE }} |
+
+          ### 📋 Pull Request Details
+          | Item | Value |
+          |--------|--------|
+          | 🔢 PR Number | #${{ env.PR_NUMBER }} |
+          | 📝 PR Title | ${{ env.PR_TITLE }} |
+          | 🔗 PR URL | ${{ env.PR_URL }} |
+          | 👤 Author | ${{ env.PR_AUTHOR }} |
+          | 🌿 Source Branch | ${{ env.PR_BRANCH }} |
+          | 🎯 Target Branch | ${{ env.PR_BASE_BRANCH }} |
+          | 🏷️ Label | ${{ env.PR_LABELS }} |
+          | 🔖 Commit SHA | ${{ env.PR_SHA }} |
+
+          ## 📊 Execution Metrics
+          | Metric | Value | % |
+          |----------|----------|----------|
+          | 🧪 Total Tests | ${{ env.TOTAL_TESTS }} | - |
+          | ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |
+          | ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |
+          | ⚠️ Flaky | ${{ env.FLAKY_TESTS }} | ${{ env.FLAKY_RATE }}% |
+          | ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} | ${{ env.SKIPPED_RATE }}% |
+          | 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |
+          | ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |
+
+          ## 🌐 Application Summary
+
+          ## 📦 Module Breakdown
+
+          ## 🏷️ Tag Execution Summary
+
+          ## ❌ Failed Module
+
+          ## ❌ Failed Tests
+
+          ## 🔗 Report Links
 
           EOF
 
