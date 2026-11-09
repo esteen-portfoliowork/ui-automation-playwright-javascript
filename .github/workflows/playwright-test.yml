@@ -1105,7 +1105,7 @@ jobs:
                     - type: raw_text
                       text: "-"
                     - type: raw_text
-                      text: "${{ env.QUALITY_SCORE }}"
+                      text: "${{ env.QUALITY_SCORE }}%"
                   - - type: raw_text
                       text: "⏱️ Duration"
                     - type: raw_text
@@ -1419,109 +1419,128 @@ jobs:
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            STATUS="✅ Success"
-          else
-            STATUS="❌ Failure"
-          fi
+          # 🎭 Playwright Execution Summary
 
-          if [ "${{ job.status }}" = "success" ]; then
-            TITLE="✅ Playwright Validation Passed"
-          else
-            TITLE="❌ Playwright Validation Failed"
-          fi
+          ## ${{ env.BUILD_EMOJI }} Pull Request Validation
+          ${{ env.BUILD_TEXT }}
 
-          if [ "${{ steps.slack_data.outputs.FAILED_MODULE_COUNT }}" = "0" ]; then
+          ## 🚦 Execution Health
+          ${{ env.EXECUTION_HEALTH }}
+          Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}.
 
-            FAILED_MODULE_SECTION="✅ No failed modules."
-
-          else
-
-            FAILED_MODULE_SECTION="
-          ## ❌ Failed Modules
-
-          ${{ steps.slack_data.outputs.FAILED_MODULES }}
-          "
-
-          fi
-
-          if [ "${{ env.FAILED_TESTS }}" = "0" ]; then
-
-            FAILURE_SECTION="✅ No failed tests detected."
-
-          else
-
-            FAILURE_SECTION="
-          ## ❌ Failed Tests
-
-          ${{ steps.slack_data.outputs.FAILED_TESTS }}
-          "
-
-          fi
-
-          cat <<EOF > pr-comment.md
-          <!-- playwright-validation-report -->
-
-          # $TITLE
-
-          ## 📋 Pull Request Details
-
+          ## 📋 Execution Overview
           | Item | Value |
-          |--------|--------|
-          | PR Number | #${{ env.PR_NUMBER }} |
-          | PR Title | ${{ env.PR_TITLE }} |
-          | Link | ${{ env.PR_URL }} |
-          | Author | ${{ env.PR_AUTHOR }} |
-          | Source Branch | ${{ github.head_ref }} |
-          | Target Branch | ${{ github.base_ref }} |
-          | Label | ${{ env.PR_LABELS }} |
-          | Status | $STATUS |
+          |------|-------|
+          | 🌐 Browser | ${{ env.BROWSER }} |
 
-          ## 🚦 Validation Status
 
-          | Status | Result |
-          |----------|----------|
-          | Build Status | ${{ env.BUILD_EMOJI }} |
-          | Health | ${{ env.EXECUTION_HEALTH }} |
-          | Duration | ${{ env.EXECUTION_DURATION }} |
 
-          ## 📊 Execution Metrics
+      # - name: 📝 Generate PR Comment
+      #   if: always() && github.event_name == 'pull_request'
+      #   run: |
+      #     if [ "${{ job.status }}" = "success" ]; then
+      #       STATUS="✅ Success"
+      #     else
+      #       STATUS="❌ Failure"
+      #     fi
 
-          | Metric | Value |
-          |--------|--------|
-          | Browser | Chromium |
-          | Executed Tag | ${{ env.EXECUTED_TAG }} |
-          | Duration | ${{ env.EXECUTION_DURATION }} |
-          | Node Version | ${{ env.NODE_VERSION }} |
-          | Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |
+      #     if [ "${{ job.status }}" = "success" ]; then
+      #       TITLE="✅ Playwright Validation Passed"
+      #     else
+      #       TITLE="❌ Playwright Validation Failed"
+      #     fi
 
-          ## 🧪 Test Results
+      #     if [ "${{ steps.slack_data.outputs.FAILED_MODULE_COUNT }}" = "0" ]; then
 
-          | Metric | Count |
-          |--------|--------|
-          | Passed | ${{ env.PASSED_TESTS }} |
-          | Failed | ${{ env.FAILED_TESTS }} |
-          | Skipped | ${{ env.SKIPPED_TESTS }} |
-          | Flaky | ${{ env.FLAKY_TESTS }} |
-          | Total | ${{ env.TOTAL_TESTS }} |
+      #       FAILED_MODULE_SECTION="✅ No failed modules."
 
-          ## ❌ Failed Modules
+      #     else
 
-          ${{ steps.slack_data.outputs.FAILED_MODULES }}
+      #       FAILED_MODULE_SECTION="
+      #     ## ❌ Failed Modules
 
-          ## ❌ Failed Tests
+      #     ${{ steps.slack_data.outputs.FAILED_MODULES }}
+      #     "
 
-          ${{ steps.slack_data.outputs.FAILED_TESTS }}
+      #     fi
 
-          ## 🔗 Reports
+      #     if [ "${{ env.FAILED_TESTS }}" = "0" ]; then
 
-          - Playwright HTML Report
-          - Allure Report
+      #       FAILURE_SECTION="✅ No failed tests detected."
 
-          🔗 Workflow:
-          [Open Workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+      #     else
 
-          EOF
+      #       FAILURE_SECTION="
+      #     ## ❌ Failed Tests
+
+      #     ${{ steps.slack_data.outputs.FAILED_TESTS }}
+      #     "
+
+      #     fi
+
+      #     cat <<EOF > pr-comment.md
+      #     <!-- playwright-validation-report -->
+
+      #     # $TITLE
+
+      #     ## 📋 Pull Request Details
+
+      #     | Item | Value |
+      #     |--------|--------|
+      #     | PR Number | #${{ env.PR_NUMBER }} |
+      #     | PR Title | ${{ env.PR_TITLE }} |
+      #     | Link | ${{ env.PR_URL }} |
+      #     | Author | ${{ env.PR_AUTHOR }} |
+      #     | Source Branch | ${{ github.head_ref }} |
+      #     | Target Branch | ${{ github.base_ref }} |
+      #     | Label | ${{ env.PR_LABELS }} |
+      #     | Status | $STATUS |
+
+      #     ## 🚦 Validation Status
+
+      #     | Status | Result |
+      #     |----------|----------|
+      #     | Build Status | ${{ env.BUILD_EMOJI }} |
+      #     | Health | ${{ env.EXECUTION_HEALTH }} |
+      #     | Duration | ${{ env.EXECUTION_DURATION }} |
+
+      #     ## 📊 Execution Metrics
+
+      #     | Metric | Value |
+      #     |--------|--------|
+      #     | Browser | Chromium |
+      #     | Executed Tag | ${{ env.EXECUTED_TAG }} |
+      #     | Duration | ${{ env.EXECUTION_DURATION }} |
+      #     | Node Version | ${{ env.NODE_VERSION }} |
+      #     | Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |
+
+      #     ## 🧪 Test Results
+
+      #     | Metric | Count |
+      #     |--------|--------|
+      #     | Passed | ${{ env.PASSED_TESTS }} |
+      #     | Failed | ${{ env.FAILED_TESTS }} |
+      #     | Skipped | ${{ env.SKIPPED_TESTS }} |
+      #     | Flaky | ${{ env.FLAKY_TESTS }} |
+      #     | Total | ${{ env.TOTAL_TESTS }} |
+
+      #     ## ❌ Failed Modules
+
+      #     ${{ steps.slack_data.outputs.FAILED_MODULES }}
+
+      #     ## ❌ Failed Tests
+
+      #     ${{ steps.slack_data.outputs.FAILED_TESTS }}
+
+      #     ## 🔗 Reports
+
+      #     - Playwright HTML Report
+      #     - Allure Report
+
+      #     🔗 Workflow:
+      #     [Open Workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+      #     EOF
 
       - name: 💬 Create or Update PR Comment
         if: always() && github.event_name == 'pull_request'
