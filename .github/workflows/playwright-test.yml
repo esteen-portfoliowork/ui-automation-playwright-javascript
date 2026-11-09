@@ -1105,7 +1105,7 @@ jobs:
                     - type: raw_text
                       text: "-"
                     - type: raw_text
-                      text: "${{ env.QUALITY_SCORE }}"
+                      text: "${{ env.QUALITY_SCORE }}%"
                   - - type: raw_text
                       text: "⏱️ Duration"
                     - type: raw_text
@@ -1419,107 +1419,64 @@ jobs:
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            STATUS="✅ Success"
-          else
-            STATUS="❌ Failure"
-          fi
-
-          if [ "${{ job.status }}" = "success" ]; then
-            TITLE="✅ Playwright Validation Passed"
-          else
-            TITLE="❌ Playwright Validation Failed"
-          fi
-
-          if [ "${{ steps.slack_data.outputs.FAILED_MODULE_COUNT }}" = "0" ]; then
-
-            FAILED_MODULE_SECTION="✅ No failed modules."
-
-          else
-
-            FAILED_MODULE_SECTION="
-          ## ❌ Failed Modules
-
-          ${{ steps.slack_data.outputs.FAILED_MODULES }}
-          "
-
-          fi
-
-          if [ "${{ env.FAILED_TESTS }}" = "0" ]; then
-
-            FAILURE_SECTION="✅ No failed tests detected."
-
-          else
-
-            FAILURE_SECTION="
-          ## ❌ Failed Tests
-
-          ${{ steps.slack_data.outputs.FAILED_TESTS }}
-          "
-
-          fi
-
           cat <<EOF > pr-comment.md
           <!-- playwright-validation-report -->
 
-          # $TITLE
+          # 🎭 Playwright Execution Summary
 
-          ## 📋 Pull Request Details
+          ## ${{ env.BUILD_EMOJI }} Pull Request Validation
+          ${{ env.BUILD_TEXT }}
 
+          ## 🚦 Execution Health
+          ${{ env.EXECUTION_HEALTH }}
+          Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}.
+
+          ## 📋 Execution Overview
+          | Item | Value |
+          |------|-------|
+          | 🌐 Browser | ${{ env.BROWSER }} |
+          | 🏷️ Executed Tag | ${{ env.EXECUTED_TAG }} |
+          | 🌍 Environment | ${{ env.ENVIRONMENT }} |
+          | 🎭 Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |
+          | 📦 Node Version | ${{ env.NODE_VERSION }} |
+          | 💻 Runner OS | ${{ env.RUNNER_OS_NAME }} |
+          | ▶️ Start Time | ${{ env.START_DATE }} |
+          | ⏹️ End Time | ${{ env.END_DATE }} |
+
+          ### 📋 Pull Request Details
           | Item | Value |
           |--------|--------|
-          | PR Number | #${{ env.PR_NUMBER }} |
-          | PR Title | ${{ env.PR_TITLE }} |
-          | Link | ${{ env.PR_URL }} |
-          | Author | ${{ env.PR_AUTHOR }} |
-          | Source Branch | ${{ github.head_ref }} |
-          | Target Branch | ${{ github.base_ref }} |
-          | Label | ${{ env.PR_LABELS }} |
-          | Status | $STATUS |
-
-          ## 🚦 Validation Status
-
-          | Status | Result |
-          |----------|----------|
-          | Build Status | ${{ env.BUILD_EMOJI }} |
-          | Health | ${{ env.EXECUTION_HEALTH }} |
-          | Duration | ${{ env.EXECUTION_DURATION }} |
+          | 🔢 PR Number | #${{ env.PR_NUMBER }} |
+          | 📝 PR Title | ${{ env.PR_TITLE }} |
+          | 🔗 PR URL | ${{ env.PR_URL }} |
+          | 👤 Author | ${{ env.PR_AUTHOR }} |
+          | 🌿 Source Branch | ${{ env.PR_BRANCH }} |
+          | 🎯 Target Branch | ${{ env.PR_BASE_BRANCH }} |
+          | 🏷️ Label | ${{ env.PR_LABELS }} |
+          | 🔖 Commit SHA | ${{ env.PR_SHA }} |
 
           ## 📊 Execution Metrics
+          | Metric | Value | % |
+          |----------|----------|----------|
+          | 🧪 Total Tests | ${{ env.TOTAL_TESTS }} | - |
+          | ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |
+          | ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |
+          | ⚠️ Flaky | ${{ env.FLAKY_TESTS }} | ${{ env.FLAKY_RATE }}% |
+          | ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} | ${{ env.SKIPPED_RATE }}% |
+          | 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |
+          | ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |
 
-          | Metric | Value |
-          |--------|--------|
-          | Browser | Chromium |
-          | Executed Tag | ${{ env.EXECUTED_TAG }} |
-          | Duration | ${{ env.EXECUTION_DURATION }} |
-          | Node Version | ${{ env.NODE_VERSION }} |
-          | Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |
+          ## 🌐 Application Summary
 
-          ## 🧪 Test Results
+          ## 📦 Module Breakdown
 
-          | Metric | Count |
-          |--------|--------|
-          | Passed | ${{ env.PASSED_TESTS }} |
-          | Failed | ${{ env.FAILED_TESTS }} |
-          | Skipped | ${{ env.SKIPPED_TESTS }} |
-          | Flaky | ${{ env.FLAKY_TESTS }} |
-          | Total | ${{ env.TOTAL_TESTS }} |
+          ## 🏷️ Tag Execution Summary
 
-          ## ❌ Failed Modules
-
-          ${{ steps.slack_data.outputs.FAILED_MODULES }}
+          ## ❌ Failed Module
 
           ## ❌ Failed Tests
 
-          ${{ steps.slack_data.outputs.FAILED_TESTS }}
-
-          ## 🔗 Reports
-
-          - Playwright HTML Report
-          - Allure Report
-
-          🔗 Workflow:
-          [Open Workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          ## 🔗 Report Links
 
           EOF
 
