@@ -1419,6 +1419,9 @@ jobs:
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
         run: |
+          cat <<EOF > pr-comment.md
+          <!-- playwright-validation-report -->
+
           # 🎭 Playwright Execution Summary
 
           ## ${{ env.BUILD_EMOJI }} Pull Request Validation
@@ -1432,6 +1435,8 @@ jobs:
           | Item | Value |
           |------|-------|
           | 🌐 Browser | ${{ env.BROWSER }} |
+
+          EOF
 
 
 
