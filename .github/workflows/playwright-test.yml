@@ -340,16 +340,16 @@ jobs:
         #     | {file,title,status}
         #   ' playwright-report/results.json | head -100
 
-      - name: 🔍 Debug Spec Summary
-        if: always()
-        run: |
-          jq '
-          .suites[].suites[].specs[]
-          | {
-              title,
-              ok
-            }
-          ' playwright-report/results.json
+      # - name: 🔍 Debug Spec Summary
+      #   if: always()
+      #   run: |
+      #     jq '
+      #     .suites[].suites[].specs[]
+      #     | {
+      #         title,
+      #         ok
+      #       }
+      #     ' playwright-report/results.json
 
       - name: 📋 Collect PR Details
         if: github.event_name == 'pull_request'
@@ -405,14 +405,14 @@ jobs:
       #       | {title,status,outcome}
       #     ' playwright-report/results.json | head -200
 
-      - name: 🔍 Debug Application Paths
-        if: always()
-        run: |
-          jq -r '
-          .suites[].suites[]
-          | select(.file != null)
-          | .file
-          ' playwright-report/results.json
+      # - name: 🔍 Debug Application Paths
+      #   if: always()
+      #   run: |
+      #     jq -r '
+      #     .suites[].suites[]
+      #     | select(.file != null)
+      #     | .file
+      #     ' playwright-report/results.json
 
       - name: 📦 Build Breakdown Data
         id: breakdown
@@ -428,7 +428,7 @@ jobs:
           }
 
           # Table header for Application Health Dashboard
-          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skip Rate | Quality Score |" > application-summary.md
+          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |" > application-summary.md
           echo "|-------------|-------|--------|--------|--------|--------|-----------|-----------|------------|-----------|---------------|" >> application-summary.md
 
           # Application Health Dashboard
@@ -513,6 +513,31 @@ jobs:
             echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% |" >> application-summary.md
 
           done
+
+          {
+            echo "APPLICATION_DASHBOARD<<EOF"
+
+            awk -F'|' '
+            NR > 2 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $3)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+              gsub(/^[ \t]+|[ \t]+$/, "", $6)
+              gsub(/^[ \t]+|[ \t]+$/, "", $7)
+              gsub(/^[ \t]+|[ \t]+$/, "", $8)
+              gsub(/^[ \t]+|[ \t]+$/, "", $9)
+              gsub(/^[ \t]+|[ \t]+$/, "", $10)
+              gsub(/^[ \t]+|[ \t]+$/, "", $11)
+              gsub(/^[ \t]+|[ \t]+$/, "", $12)
+
+              printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s\n",
+                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
+            }
+            ' application-summary.md
+
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
       # - name: 📣 Build Slack Data
       #   id: slack_data
@@ -1013,6 +1038,11 @@ jobs:
                   type: plain_text
                   text: "🌐 Application Health Dashboard"
 
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
+
               - type: divider
 
               - type: header
@@ -1267,6 +1297,12 @@ jobs:
                 text:
                   type: plain_text
                   text: "🌐 Application Health Dashboard"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: |
+                    ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
 
               - type: divider
 
