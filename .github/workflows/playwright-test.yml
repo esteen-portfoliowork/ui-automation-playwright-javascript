@@ -405,6 +405,15 @@ jobs:
       #       | {title,status,outcome}
       #     ' playwright-report/results.json | head -200
 
+      - name: 🔍 Debug Application Paths
+        if: always()
+        run: |
+          jq -r '
+          .suites[].suites[]
+          | select(.file != null)
+          | .file
+          ' playwright-report/results.json
+
       - name: 📦 Build Breakdown Data
         id: breakdown
         if: always()
@@ -427,7 +436,7 @@ jobs:
           .suites[].suites[]
           | select(.file != null)
           | [
-              (.file | capture("^(?<app>[^/]+)/") | .app,
+              (.file | capture("^(?<app>[^/]+)/").app),
               (.specs | length),
               ([.specs[]
                 | select(.ok == true)
