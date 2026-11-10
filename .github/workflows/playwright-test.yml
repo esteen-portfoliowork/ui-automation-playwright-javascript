@@ -427,7 +427,7 @@ jobs:
           .suites[].suites[]
           | select(.file != null)
           | [
-              (.file | split("/")[0]),
+              (.file | split("/")[1]),
               (.specs | length),
               ([.specs[]
                 | select(.ok == true)
