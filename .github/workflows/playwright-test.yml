@@ -428,7 +428,7 @@ jobs:
           }
 
           # Table header for Application Health Dashboard
-          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skip Rate | Quality Score |" > application-summary.md
+          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |" > application-summary.md
           echo "|-------------|-------|--------|--------|--------|--------|-----------|-----------|------------|-----------|---------------|" >> application-summary.md
 
           # Application Health Dashboard
@@ -525,8 +525,8 @@ jobs:
               gsub(/^[ \t]+|[ \t]+$/, "", $5)
               gsub(/^[ \t]+|[ \t]+$/, "", $8)
 
-              printf "• %s | Total:%s | Passed:%s | Failed:%s | Pass:%s\n",
-                $2,$3,$4,$5,$8
+              printf "• %s\n  Total:%s  Passed:%s  Failed:%s\n  Flaky:%s  Skipped:%s\n  Pass Rate:%s  Fail Rate:%s\n  Flaky Rate:%s  Skipped Rate:%s\n  Quality Score:%s\n",
+                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
             }
             ' application-summary.md
 
@@ -1035,8 +1035,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: |
-                    ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
+                  text: ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
 
               - type: divider
 
