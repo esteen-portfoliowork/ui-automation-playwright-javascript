@@ -516,7 +516,20 @@ jobs:
 
           {
             echo "APPLICATION_DASHBOARD<<EOF"
-            cat application-summary.md
+
+            awk -F'|' '
+            NR > 2 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $3)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+              gsub(/^[ \t]+|[ \t]+$/, "", $8)
+
+              printf "• %s | Total:%s | Passed:%s | Failed:%s | Pass:%s\n",
+                $2,$3,$4,$5,$8
+            }
+            ' application-summary.md
+
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
