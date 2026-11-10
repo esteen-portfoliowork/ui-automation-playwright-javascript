@@ -477,7 +477,7 @@ jobs:
           END {
               for (app in total)
                   print app "\t" total[app] "\t" passed[app] "\t" failed[app] "\t" flaky[app] "\t" skipped[app]
-          }'
+          }' |
           while IFS=$'\t' read -r APP TOTAL PASSED FAILED FLAKY SKIPPED
           do
             APP_NAME=$(get_app_name "$APP")
