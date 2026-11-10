@@ -405,6 +405,15 @@ jobs:
       #       | {title,status,outcome}
       #     ' playwright-report/results.json | head -200
 
+      - name: 🔍 Debug Application Paths
+        if: always()
+        run: |
+          jq -r '
+          .suites[].suites[]
+          | select(.file != null)
+          | .file
+          ' playwright-report/results.json
+
       - name: 📦 Build Breakdown Data
         id: breakdown
         if: always()
@@ -418,325 +427,206 @@ jobs:
             esac
           }
 
-          if [ ! -f "playwright-report/results.json" ]; then
-            echo "Playwright results not found."
-            exit 0
-          fi
+          # Table header for Application Health Dashboard
+          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skip Rate | Quality Score |" > application-summary.md
+          echo "|-------------|-------|--------|--------|--------|--------|-----------|-----------|------------|-----------|---------------|" >> application-summary.md
 
-          echo "| Application | Module | ✅ Passed | ❌ Failed |" > module-breakdown.md
-          echo "|-------------|--------|-----------|-----------|" >> module-breakdown.md
-
+          # Application Health Dashboard
           jq -r '
-            .suites[].suites[]
-            | select(.file != null)
-            | [
-                .file,
-                ([.specs[] | select(.ok)] | length),
-                ([.specs[] | select(.ok == false)] | length)
-              ]
-            | @tsv
-          ' playwright-report/results.json |
-          while IFS=$'\t' read -r FILE PASSED FAILED
-          do
-            APP=$(cut -d'/' -f1 <<< "$FILE")
-            MODULE=$(basename "$FILE" .spec.js)
+          .suites[].suites[]
+          | select(.file != null)
+          | [
+              (.file | split("/")[0]),
 
-            APP_NAME=$(get_app_name "$APP")
+              (.specs | length),
 
-            MODULE_NAME=$(echo "$MODULE" \
-              | sed 's/-/ /g' \
-              | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1')
+              ([.specs[]
+                | select(.ok == true)
+                | select(
+                    any(.tests[].results[]?; .status=="flaky") | not
+                  )
+              ] | length),
 
-            echo "| $APP_NAME | $MODULE_NAME | $PASSED | $FAILED |" >> module-breakdown.md
-          done
+              ([.specs[]
+                | select(.ok == false)
+              ] | length),
 
-          # DISPLAY_LIMIT=5
+              ([.specs[]
+                | select(
+                    any(.tests[].results[]?; .status=="flaky")
+                  )
+              ] | length),
 
-          TOTAL_MODULES=$(
-            awk -F'|' '
-            NF > 4 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              ([.specs[]
+                | select(
+                    all(.tests[].results[]?; .status=="skipped")
+                  )
+              ] | length)
 
-              FAILED=$5 + 0
-
-              if ($2 != "Application" && $2 != "Module" && $2 != "-------------" && FAILED > 0)
-                count++
-            }
-            END {
-              print count
-            }
-            ' module-breakdown.md
-          )
-
-          {
-            echo "MODULE_BREAKDOWN<<EOF"
-
-            if [ -f module-breakdown.md ]; then
-
-              awk -F'|' '
-              NF > 4 {
-                gsub(/^[ \t]+|[ \t]+$/, "", $2)
-                gsub(/^[ \t]+|[ \t]+$/, "", $4)
-                gsub(/^[ \t]+|[ \t]+$/, "", $5)
-
-                if ($2 != "Module" && $2 != "-------------")
-                  printf "• %s: ✅ %s | ❌ %s\n", $2, $4, $5
-              }
-              ' module-breakdown.md | head -"$DISPLAY_LIMIT"
-
-              if [ "$TOTAL_MODULES" -gt "$DISPLAY_LIMIT" ]; then
-                echo ""
-                echo "...and $((TOTAL_MODULES - DISPLAY_LIMIT)) more modules"
-              fi
-
-            else
-              echo "No module data available"
-            fi
-
-            echo EOF
-          } >> $GITHUB_ENV
-
-          echo "| Application | ✅ Passed | ❌ Failed |" > application-summary.md
-          echo "|-------------|-----------|-----------|" >> application-summary.md
-
-          jq -r '
-            .suites[].suites[]
-            | select(.file != null)
-            | [
-                (.file | split("/")[0]),
-                ([.specs[] | select(.ok)] | length),
-                ([.specs[] | select(.ok == false)] | length)
-              ]
-            | @tsv
+          ]
+          | @tsv
           ' playwright-report/results.json |
           awk -F'\t' '
           {
-            passed[$1] += $2;
-            failed[$1] += $3;
+              total[$1] += $2
+              passed[$1] += $3
+              failed[$1] += $4
+              flaky[$1] += $5
+              skipped[$1] += $6
           }
           END {
-            for (app in passed)
-              print app "\t" passed[app] "\t" failed[app];
+              for (app in total)
+                  print app "\t" total[app] "\t" passed[app] "\t" failed[app] "\t" flaky[app] "\t" skipped[app]
           }' |
-          sort |
-          while IFS=$'\t' read -r APP PASSED FAILED
+          while IFS=$'\t' read -r APP TOTAL PASSED FAILED FLAKY SKIPPED
           do
             APP_NAME=$(get_app_name "$APP")
-            echo "| $APP_NAME | $PASSED | $FAILED |" >> application-summary.md
+            if [ "$TOTAL" -gt 0 ]; then
+              PASS_RATE=$(awk "BEGIN {
+                printf \"%.2f\",
+                (($PASSED + $FLAKY)/$TOTAL)*100
+              }")
+              FAIL_RATE=$(awk "BEGIN {
+                printf \"%.2f\",
+                ($FAILED/$TOTAL)*100
+              }")
+              FLAKY_RATE=$(awk "BEGIN {
+                printf \"%.2f\",
+                ($FLAKY/$TOTAL)*100
+              }")
+              SKIP_RATE=$(awk "BEGIN {
+                printf \"%.2f\",
+                ($SKIPPED/$TOTAL)*100
+              }")
+              QUALITY_SCORE=$(awk "BEGIN {
+                printf \"%.0f\",
+                (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
+              }")
+            else
+              PASS_RATE=0
+              FAIL_RATE=0
+              FLAKY_RATE=0
+              SKIP_RATE=0
+              QUALITY_SCORE=0
+            fi
+
+            echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% |" >> application-summary.md
+
           done
 
-          {
-            echo "APPLICATION_BREAKDOWN<<EOF"
-
-            awk -F'|' '
-            NF > 3 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $3)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
-
-              if ($2 != "Application" && $2 != "-------------")
-                printf "• %s: ✅ %s | ❌ %s\n", $2, $3, $4
-            }
-            ' application-summary.md
-
-            echo EOF
-          } >> $GITHUB_OUTPUT
-
-          {
-            echo "MODULE_BREAKDOWN<<EOF"
-
-            awk -F'|' '
-            NF > 4 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
-              gsub(/^[ \t]+|[ \t]+$/, "", $5)
-
-              if ($2 != "Module" && $2 != "-------------")
-                printf "• %s: ✅ %s | ❌ %s\n", $2, $4, $5
-            }
-            ' module-breakdown.md | head -5
-
-            echo EOF
-          } >> $GITHUB_OUTPUT
-
-          echo "| Tag | Total | ✅ Passed | ❌ Failed | ⏭️ Skipped | 📈 Pass Rate |" > tag-summary.md
-          echo "|-----|-------|-----------|-----------|------------|--------------|" >> tag-summary.md
-
-          {
-            echo "TAG_BREAKDOWN<<EOF"
-
-            awk -F'|' '
-            NF > 5 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
-              gsub(/^[ \t]+|[ \t]+$/, "", $5)
-
-              if ($2 != "Tag" && $2 != "-----")
-                printf "• %s: ✅ %s | ❌ %s\n", $2, $4, $5
-            }
-            ' tag-summary.md | head -5
-
-            echo EOF
-          } >> $GITHUB_OUTPUT
-
-          # Exclude application tags from tag analytics
-          jq -r '
-            .suites[].suites[]
-            | .specs[]
-            | . as $spec
-            | .tags[]
-            | select(
-                . != "sauce-demo" and
-                . != "orangehr" and
-                . != "qa-playground"
-              )
-            | [
-                .,
-                (if $spec.ok then 1 else 0 end),
-                (if $spec.ok then 0 else 1 end)
-              ]
-            | @tsv
-          ' playwright-report/results.json |
-          awk -F $'\t' '
-          {
-            total[$1]++
-            passed[$1] += $2
-            failed[$1] += $3
-          }
-          END {
-            for (tag in total) {
-              skipped = 0
-              rate = (passed[tag] / total[tag]) * 100
-
-              printf "%s\t%d\t%d\t%d\t%d\t%.2f\n",
-                tag,
-                total[tag],
-                passed[tag],
-                failed[tag],
-                skipped,
-                rate
-            }
-          }
-          ' |
-          sort |
-          while IFS=$'\t' read -r TAG TOTAL PASSED FAILED SKIPPED RATE
-          do
-              echo "| @$TAG | $TOTAL | $PASSED | $FAILED | $SKIPPED | $RATE% |" >> tag-summary.md
-          done
-
-      - name: 📣 Build Slack Data
-        id: slack_data
-        if: always()
-        run: |
-          DISPLAY_LIMIT=5
+      # - name: 📣 Build Slack Data
+      #   id: slack_data
+      #   if: always()
+      #   run: |
+      #     DISPLAY_LIMIT=5
           
-          # Application Summary
-          APPLICATION=$(awk -F'|' '
-            NF > 3 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $3)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+      #     # Application Summary
+      #     APPLICATION=$(awk -F'|' '
+      #       NF > 3 {
+      #         gsub(/^[ \t]+|[ \t]+$/, "", $2)
+      #         gsub(/^[ \t]+|[ \t]+$/, "", $3)
+      #         gsub(/^[ \t]+|[ \t]+$/, "", $4)
 
-              if ($2 != "Application" && $2 != "-------------")
-                printf "• %s: ✅ %s ❌ %s ", $2, $3, $4
-            }
-          ' application-summary.md)
+      #         if ($2 != "Application" && $2 != "-------------")
+      #           printf "• %s: ✅ %s ❌ %s ", $2, $3, $4
+      #       }
+      #     ' application-summary.md)
 
-          MODULES=$(awk -F'|' '
-            NF > 4 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
-              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+      #     MODULES=$(awk -F'|' '
+      #       NF > 4 {
+      #         gsub(/^[ \t]+|[ \t]+$/, "", $2)
+      #         gsub(/^[ \t]+|[ \t]+$/, "", $4)
+      #         gsub(/^[ \t]+|[ \t]+$/, "", $5)
 
-              if ($2 != "Module" && $2 != "-------------")
-                printf "• %s: ✅ %s ❌ %s ", $2, $4, $5
-            }
-          ' module-breakdown.md | head -5)
+      #         if ($2 != "Module" && $2 != "-------------")
+      #           printf "• %s: ✅ %s ❌ %s ", $2, $4, $5
+      #       }
+      #     ' module-breakdown.md | head -5)
 
-          FAILED_MODULES=$(
-          awk -F'|' '
-          NF > 4 {
+      #     FAILED_MODULES=$(
+      #     awk -F'|' '
+      #     NF > 4 {
 
-            gsub(/^[ \t]+|[ \t]+$/, "", $2)
-            gsub(/^[ \t]+|[ \t]+$/, "", $5)
+      #       gsub(/^[ \t]+|[ \t]+$/, "", $2)
+      #       gsub(/^[ \t]+|[ \t]+$/, "", $5)
 
-            FAILED=$5+0
+      #       FAILED=$5+0
 
-            if ($2 != "Module" &&
-                $2 != "-------------" &&
-                FAILED > 0)
+      #       if ($2 != "Module" &&
+      #           $2 != "-------------" &&
+      #           FAILED > 0)
 
-              printf "• %s (%s failure) ", $2, FAILED
-          }
-          ' module-breakdown.md
-          )
+      #         printf "• %s (%s failure) ", $2, FAILED
+      #     }
+      #     ' module-breakdown.md
+      #     )
 
-          FAILED_MODULE_COUNT=$(awk -F'|' '
-          NF > 4 {
+      #     FAILED_MODULE_COUNT=$(awk -F'|' '
+      #     NF > 4 {
 
-            gsub(/^[ \t]+|[ \t]+$/, "", $5)
+      #       gsub(/^[ \t]+|[ \t]+$/, "", $5)
 
-            FAILED=$5+0
+      #       FAILED=$5+0
 
-            if (FAILED > 0)
-              count++
-          }
-          END {
-            print count+0
-          }
-          ' module-breakdown.md)
+      #       if (FAILED > 0)
+      #         count++
+      #     }
+      #     END {
+      #       print count+0
+      #     }
+      #     ' module-breakdown.md)
 
-          if [ -z "$FAILED_MODULES" ]; then
-            FAILED_MODULES="✅ No failed modules"
-          fi
+      #     if [ -z "$FAILED_MODULES" ]; then
+      #       FAILED_MODULES="✅ No failed modules"
+      #     fi
 
-          FAILED_COUNT=$(
-          jq '
-          [
-            .suites[].suites[]
-            | .specs[]
-            | select(.ok == false)
-          ]
-          | length
-          ' playwright-report/results.json
-          )
+      #     FAILED_COUNT=$(
+      #     jq '
+      #     [
+      #       .suites[].suites[]
+      #       | .specs[]
+      #       | select(.ok == false)
+      #     ]
+      #     | length
+      #     ' playwright-report/results.json
+      #     )
 
-          FAILED_TESTS=$(
-          jq -r '
-          .suites[].suites[]
-          | .specs[]
-          | select(.ok == false)
-          | .title
-          ' playwright-report/results.json |
-          head -5 |
-          paste -sd " | " -
-          )
+      #     FAILED_TESTS=$(
+      #     jq -r '
+      #     .suites[].suites[]
+      #     | .specs[]
+      #     | select(.ok == false)
+      #     | .title
+      #     ' playwright-report/results.json |
+      #     head -5 |
+      #     paste -sd " | " -
+      #     )
 
-          if [ -z "$FAILED_TESTS" ]; then
-            FAILED_TESTS="✅ No failed tests"
-          fi
+      #     if [ -z "$FAILED_TESTS" ]; then
+      #       FAILED_TESTS="✅ No failed tests"
+      #     fi
 
-          echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_OUTPUT
+      #     echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_OUTPUT
 
-          # Tags
-          TAGS=$(awk -F'|' '
-            NF > 5 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
-              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+      #     # Tags
+      #     TAGS=$(awk -F'|' '
+      #       NF > 5 {
+      #         gsub(/^[ \t]+|[ \t]+$/, "", $2)
+      #         gsub(/^[ \t]+|[ \t]+$/, "", $4)
+      #         gsub(/^[ \t]+|[ \t]+$/, "", $5)
 
-              if ($2 != "Tag" && $2 != "-----")
-                printf "• %s: ✅ %s ❌ %s ", $2, $4, $5
-            }
-          ' tag-summary.md | head -5)
+      #         if ($2 != "Tag" && $2 != "-----")
+      #           printf "• %s: ✅ %s ❌ %s ", $2, $4, $5
+      #       }
+      #     ' tag-summary.md | head -5)
 
-          echo "APPLICATION=$APPLICATION" >> $GITHUB_OUTPUT
-          echo "MODULES=$MODULES" >> $GITHUB_OUTPUT
-          echo "FAILED_MODULES=$FAILED_MODULES" >> $GITHUB_OUTPUT
-          echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_OUTPUT
-          echo "FAILED_MODULE_COUNT=$FAILED_MODULE_COUNT" >> $GITHUB_OUTPUT
-          echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_OUTPUT
-          echo "TAGS=$TAGS" >> $GITHUB_OUTPUT
+      #     echo "APPLICATION=$APPLICATION" >> $GITHUB_OUTPUT
+      #     echo "MODULES=$MODULES" >> $GITHUB_OUTPUT
+      #     echo "FAILED_MODULES=$FAILED_MODULES" >> $GITHUB_OUTPUT
+      #     echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_OUTPUT
+      #     echo "FAILED_MODULE_COUNT=$FAILED_MODULE_COUNT" >> $GITHUB_OUTPUT
+      #     echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_OUTPUT
+      #     echo "TAGS=$TAGS" >> $GITHUB_OUTPUT
 
       - name: 📄 Upload Playwright Report
         if: always()
@@ -922,7 +812,9 @@ jobs:
           echo "| 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |" >> $GITHUB_STEP_SUMMARY
 
-          echo "## 🌐 Application Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🌐 Application Health Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat application-summary.md >> $GITHUB_STEP_SUMMARY
 
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
 
@@ -1119,7 +1011,7 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
-                  text: "🌐 Application Summary"
+                  text: "🌐 Application Health Dashboard"
 
               - type: divider
 
@@ -1360,7 +1252,7 @@ jobs:
                     - type: raw_text
                       text: "-"
                     - type: raw_text
-                      text: "${{ env.QUALITY_SCORE }}"
+                      text: "${{ env.QUALITY_SCORE }}%"
                   - - type: raw_text
                       text: "⏱️ Duration"
                     - type: raw_text
@@ -1374,7 +1266,7 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
-                  text: "🌐 Application Summary"
+                  text: "🌐 Application Health Dashboard"
 
               - type: divider
 
@@ -1466,7 +1358,7 @@ jobs:
           | 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |
           | ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |
 
-          ## 🌐 Application Summary
+          ## 🌐 Application Health Dashboard
 
           ## 📦 Module Breakdown
 
