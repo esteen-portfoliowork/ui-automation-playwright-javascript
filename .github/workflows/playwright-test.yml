@@ -1395,6 +1395,7 @@ jobs:
           | ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |
 
           ## 🌐 Application Health Dashboard
+          $(cat application-summary.md)
 
           ## 📦 Module Breakdown
 
