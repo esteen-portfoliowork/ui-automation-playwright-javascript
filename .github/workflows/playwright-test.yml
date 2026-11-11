@@ -176,14 +176,6 @@ jobs:
       - name: 🎭 Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      # # Get details of run
-      # - name: 🔍 Debug Inputs
-      #   run: |
-      #     echo "Event: ${{ github.event_name }}"
-      #     echo "Browser: ${{ github.event.inputs.browser }}"
-      #     echo "Folder: ${{ github.event.inputs.folder }}"
-      #     echo "Environment: ${{ github.event.inputs.environment }}"
-
       - name: ⏱️ Capture Start Details
         run: |
           echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
@@ -418,13 +410,6 @@ jobs:
         id: breakdown
         if: always()
         run: |
-          echo "===== MODULE PATHS ====="
-          jq -r '
-          .suites[].suites[]
-          | select(.file != null)
-          | .file
-          ' playwright-report/results.json
-
           # Get Application
           get_app_name() {
             case "$1" in
@@ -477,12 +462,12 @@ jobs:
           }
 
           # Table header for Application Health Dashboard
-          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |" > application-summary.md
-          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|" >> application-summary.md
+          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > application-health-dashboard.md
+          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|-----------|" >> application-health-dashboard.md
 
           # Table header for Module Breakdown
           echo "| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
-          echo "|-------------|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|--------|" >> module-breakdown.md
+          echo "|-------------|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|-----------|" >> module-breakdown.md
 
           # Application Health Dashboard
           jq -r '
@@ -515,7 +500,6 @@ jobs:
                     all(.tests[].results[]?; .status=="skipped")
                   )
               ] | length)
-
           ]
           | @tsv
           ' playwright-report/results.json |
@@ -535,26 +519,6 @@ jobs:
           do
             APP_NAME=$(get_app_name "$APP")
             if [ "$TOTAL" -gt 0 ]; then
-              # PASS_RATE=$(awk "BEGIN {
-              #   printf \"%.2f\",
-              #   (($PASSED + $FLAKY)/$TOTAL)*100
-              # }")
-              # FAIL_RATE=$(awk "BEGIN {
-              #   printf \"%.2f\",
-              #   ($FAILED/$TOTAL)*100
-              # }")
-              # FLAKY_RATE=$(awk "BEGIN {
-              #   printf \"%.2f\",
-              #   ($FLAKY/$TOTAL)*100
-              # }")
-              # SKIP_RATE=$(awk "BEGIN {
-              #   printf \"%.2f\",
-              #   ($SKIPPED/$TOTAL)*100
-              # }")
-              # QUALITY_SCORE=$(awk "BEGIN {
-              #   printf \"%.0f\",
-              #   (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
-              # }")
               calculate_metrics \
                 "$TOTAL" \
                 "$PASSED" \
@@ -568,7 +532,7 @@ jobs:
               SKIP_RATE=0
               QUALITY_SCORE=0
             fi
-            echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% |" >> application-summary.md
+            echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> application-health-dashboard.md
           done
 
           # Module Breakdown
@@ -626,31 +590,83 @@ jobs:
             echo "| $APP_NAME | $MODULE | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> module-breakdown.md
           done
 
-          ### Application Health Dashboard Display
-          {
-            echo "APPLICATION_DASHBOARD<<EOF"
+          # Generate Slack formatted text
+          node <<'NODE'
+          const fs = require('fs');
+          function readTable(file) {
+            return fs.readFileSync(file, 'utf8')
+              .split(/\r?\n/)
+              .filter(line => line.trim().startsWith('|'))
+              .filter(line => !/^\|[\s|:-]+\|$/.test(line.trim()))
+              .map(line => line.trim()
+                .replace(/^\|/, '')
+                .replace(/\|$/, '')
+                .split('|')
+                .map(cell => cell.trim())
+              );
+          }
 
-            awk -F'|' '
-            NR > 2 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $3)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
-              gsub(/^[ \t]+|[ \t]+$/, "", $5)
-              gsub(/^[ \t]+|[ \t]+$/, "", $6)
-              gsub(/^[ \t]+|[ \t]+$/, "", $7)
-              gsub(/^[ \t]+|[ \t]+$/, "", $8)
-              gsub(/^[ \t]+|[ \t]+$/, "", $9)
-              gsub(/^[ \t]+|[ \t]+$/, "", $10)
-              gsub(/^[ \t]+|[ \t]+$/, "", $11)
-              gsub(/^[ \t]+|[ \t]+$/, "", $12)
+          // Application Health Dashboard
+          const appRows = readTable('application-health-dashboard.md');
+          const appText = appRows.slice(1).map(row =>
+            `• *${row[0]}* — Total: ${row[1]} | Passed: ${row[2]} | Failed: ${row[3]} | Flaky: ${row[4]} | Skipped: ${row[5]} | Pass Rate: ${row[6]} | Fail Rate: ${row[7]} | Flaky Rate: ${row[8]} | Skipped Rate: ${row[9]} | Quality Score: ${row[10]} | Health: ${row[11]}`
+          ).join('\n');
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `APPLICATION_HEALTH_TEXT=${JSON.stringify(appText)}\n`
+          );
 
-              printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s |\n",
-                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
+          // Module Breakdown grouped by Application
+          const moduleRows = readTable('module-breakdown.md').slice(1);
+          const grouped = {};
+          for (const row of moduleRows) {
+            const [
+              application,
+              module,
+              total,
+              passed,
+              failed,
+              flaky,
+              skipped,
+              passRate,
+              failRate,
+              flakyRate,
+              skippedRate,
+              qualityScore,
+              health
+            ] = row;
+            if (!grouped[application]) {
+              grouped[application] = [];
             }
-            ' application-summary.md
+            grouped[application].push(
+              `   • *${module}* — Total: ${total} | Passed: ${passed} | Failed: ${failed} | Flaky: ${flaky} | Skipped: ${skipped} | Pass Rate: ${passRate} | Fail Rate: ${failRate} | Flaky Rate: ${flakyRate} | Skipped Rate: ${skippedRate} | Quality Score: ${qualityScore} | Health: ${health}`
+            );
+          }
 
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
+          // Build grouped module text
+          const moduleText = Object.entries(grouped)
+            .map(([application, modules]) =>
+              `🧩 *${application}*\n${modules.join('\n')}`
+            )
+            .join('\n\n');
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `MODULE_BREAKDOWN_TEXT=${JSON.stringify(moduleText)}\n`
+          );
+          NODE
+
+      # - name: 🔍 Debug Breakdown Tables
+      #   if: always()
+      #   run: |
+      #     echo "===== APPLICATION HEALTH ====="
+      #     cat application-health-dashboard.md
+
+      #     echo "===== MODULE BREAKDOWN ====="
+      #     cat module-breakdown.md
+
+      #     echo "===== SLACK TABLE OUTPUTS ====="
+      #     echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
+          # echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
 
       - name: 📄 Upload Playwright Report
         if: always()
@@ -837,7 +853,7 @@ jobs:
 
           echo "## 🌐 Application Health Dashboard" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat application-summary.md >> $GITHUB_STEP_SUMMARY
+          cat application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
 
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -859,6 +875,7 @@ jobs:
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
             channel: "C0CDR49PPSL"
+            text: "Playwright execution summary. See the message blocks for application health and module breakdown details."
 
             blocks:
               - type: header
@@ -1041,7 +1058,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
+                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT }}
 
               - type: divider
 
@@ -1050,6 +1067,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "📦 Module Breakdown"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT }}
 
               - type: divider
 
@@ -1091,6 +1113,7 @@ jobs:
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
             channel: "C0CDR49PPSL"
+            text: "Playwright execution summary. See the message blocks for application health and module breakdown details."
 
             blocks:
               - type: header
@@ -1301,7 +1324,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
+                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT }}
 
               - type: divider
 
@@ -1310,6 +1333,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "📦 Module Breakdown"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT }}
 
               - type: divider
 
@@ -1394,7 +1422,7 @@ jobs:
           | ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |
 
           ## 🌐 Application Health Dashboard
-          $(cat application-summary.md)
+          $(cat application-health-dashboard.md)
 
           ## 📦 Module Breakdown
 
