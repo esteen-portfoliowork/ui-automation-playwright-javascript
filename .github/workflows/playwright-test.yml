@@ -1307,8 +1307,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: |
-                    ${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}
+                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}
 
               - type: divider
 
