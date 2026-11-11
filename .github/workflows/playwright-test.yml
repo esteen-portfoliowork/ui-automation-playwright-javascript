@@ -424,7 +424,7 @@ jobs:
           | select(.file != null)
           | .file
           ' playwright-report/results.json
-          
+
           # Get Application
           get_app_name() {
             case "$1" in
@@ -840,6 +840,8 @@ jobs:
           cat application-summary.md >> $GITHUB_STEP_SUMMARY
 
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
 
           echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
 
