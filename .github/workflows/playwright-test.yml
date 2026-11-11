@@ -418,6 +418,14 @@ jobs:
         id: breakdown
         if: always()
         run: |
+          echo "===== MODULE PATHS ====="
+          jq -r '
+          .suites[].suites[]
+          | select(.file != null)
+          | .file
+          ' playwright-report/results.json
+
+          # Get Application
           get_app_name() {
             case "$1" in
               sauce-demo)   echo "SauceDemo" ;;
@@ -427,9 +435,54 @@ jobs:
             esac
           }
 
+          # Get Health
+            get_health() {
+              local FAILED=$1
+              local FLAKY=$2
+              if [ "$FAILED" -gt 0 ]; then
+                echo "🔴 Critical"
+              elif [ "$FLAKY" -gt 0 ]; then
+                echo "🟡 Unstable"
+              else
+                echo "🟢 Healthy"
+              fi
+            }
+
+          # Common Calculation
+          calculate_metrics() {
+            local TOTAL=$1
+            local PASSED=$2
+            local FAILED=$3
+            local FLAKY=$4
+            local SKIPPED=$5
+
+            if [ "$TOTAL" -gt 0 ]; then
+              HEALTH=$(get_health "$FAILED" "$FLAKY")
+              PASS_RATE=$(awk "BEGIN { printf \"%.2f\", (($PASSED + $FLAKY)/$TOTAL)*100 }")
+              FAIL_RATE=$(awk "BEGIN { printf \"%.2f\", ($FAILED/$TOTAL)*100 }")
+              FLAKY_RATE=$(awk "BEGIN { printf \"%.2f\", ($FLAKY/$TOTAL)*100 }")
+              SKIP_RATE=$(awk "BEGIN { printf \"%.2f\", ($SKIPPED/$TOTAL)*100 }")
+              QUALITY_SCORE=$(awk "BEGIN {
+                printf \"%.0f\",
+                (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
+              }")
+            else
+              HEALTH=$(get_health "$FAILED" "$FLAKY")
+              PASS_RATE=0
+              FAIL_RATE=0
+              FLAKY_RATE=0
+              SKIP_RATE=0
+              QUALITY_SCORE=0
+            fi
+          }
+
           # Table header for Application Health Dashboard
           echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |" > application-summary.md
-          echo "|-------------|-------|--------|--------|--------|--------|-----------|-----------|------------|-----------|---------------|" >> application-summary.md
+          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|" >> application-summary.md
+
+          # Table header for Module Breakdown
+          echo "| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
+          echo "|-------------|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|--------|" >> module-breakdown.md
 
           # Application Health Dashboard
           jq -r '
@@ -482,26 +535,32 @@ jobs:
           do
             APP_NAME=$(get_app_name "$APP")
             if [ "$TOTAL" -gt 0 ]; then
-              PASS_RATE=$(awk "BEGIN {
-                printf \"%.2f\",
-                (($PASSED + $FLAKY)/$TOTAL)*100
-              }")
-              FAIL_RATE=$(awk "BEGIN {
-                printf \"%.2f\",
-                ($FAILED/$TOTAL)*100
-              }")
-              FLAKY_RATE=$(awk "BEGIN {
-                printf \"%.2f\",
-                ($FLAKY/$TOTAL)*100
-              }")
-              SKIP_RATE=$(awk "BEGIN {
-                printf \"%.2f\",
-                ($SKIPPED/$TOTAL)*100
-              }")
-              QUALITY_SCORE=$(awk "BEGIN {
-                printf \"%.0f\",
-                (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
-              }")
+              # PASS_RATE=$(awk "BEGIN {
+              #   printf \"%.2f\",
+              #   (($PASSED + $FLAKY)/$TOTAL)*100
+              # }")
+              # FAIL_RATE=$(awk "BEGIN {
+              #   printf \"%.2f\",
+              #   ($FAILED/$TOTAL)*100
+              # }")
+              # FLAKY_RATE=$(awk "BEGIN {
+              #   printf \"%.2f\",
+              #   ($FLAKY/$TOTAL)*100
+              # }")
+              # SKIP_RATE=$(awk "BEGIN {
+              #   printf \"%.2f\",
+              #   ($SKIPPED/$TOTAL)*100
+              # }")
+              # QUALITY_SCORE=$(awk "BEGIN {
+              #   printf \"%.0f\",
+              #   (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
+              # }")
+              calculate_metrics \
+                "$TOTAL" \
+                "$PASSED" \
+                "$FAILED" \
+                "$FLAKY" \
+                "$SKIPPED"
             else
               PASS_RATE=0
               FAIL_RATE=0
@@ -509,11 +568,65 @@ jobs:
               SKIP_RATE=0
               QUALITY_SCORE=0
             fi
-
             echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% |" >> application-summary.md
-
           done
 
+          # Module Breakdown
+          jq -r '
+          .suites[].suites[]
+          | select(.file != null)
+          | [
+              (.file | split("/")[0]),
+              (.file | split("/")[1] | sub("\\.spec\\.js$"; "")),
+
+              (.specs | length),
+
+              ([.specs[]
+                | select(.ok == true)
+                | select(
+                    any(.tests[].results[]?; .status=="flaky") | not
+                )
+              ] | length),
+
+              ([.specs[]
+                | select(.ok == false)
+              ] | length),
+
+              ([.specs[]
+                | select(
+                    any(.tests[].results[]?; .status=="flaky")
+                )
+              ] | length),
+
+              ([.specs[]
+                | select(
+                    all(.tests[].results[]?; .status=="skipped")
+                )
+              ] | length)
+          ]
+          | @tsv
+          ' playwright-report/results.json |
+          while IFS=$'\t' read -r APP MODULE TOTAL PASSED FAILED FLAKY SKIPPED
+          do
+            APP_NAME=$(get_app_name "$APP")
+            if [ "$TOTAL" -gt 0 ]; then
+              calculate_metrics \
+                "$TOTAL" \
+                "$PASSED" \
+                "$FAILED" \
+                "$FLAKY" \
+                "$SKIPPED"
+            else
+              PASS_RATE=0
+              FAIL_RATE=0
+              FLAKY_RATE=0
+              SKIP_RATE=0
+              QUALITY_SCORE=0
+            fi
+            echo "| $APP_NAME | $MODULE | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> module-breakdown.md
+          done
+
+          ### Application Health Dashboard Display
           {
             echo "APPLICATION_DASHBOARD<<EOF"
 
@@ -531,7 +644,7 @@ jobs:
               gsub(/^[ \t]+|[ \t]+$/, "", $11)
               gsub(/^[ \t]+|[ \t]+$/, "", $12)
 
-              printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s\n",
+              printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s |\n",
                 $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
             }
             ' application-summary.md
@@ -553,7 +666,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event_name == 'pull_request' && format('pr-failure-screenshots-{0}', github.run_number) || format('failure-screenshots-{0}', github.run_number) }}
-          # name: failure-screenshots-${{ github.run_number }}
           path: test-results/
           if-no-files-found: ignore
           retention-days: 7
@@ -728,6 +840,8 @@ jobs:
           cat application-summary.md >> $GITHUB_STEP_SUMMARY
 
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
 
           echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
 
@@ -1187,8 +1301,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: |
-                    ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
+                  text: ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
 
               - type: divider
 
