@@ -631,7 +631,7 @@ jobs:
             grouped[application].push(
               `   • *${module}* — Total: ${total} | Passed: ${passed} | Failed: ${failed} | Flaky: ${flaky} | Skipped: ${skipped} | Health: ${health}`
             );
-          }
+          };
           const moduleText = Object.entries(grouped)
             .map(([application, modules]) =>
               `📦 *${application}*\n${modules.join('\n')}`
