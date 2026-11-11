@@ -591,8 +591,9 @@ jobs:
             echo "| $APP_NAME | $MODULE | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> module-breakdown.md
           done
 
-          # Generate Slack Table Rows
           
+          # Generate Slack Table Rows
+          node <<'NODE'
           const fs = require('fs');
 
           function createRows(file, outputName) {
@@ -602,25 +603,22 @@ jobs:
 
             let rows = lines
               .filter(line => !/^\|[\s|:-]+\|$/.test(line.trim()))
-              .map(line => {
-                return line.trim()
-                  .replace(/^\|/, '')
-                  .replace(/\|$/, '')
-                  .split('|')
-                  .map(cell => ({
-                    type: 'raw_text',
-                    text: cell.trim() || '-'
-                  }));
-              });
+              .map(line => line.trim()
+                .replace(/^\|/, '')
+                .replace(/\|$/, '')
+                .split('|')
+                .map(cell => ({
+                  type: 'raw_text',
+                  text: cell.trim() || '-'
+                }))
+              );
 
             if (rows.length === 0) {
               throw new Error(`No table rows found in ${file}`);
             }
 
-            // Use the header as the expected column count
             const columnCount = rows[0].length;
 
-            // Ensure all rows have consistent column counts
             rows = rows.map(row => {
               while (row.length < columnCount) {
                 row.push({ type: 'raw_text', text: '-' });
@@ -648,6 +646,7 @@ jobs:
             'module-breakdown.md',
             'MODULE_BREAKDOWN_ROWS'
           );
+          NODE
 
       - name: 🔍 Debug Breakdown Tables
         if: always()
