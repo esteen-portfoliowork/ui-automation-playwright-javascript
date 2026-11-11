@@ -1038,7 +1038,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "${{ steps.breakdown.outputs.APPLICATION_HEALTH_DASHBOARD }}"
+                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_DASHBOARD }}
 
               - type: divider
 
@@ -1051,7 +1051,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}"
+                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}
 
               - type: divider
 
@@ -1303,7 +1303,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "${{ steps.breakdown.outputs.APPLICATION_HEALTH_DASHBOARD }}"
+                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_DASHBOARD }}
 
               - type: divider
 
@@ -1316,7 +1316,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}"
+                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}
 
               - type: divider
 
