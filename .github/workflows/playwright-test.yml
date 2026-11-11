@@ -176,14 +176,6 @@ jobs:
       - name: 🎭 Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      # # Get details of run
-      # - name: 🔍 Debug Inputs
-      #   run: |
-      #     echo "Event: ${{ github.event_name }}"
-      #     echo "Browser: ${{ github.event.inputs.browser }}"
-      #     echo "Folder: ${{ github.event.inputs.folder }}"
-      #     echo "Environment: ${{ github.event.inputs.environment }}"
-
       - name: ⏱️ Capture Start Details
         run: |
           echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
@@ -599,7 +591,7 @@ jobs:
             echo "| $APP_NAME | $MODULE | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> module-breakdown.md
           done
 
-          ### Generate Slack Table Rows
+          # Generate Slack Table Rows
           
           const fs = require('fs');
 
