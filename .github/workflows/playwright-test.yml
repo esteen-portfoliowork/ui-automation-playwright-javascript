@@ -470,8 +470,8 @@ jobs:
           }
 
           # Table header for Application Health Dashboard
-          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |" > application-summary.md
-          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|" >> application-summary.md
+          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |" > application-health-dashboard.md
+          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|" >> application-health-dashboard.md
 
           # Table header for Module Breakdown
           echo "| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
@@ -541,7 +541,7 @@ jobs:
               SKIP_RATE=0
               QUALITY_SCORE=0
             fi
-            echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% |" >> application-summary.md
+            echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% |" >> application-health-dashboard.md
           done
 
           # Module Breakdown
@@ -619,7 +619,7 @@ jobs:
               printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s |\n",
                 $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
             }
-            ' application-summary.md
+            ' application-health-dashboard.md
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
@@ -640,11 +640,12 @@ jobs:
               gsub(/^[ \t]+|[ \t]+$/, "", $11)
               gsub(/^[ \t]+|[ \t]+$/, "", $12)
               gsub(/^[ \t]+|[ \t]+$/, "", $13)
+              gsub(/^[ \t]+|[ \t]+$/, "", $14)
 
-              printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s | Health:%s |\n",
-                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+              printf "• %s | Module:%s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s | Health:%s |\n",
+                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
             }
-            ' application-summary.md
+            ' module-breakdown.md
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
@@ -833,7 +834,7 @@ jobs:
 
           echo "## 🌐 Application Health Dashboard" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat application-summary.md >> $GITHUB_STEP_SUMMARY
+          cat application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
 
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -1400,7 +1401,7 @@ jobs:
           | ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |
 
           ## 🌐 Application Health Dashboard
-          $(cat application-summary.md)
+          $(cat application-health-dashboard.md)
 
           ## 📦 Module Breakdown
 
