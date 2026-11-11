@@ -467,6 +467,7 @@ jobs:
               SKIP_RATE=0
               QUALITY_SCORE=0
             fi
+          }
 
           # Table header for Application Health Dashboard
           echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |" > application-summary.md
@@ -515,8 +516,7 @@ jobs:
           {
               total[$1] += $2
               passed[$1] += $3
-              failed[$1] += $4echo "|-------------|-------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|------|" >> module-breakdown.md
-              flaky[$1] += $5
+              failed[$1] += $4
               skipped[$1] += $6
           }
           END {
@@ -615,7 +615,7 @@ jobs:
               SKIP_RATE=0
               QUALITY_SCORE=0
             fi
-            echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% |" >> application-summary.md
+            echo "| $APP_NAME | $MODULE | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% |" >> module-breakdown.md
           done
 
           ### Application Health Dashboard Display
