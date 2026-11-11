@@ -427,9 +427,47 @@ jobs:
             esac
           }
 
+          # Common Calculation
+          calculate_metrics() {
+            local TOTAL=$1
+            local PASSED=$2
+            local FAILED=$3
+            local FLAKY=$4
+            local SKIPPED=$5
+
+            if [ "$TOTAL" -gt 0 ]; then
+              PASS_RATE=$(awk "BEGIN { printf \"%.2f\", (($PASSED + $FLAKY)/$TOTAL)*100 }")
+              FAIL_RATE=$(awk "BEGIN { printf \"%.2f\", ($FAILED/$TOTAL)*100 }")
+              FLAKY_RATE=$(awk "BEGIN { printf \"%.2f\", ($FLAKY/$TOTAL)*100 }")
+              SKIP_RATE=$(awk "BEGIN { printf \"%.2f\", ($SKIPPED/$TOTAL)*100 }")
+              QUALITY_SCORE=$(awk "BEGIN {
+                printf \"%.0f\",
+                (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
+              }")
+            else
+              PASS_RATE=0
+              FAIL_RATE=0
+              FLAKY_RATE=0
+              SKIP_RATE=0
+              QUALITY_SCORE=0
+            fi
+
+            if [ "$FAILED" -gt 0 ]; then
+              HEALTH="🔴 Critical"
+            elif [ "$FLAKY" -gt 0 ]; then
+              HEALTH="🟡 Unstable"
+            else
+              HEALTH="🟢 Healthy"
+            fi
+          }
+
           # Table header for Application Health Dashboard
           echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |" > application-summary.md
-          echo "|-------------|-------|--------|--------|--------|--------|-----------|-----------|------------|-----------|---------------|" >> application-summary.md
+          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|" >> application-summary.md
+
+          # Table header for Module Breakdown
+          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
+          echo "|-------------|-------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|------|" >> module-breakdownapplication-summary.md
 
           # Application Health Dashboard
           jq -r '
@@ -482,26 +520,32 @@ jobs:
           do
             APP_NAME=$(get_app_name "$APP")
             if [ "$TOTAL" -gt 0 ]; then
-              PASS_RATE=$(awk "BEGIN {
-                printf \"%.2f\",
-                (($PASSED + $FLAKY)/$TOTAL)*100
-              }")
-              FAIL_RATE=$(awk "BEGIN {
-                printf \"%.2f\",
-                ($FAILED/$TOTAL)*100
-              }")
-              FLAKY_RATE=$(awk "BEGIN {
-                printf \"%.2f\",
-                ($FLAKY/$TOTAL)*100
-              }")
-              SKIP_RATE=$(awk "BEGIN {
-                printf \"%.2f\",
-                ($SKIPPED/$TOTAL)*100
-              }")
-              QUALITY_SCORE=$(awk "BEGIN {
-                printf \"%.0f\",
-                (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
-              }")
+              # PASS_RATE=$(awk "BEGIN {
+              #   printf \"%.2f\",
+              #   (($PASSED + $FLAKY)/$TOTAL)*100
+              # }")
+              # FAIL_RATE=$(awk "BEGIN {
+              #   printf \"%.2f\",
+              #   ($FAILED/$TOTAL)*100
+              # }")
+              # FLAKY_RATE=$(awk "BEGIN {
+              #   printf \"%.2f\",
+              #   ($FLAKY/$TOTAL)*100
+              # }")
+              # SKIP_RATE=$(awk "BEGIN {
+              #   printf \"%.2f\",
+              #   ($SKIPPED/$TOTAL)*100
+              # }")
+              # QUALITY_SCORE=$(awk "BEGIN {
+              #   printf \"%.0f\",
+              #   (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
+              # }")
+              calculate_metrics \
+                "$TOTAL" \
+                "$PASSED" \
+                "$FAILED" \
+                "$FLAKY" \
+                "$SKIPPED"
             else
               PASS_RATE=0
               FAIL_RATE=0
@@ -514,6 +558,45 @@ jobs:
 
           done
 
+          # Module Breakdown
+          jq -r '
+          .suites[].suites[]
+          | select(.file != null)
+          | [
+              (.file | split("/")[0]),
+              (.file | split("/")[1] | sub("\\.spec\\.js$"; "")),
+
+              (.specs | length),
+
+              ([.specs[]
+                | select(.ok == true)
+                | select(
+                    any(.tests[].results[]?; .status=="flaky") | not
+                )
+              ] | length),
+
+              ([.specs[]
+                | select(.ok == false)
+              ] | length),
+
+              ([.specs[]
+                | select(
+                    any(.tests[].results[]?; .status=="flaky")
+                )
+              ] | length),
+
+              ([.specs[]
+                | select(
+                    all(.tests[].results[]?; .status=="skipped")
+                )
+              ] | length)
+          ]
+          | @tsv
+          ' playwright-report/results.json |
+          while IFS=$'\t' read -r APP MODULE TOTAL PASSED FAILED FLAKY SKIPPED
+          do
+
+          ### Application Health Dashboard Display
           {
             echo "APPLICATION_DASHBOARD<<EOF"
 
