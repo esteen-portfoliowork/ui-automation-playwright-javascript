@@ -591,7 +591,6 @@ jobs:
             echo "| $APP_NAME | $MODULE | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> module-breakdown.md
           done
 
-          
           // Generate Slack formatted text
           const fs = require('fs');
 
@@ -649,7 +648,6 @@ jobs:
             process.env.GITHUB_OUTPUT,
             `MODULE_BREAKDOWN_TEXT=${JSON.stringify(moduleText)}\n`
           );
-
 
       - name: 🔍 Debug Breakdown Tables
         if: always()
