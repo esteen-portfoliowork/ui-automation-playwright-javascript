@@ -600,32 +600,50 @@ jobs:
           done
 
           ### Generate Slack Table Rows
-          node <<'NODE'
+          
           const fs = require('fs');
 
           function createRows(file, outputName) {
             const lines = fs.readFileSync(file, 'utf8')
-              .split('\n')
+              .split(/\r?\n/)
               .filter(line => line.trim().startsWith('|'));
 
-            const rows = lines
-              .filter((line, index) => index === 0 || !/^\|[\s|:-]+\|$/.test(line.trim()))
+            let rows = lines
+              .filter(line => !/^\|[\s|:-]+\|$/.test(line.trim()))
               .map(line => {
-                const cells = line.trim()
+                return line.trim()
                   .replace(/^\|/, '')
                   .replace(/\|$/, '')
                   .split('|')
                   .map(cell => ({
                     type: 'raw_text',
-                    text: cell.trim()
+                    text: cell.trim() || '-'
                   }));
-
-                return cells;
               });
+
+            if (rows.length === 0) {
+              throw new Error(`No table rows found in ${file}`);
+            }
+
+            // Use the header as the expected column count
+            const columnCount = rows[0].length;
+
+            // Ensure all rows have consistent column counts
+            rows = rows.map(row => {
+              while (row.length < columnCount) {
+                row.push({ type: 'raw_text', text: '-' });
+              }
+
+              return row.slice(0, columnCount);
+            });
+
+            console.log(`${file}: ${rows.length} rows, ${columnCount} columns`);
+
+            const output = JSON.stringify(rows);
 
             fs.appendFileSync(
               process.env.GITHUB_OUTPUT,
-              `${outputName}=${JSON.stringify(rows)}\n`
+              `${outputName}=${output}\n`
             );
           }
 
@@ -638,7 +656,19 @@ jobs:
             'module-breakdown.md',
             'MODULE_BREAKDOWN_ROWS'
           );
-          NODE
+
+      - name: 🔍 Debug Breakdown Tables
+        if: always()
+        run: |
+          echo "===== APPLICATION HEALTH ====="
+          cat application-health-dashboard.md
+
+          echo "===== MODULE BREAKDOWN ====="
+          cat module-breakdown.md
+
+          echo "===== SLACK TABLE OUTPUTS ====="
+          echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
+          echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
 
       - name: 📄 Upload Playwright Report
         if: always()
@@ -847,6 +877,7 @@ jobs:
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
             channel: "C0CDR49PPSL"
+            text: "Playwright execution summary. See the message blocks for application health and module breakdown details."
 
             blocks:
               - type: header
@@ -1084,6 +1115,7 @@ jobs:
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload: |
             channel: "C0CDR49PPSL"
+            text: "Playwright execution summary. See the message blocks for application health and module breakdown details."
 
             blocks:
               - type: header
@@ -1291,10 +1323,10 @@ jobs:
                   type: plain_text
                   text: "🌐 Application Health Dashboard"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_DASHBOARD }}
+              - type: table
+                column_settings:
+                  - is_wrapped: true
+                rows: ${{ fromJSON(steps.breakdown.outputs.APPLICATION_HEALTH_ROWS) }}
 
               - type: divider
 
@@ -1304,10 +1336,10 @@ jobs:
                   type: plain_text
                   text: "📦 Module Breakdown"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}
+              - type: table
+                column_settings:
+                  - is_wrapped: true
+                rows: ${{ fromJSON(steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS) }}
 
               - type: divider
 
