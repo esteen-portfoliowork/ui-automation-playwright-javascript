@@ -418,13 +418,6 @@ jobs:
         id: breakdown
         if: always()
         run: |
-          echo "===== MODULE PATHS ====="
-          jq -r '
-          .suites[].suites[]
-          | select(.file != null)
-          | .file
-          ' playwright-report/results.json
-
           # Get Application
           get_app_name() {
             case "$1" in
@@ -535,26 +528,6 @@ jobs:
           do
             APP_NAME=$(get_app_name "$APP")
             if [ "$TOTAL" -gt 0 ]; then
-              # PASS_RATE=$(awk "BEGIN {
-              #   printf \"%.2f\",
-              #   (($PASSED + $FLAKY)/$TOTAL)*100
-              # }")
-              # FAIL_RATE=$(awk "BEGIN {
-              #   printf \"%.2f\",
-              #   ($FAILED/$TOTAL)*100
-              # }")
-              # FLAKY_RATE=$(awk "BEGIN {
-              #   printf \"%.2f\",
-              #   ($FLAKY/$TOTAL)*100
-              # }")
-              # SKIP_RATE=$(awk "BEGIN {
-              #   printf \"%.2f\",
-              #   ($SKIPPED/$TOTAL)*100
-              # }")
-              # QUALITY_SCORE=$(awk "BEGIN {
-              #   printf \"%.0f\",
-              #   (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
-              # }")
               calculate_metrics \
                 "$TOTAL" \
                 "$PASSED" \
@@ -628,8 +601,7 @@ jobs:
 
           ### Application Health Dashboard Display
           {
-            echo "APPLICATION_DASHBOARD<<EOF"
-
+            echo "APPLICATION_HEALTH_DASHBOARD<<EOF"
             awk -F'|' '
             NR > 2 {
               gsub(/^[ \t]+|[ \t]+$/, "", $2)
@@ -648,7 +620,31 @@ jobs:
                 $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
             }
             ' application-summary.md
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
+          ### Module Breakdown Display
+          {
+            echo "MODULE_BREAKDOWN<<EOF"
+            awk -F'|' '
+            NR > 2 {
+              gsub(/^[ \t]+|[ \t]+$/, "", $2)
+              gsub(/^[ \t]+|[ \t]+$/, "", $3)
+              gsub(/^[ \t]+|[ \t]+$/, "", $4)
+              gsub(/^[ \t]+|[ \t]+$/, "", $5)
+              gsub(/^[ \t]+|[ \t]+$/, "", $6)
+              gsub(/^[ \t]+|[ \t]+$/, "", $7)
+              gsub(/^[ \t]+|[ \t]+$/, "", $8)
+              gsub(/^[ \t]+|[ \t]+$/, "", $9)
+              gsub(/^[ \t]+|[ \t]+$/, "", $10)
+              gsub(/^[ \t]+|[ \t]+$/, "", $11)
+              gsub(/^[ \t]+|[ \t]+$/, "", $12)
+              gsub(/^[ \t]+|[ \t]+$/, "", $13)
+
+              printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s | Health:%s |\n",
+                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+            }
+            ' application-summary.md
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
@@ -1041,7 +1037,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
+                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_DASHBOARD }}
 
               - type: divider
 
@@ -1050,6 +1046,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "📦 Module Breakdown"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}
 
               - type: divider
 
@@ -1301,7 +1302,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_DASHBOARD }}
+                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_DASHBOARD }}
 
               - type: divider
 
@@ -1310,6 +1311,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "📦 Module Breakdown"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}
 
               - type: divider
 
