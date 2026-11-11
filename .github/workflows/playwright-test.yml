@@ -649,18 +649,18 @@ jobs:
             `MODULE_BREAKDOWN_TEXT=${JSON.stringify(moduleText)}\n`
           );
 
-      - name: 🔍 Debug Breakdown Tables
-        if: always()
-        run: |
-          echo "===== APPLICATION HEALTH ====="
-          cat application-health-dashboard.md
+      # - name: 🔍 Debug Breakdown Tables
+      #   if: always()
+      #   run: |
+      #     echo "===== APPLICATION HEALTH ====="
+      #     cat application-health-dashboard.md
 
-          echo "===== MODULE BREAKDOWN ====="
-          cat module-breakdown.md
+      #     echo "===== MODULE BREAKDOWN ====="
+      #     cat module-breakdown.md
 
-          echo "===== SLACK TABLE OUTPUTS ====="
-          echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
-          echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
+      #     echo "===== SLACK TABLE OUTPUTS ====="
+      #     echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
+          # echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
 
       - name: 📄 Upload Playwright Report
         if: always()
