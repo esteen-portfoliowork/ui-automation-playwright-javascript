@@ -474,7 +474,7 @@ jobs:
 
           # Table header for Module Breakdown
           echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
-          echo "|-------------|-------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|------|" >> module-breakdownapplication-summary.md
+          echo "|-------------|-------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|------|" >> module-breakdown.md
 
           # Application Health Dashboard
           jq -r '
