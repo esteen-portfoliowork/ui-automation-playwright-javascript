@@ -642,8 +642,10 @@ jobs:
               gsub(/^[ \t]+|[ \t]+$/, "", $13)
               gsub(/^[ \t]+|[ \t]+$/, "", $14)
 
-              printf "• %s | Module:%s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s | Health:%s |\n",
-                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
+              # printf "• %s | Module:%s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s | Health:%s |\n",
+              #   $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
+              prinf "• %s - %s\n Total:%s   Passed:%s   Failed:%s\n Flaky:%s   Skipped:%s\n Pass Rate:%s   Fail Rate:%s\n Flaky Rate:%s   Skipped Rate:%s\n Quality Score:%s   Health:%s\n"
+              $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
             }
             ' module-breakdown.md
             echo "EOF"
