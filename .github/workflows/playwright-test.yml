@@ -470,12 +470,12 @@ jobs:
           }
 
           # Table header for Application Health Dashboard
-          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |" > application-health-dashboard.md
-          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|" >> application-health-dashboard.md
+          echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > application-health-dashboard.md
+          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|-----------|" >> application-health-dashboard.md
 
           # Table header for Module Breakdown
           echo "| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
-          echo "|-------------|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|--------|" >> module-breakdown.md
+          echo "|-------------|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|-----------|" >> module-breakdown.md
 
           # Application Health Dashboard
           jq -r '
@@ -541,7 +541,7 @@ jobs:
               SKIP_RATE=0
               QUALITY_SCORE=0
             fi
-            echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% |" >> application-health-dashboard.md
+            echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> application-health-dashboard.md
           done
 
           # Module Breakdown
@@ -599,55 +599,46 @@ jobs:
             echo "| $APP_NAME | $MODULE | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> module-breakdown.md
           done
 
-          ### Application Health Dashboard Display
-          {
-            echo "APPLICATION_HEALTH_DASHBOARD<<EOF"
-            awk -F'|' '
-            NR > 2 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $3)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
-              gsub(/^[ \t]+|[ \t]+$/, "", $5)
-              gsub(/^[ \t]+|[ \t]+$/, "", $6)
-              gsub(/^[ \t]+|[ \t]+$/, "", $7)
-              gsub(/^[ \t]+|[ \t]+$/, "", $8)
-              gsub(/^[ \t]+|[ \t]+$/, "", $9)
-              gsub(/^[ \t]+|[ \t]+$/, "", $10)
-              gsub(/^[ \t]+|[ \t]+$/, "", $11)
-              gsub(/^[ \t]+|[ \t]+$/, "", $12)
+          ### Generate Slack Table Rows
+          node <<'NODE'
+          const fs = require('fs');
 
-              printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s |\n",
-                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
-            }
-            ' application-health-dashboard.md
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
+          function createRows(file, outputName) {
+            const lines = fs.readFileSync(file, 'utf8')
+              .split('\n')
+              .filter(line => line.trim().startsWith('|'));
 
-          ### Module Breakdown Display
-          {
-            echo "MODULE_BREAKDOWN<<EOF"
-            awk -F'|' '
-            NR > 2 {
-              gsub(/^[ \t]+|[ \t]+$/, "", $2)
-              gsub(/^[ \t]+|[ \t]+$/, "", $3)
-              gsub(/^[ \t]+|[ \t]+$/, "", $4)
-              gsub(/^[ \t]+|[ \t]+$/, "", $5)
-              gsub(/^[ \t]+|[ \t]+$/, "", $6)
-              gsub(/^[ \t]+|[ \t]+$/, "", $7)
-              gsub(/^[ \t]+|[ \t]+$/, "", $8)
-              gsub(/^[ \t]+|[ \t]+$/, "", $9)
-              gsub(/^[ \t]+|[ \t]+$/, "", $10)
-              gsub(/^[ \t]+|[ \t]+$/, "", $11)
-              gsub(/^[ \t]+|[ \t]+$/, "", $12)
-              gsub(/^[ \t]+|[ \t]+$/, "", $13)
-              gsub(/^[ \t]+|[ \t]+$/, "", $14)
+            const rows = lines
+              .filter((line, index) => index === 0 || !/^\|[\s|:-]+\|$/.test(line.trim()))
+              .map(line => {
+                const cells = line.trim()
+                  .replace(/^\|/, '')
+                  .replace(/\|$/, '')
+                  .split('|')
+                  .map(cell => ({
+                    type: 'raw_text',
+                    text: cell.trim()
+                  }));
 
-              prinf "• %s - %s\n Total:%s   Passed:%s   Failed:%s\n Flaky:%s   Skipped:%s\n Pass Rate:%s   Fail Rate:%s\n Flaky Rate:%s   Skipped Rate:%s\n Quality Score:%s   Health:%s\n",
-                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
-            }
-            ' module-breakdown.md
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
+                return cells;
+              });
+
+            fs.appendFileSync(
+              process.env.GITHUB_OUTPUT,
+              `${outputName}=${JSON.stringify(rows)}\n`
+            );
+          }
+
+          createRows(
+            'application-health-dashboard.md',
+            'APPLICATION_HEALTH_ROWS'
+          );
+
+          createRows(
+            'module-breakdown.md',
+            'MODULE_BREAKDOWN_ROWS'
+          );
+          NODE
 
       - name: 📄 Upload Playwright Report
         if: always()
@@ -1035,10 +1026,10 @@ jobs:
                   type: plain_text
                   text: "🌐 Application Health Dashboard"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_DASHBOARD }}
+              - type: table
+                column_settings:
+                  - is_wrapped: true
+                rows: ${{ fromJSON(steps.breakdown.outputs.APPLICATION_HEALTH_ROWS) }}
 
               - type: divider
 
@@ -1048,11 +1039,10 @@ jobs:
                   type: plain_text
                   text: "📦 Module Breakdown"
 
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: |
-                  ${{ steps.breakdown.outputs.MODULE_BREAKDOWN }}
+              - type: table
+                column_settings:
+                  - is_wrapped: true
+                rows: ${{ fromJSON(steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS) }}
 
               - type: divider
 
