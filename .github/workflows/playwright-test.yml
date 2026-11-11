@@ -643,10 +643,9 @@ jobs:
               gsub(/^[ \t]+|[ \t]+$/, "", $10)
               gsub(/^[ \t]+|[ \t]+$/, "", $11)
               gsub(/^[ \t]+|[ \t]+$/, "", $12)
-              gsub(/^[ \t]+|[ \t]+$/, "", $13)
 
-              printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s | Health:%s\n",
-                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+              printf "• %s | Total:%s | Passed:%s | Failed:%s | Flaky:%s | Skipped:%s | Pass Rate:%s | Fail Rate:%s | Flaky Rate:%s | Skipped Rate:%s | Quality Score:%s |\n",
+                $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
             }
             ' application-summary.md
 
