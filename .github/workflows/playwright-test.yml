@@ -293,12 +293,11 @@ jobs:
             SKIPPED_RATE=0
           fi
 
+          echo "TOTAL_TESTS=$TOTAL" >> $GITHUB_ENV
           echo "PASSED_TESTS=$PASSED" >> $GITHUB_ENV
           echo "FAILED_TESTS=$FAILED" >> $GITHUB_ENV
-          echo "SKIPPED_TESTS=$SKIPPED" >> $GITHUB_ENV
           echo "FLAKY_TESTS=$FLAKY" >> $GITHUB_ENV
-          echo "TOTAL_TESTS=$TOTAL" >> $GITHUB_ENV
-
+          echo "SKIPPED_TESTS=$SKIPPED" >> $GITHUB_ENV
           echo "PASS_RATE=$PASS_RATE" >> $GITHUB_ENV
           echo "FAILURE_RATE=$FAILURE_RATE" >> $GITHUB_ENV
           echo "FLAKY_RATE=$FLAKY_RATE" >> $GITHUB_ENV
@@ -413,10 +412,11 @@ jobs:
           # Get Application
           get_app_name() {
             case "$1" in
-              sauce-demo)   echo "SauceDemo" ;;
-              orangehr)     echo "OrangeHR" ;;
-              qa-playground) echo "QA Playground" ;;
-              *)            echo "$1" ;;
+              expand-testing) echo "Expand Testing" ;;
+              orange-hrm)     echo "Orange HRM" ;;
+              qa-playground)  echo "QA Playground" ;;
+              sauce-demo)     echo "SauceDemo" ;;
+              *)              echo "$1" ;;
             esac
           }
 
