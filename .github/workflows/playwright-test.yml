@@ -1425,6 +1425,7 @@ jobs:
           $(cat application-health-dashboard.md)
 
           ## 📦 Module Breakdown
+          $(cat module-breakdown.md)
 
           ## 🏷️ Tag Execution Summary
 
