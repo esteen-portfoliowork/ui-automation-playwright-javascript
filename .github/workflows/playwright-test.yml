@@ -673,13 +673,21 @@ jobs:
             fs.readFileSync(reportPath, 'utf8')
           );
           const tagStats = {};
+          const excludedTags = new Set([
+            'sauce-demo',
+            'orange-hrm'
+          ]);
           function collectSpecs(suites = []) {
             for (const suite of suites) {
               for (const spec of suite.specs || []) {
                 const tags = spec.tags?.length
                   ? spec.tags
                   : (spec.title.match(/@[a-zA-Z0-9_-]+/g) || []);
-                const uniqueTags = [...new Set(tags)];
+                const uniqueTags = [...new Set(tags)].filter(tag =>
+                  !excludedTags.has(
+                    String(tag).replace(/^@/, '').toLowerCase()
+                  )
+                );
                 if (!uniqueTags.length) continue;
                 const results = (spec.tests || [])
                   .flatMap(test => test.results || []);
