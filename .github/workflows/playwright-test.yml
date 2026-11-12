@@ -709,7 +709,7 @@ jobs:
           UNTAGGED_COUNT=$(wc -l < untagged-test-cases.txt | tr -d ' ')
           {
             echo ""
-            echo "## ⚠️ Test Cases Without Tags"
+            echo "### ⚠️ Test Cases Without Tags"
             echo ""
             echo "**Total Untagged Test Cases: $UNTAGGED_COUNT**"
             echo ""
@@ -787,22 +787,19 @@ jobs:
             `MODULE_BREAKDOWN_TEXT=${JSON.stringify(moduleText)}\n`
           );
 
-                    // Tag Execution Summary
+          // Tag Execution Summary
           const tagRows = readTable('tag-execution-summary.md');
-
           const tagText = tagRows.slice(1)
             .filter(row => row.length >= 12)
             .map(row =>
               `• *@${row[0].replace(/^@/, '')}* — Total: ${row[1]} | Passed: ${row[2]} | Failed: ${row[3]} | Flaky: ${row[4]} | Skipped: ${row[5]} | Pass Rate: ${row[6]} | Fail Rate: ${row[7]} | Flaky Rate: ${row[8]} | Skipped Rate: ${row[9]} | Quality Score: ${row[10]} | Health: ${row[11]}`
             )
             .join('\n');
-
           const untaggedLines = fs.existsSync('untagged-test-cases.txt')
             ? fs.readFileSync('untagged-test-cases.txt', 'utf8')
                 .split(/\r?\n/)
                 .filter(Boolean)
             : [];
-
           const untaggedText = untaggedLines.length
             ? untaggedLines.slice(0, 15).map((line, index) => {
                 const [title, file] = line.split('\t');
@@ -812,14 +809,12 @@ jobs:
                 ? `\n…and ${untaggedLines.length - 15} more.`
                 : '')
             : 'All test cases have valid tags.';
-
           const tagExecutionText = [
             tagText || 'No tagged tests found.',
             '',
             `⚠️ *Test Cases Without Tags: ${untaggedLines.length}*`,
             untaggedText
           ].join('\n');
-
           fs.appendFileSync(
             process.env.GITHUB_OUTPUT,
             `TAG_EXECUTION_TEXT=${JSON.stringify(tagExecutionText)}\n`
@@ -841,7 +836,7 @@ jobs:
           echo "===== SLACK TABLE OUTPUTS ====="
           echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
-          echo '${{ steps.tag_summary.outputs.TAG_SUMMARY_TEXT }}' | jq .
+          echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
           
       - name: 📤 Upload Application Health Dashboard
         if: always()
