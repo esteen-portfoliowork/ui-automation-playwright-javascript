@@ -750,15 +750,14 @@ jobs:
             '|------|------:|------:|------:|------:|------:|----------:|----------:|----------:|----------:|----------:|',
             ...rows
           ].join('\n');
-          fs.writeFileSync(
-            outputPath,
-            rows.length
-              ? content + '\n'
-              : 'No tagged tests found in the Playwright report.';
+          const slackText = rows.length
+            ? rows.map(row => row.replace(/\|/g, ' | ').trim()).join('\n')
+            : 'No tagged tests found.';
+
           fs.appendFileSync(
             process.env.GITHUB_OUTPUT,
             `TAG_SUMMARY_TEXT=${JSON.stringify(slackText)}\n`
-          );          
+          );    
           NODE
 
       - name: 🔍 Debug Breakdown Tables
