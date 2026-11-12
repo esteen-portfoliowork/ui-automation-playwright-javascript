@@ -782,8 +782,17 @@ jobs:
 
           // Markdown table for tag-execution-summary.md
           const rows = tagEntries.map(item => {
-            const { tag, stats, passRate, failRate, flakyRate,
-              skippedRate, qualityScore, health } = item;
+            const {
+              tag,
+              stats,
+              passRate,
+              failRate,
+              flakyRate,
+              skippedRate,
+              qualityScore,
+              health,
+              healthIcon
+            } = item;
 
             return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% | ${healthIcon} ${health} |`;
           });
