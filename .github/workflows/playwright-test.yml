@@ -740,7 +740,7 @@ jobs:
                 : '0.00';
               const qualityScore = stats.total
                 ? (((stats.passed + (stats.flaky * 0.05)) /
-                  stats.total) * 100).tofixed(2)
+                  stats.total) * 100).toFixed(2)
                 : '0.00';
               return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% |`;
             });
