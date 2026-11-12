@@ -789,8 +789,6 @@ jobs:
           });
 
           const content = [
-            '# 🏷️ Tag Execution Summary',
-            '',
             '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
             '|------|------:|------:|------:|------:|------:|----------:|----------:|----------:|----------:|----------:|----------|',
             ...(rows.length ? rows : ['| No tagged tests found | - | - | - | - | - | - | - | - | - | - | - |'])
