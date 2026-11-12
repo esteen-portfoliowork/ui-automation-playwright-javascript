@@ -1189,6 +1189,11 @@ jobs:
                   type: plain_text
                   text: "🏷️ Tag Execution Summary"
 
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.tag_summary.outputs.TAG_SUMMARY_TEXT }}
+
               - type: divider
 
               - type: header
@@ -1454,6 +1459,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "🏷️ Tag Execution Summary"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.tag_summary.outputs.TAG_SUMMARY_TEXT }}
 
               - type: divider
 
