@@ -785,7 +785,7 @@ jobs:
             const { tag, stats, passRate, failRate, flakyRate,
               skippedRate, qualityScore, health } = item;
 
-            return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% | ${health} |`;
+            return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% | ${healthIcon} ${health} |`;
           });
 
           const content = [
