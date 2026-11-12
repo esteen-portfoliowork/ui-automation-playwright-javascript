@@ -732,11 +732,19 @@ jobs:
               const failRate = stats.total
                 ? (stats.failed / stats.total * 100).toFixed(2)
                 : '0.00';
-              return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% |`;
+              const flakyRate = stats.total
+                ? (stats.flaky / stats.total * 100).toFixed(2)
+                : '0.00';
+              const skippedRate = stats.total
+                ? (stats.skipped / stats.total * 100).toFixed(2)
+                : '0.00';
+              const qualityScore = (((stats.passed + (stats.flaky * 0.05) /
+                stats.total) * 100).tofixed(2);
+              return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% |`;
             });
           const content = [
-            '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate |',
-            '|-----|------:|-------:|-------:|------:|--------:|----------:|----------:|',
+            '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |',
+            '|------|------:|------:|------:|------:|------:|----------:|----------:|----------:|----------:|----------:|',
             ...rows
           ].join('\n');
           fs.writeFileSync(
