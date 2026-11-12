@@ -1637,6 +1637,7 @@ jobs:
           $(cat module-breakdown.md)
 
           ## 🏷️ Tag Execution Summary
+          $(cat tag-execution-summary.md)
 
           ## ❌ Failed Module
 
