@@ -723,84 +723,62 @@ jobs:
             }
           }
           collectSpecs(report.suites || []);
-          const rows = Object.entries(tagStats)
+          const tagEntries = Object.entries(tagStats)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([tag, stats]) => {
               const passRate = stats.total
-                ? ((stats.passed + stats.flaky) /
-                    stats.total * 100).toFixed(2)
+                ? ((stats.passed + stats.flaky) / stats.total * 100).toFixed(2)
                 : '0.00';
+
               const failRate = stats.total
                 ? (stats.failed / stats.total * 100).toFixed(2)
                 : '0.00';
+
               const flakyRate = stats.total
                 ? (stats.flaky / stats.total * 100).toFixed(2)
                 : '0.00';
+
               const skippedRate = stats.total
                 ? (stats.skipped / stats.total * 100).toFixed(2)
                 : '0.00';
+
               const qualityScore = stats.total
-                ? (((stats.passed + (stats.flaky * 0.05)) /
-                  stats.total) * 100).toFixed(2)
+                ? ((stats.passed + (stats.flaky * 0.05)) /
+                  stats.total * 100).toFixed(2)
                 : '0.00';
-              return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% |`;
+
+              // Determine tag health
+              let health;
+              let healthIcon;
+              let healthUrl;
+
+              if (stats.failed > 0) {
+                health = 'Critical';
+                healthIcon = ':red_circle:';
+                healthUrl = 'https://a.slack-edge.com/production-standard-emoji-assets/16.0/google-medium/1f534@2x.png';
+              } else if (stats.flaky > 0) {
+                health = 'Unstable';
+                healthIcon = ':large_yellow_circle:';
+                healthUrl = 'https://a.slack-edge.com/production-standard-emoji-assets/16.0/google-medium/1f7e1@2x.png';
+              } else {
+                health = 'Healthy';
+                healthIcon = ':large_green_circle:';
+                healthUrl = 'https://a.slack-edge.com/production-standard-emoji-assets/16.0/google-medium/1f7e2@2x.png';
+              }
+
+              return {
+                tag,
+                stats,
+                passRate,
+                failRate,
+                flakyRate,
+                skippedRate,
+                qualityScore,
+                health,
+                healthIcon,
+                healthUrl
+              };
             });
-          const tagEntries = Object.entries(tagStats)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([tag, stats]) => {
-            const passRate = stats.total
-              ? ((stats.passed + stats.flaky) / stats.total * 100).toFixed(2)
-              : '0.00';
-
-            const failRate = stats.total
-              ? (stats.failed / stats.total * 100).toFixed(2)
-              : '0.00';
-
-            const flakyRate = stats.total
-              ? (stats.flaky / stats.total * 100).toFixed(2)
-              : '0.00';
-
-            const skippedRate = stats.total
-              ? (stats.skipped / stats.total * 100).toFixed(2)
-              : '0.00';
-
-            const qualityScore = stats.total
-              ? ((stats.passed + (stats.flaky * 0.05)) /
-                stats.total * 100).toFixed(2)
-              : '0.00';
-
-            // Determine tag health
-            let health;
-            let healthIcon;
-            let healthUrl;
-
-            if (stats.failed > 0) {
-              health = 'Critical';
-              healthIcon = ':red_circle:';
-              healthUrl = 'https://a.slack-edge.com/production-standard-emoji-assets/16.0/google-medium/1f534@2x.png';
-            } else if (stats.flaky > 0) {
-              health = 'Unstable';
-              healthIcon = ':large_yellow_circle:';
-              healthUrl = 'https://a.slack-edge.com/production-standard-emoji-assets/16.0/google-medium/1f7e1@2x.png';
-            } else {
-              health = 'Healthy';
-              healthIcon = ':large_green_circle:';
-              healthUrl = 'https://a.slack-edge.com/production-standard-emoji-assets/16.0/google-medium/1f7e2@2x.png';
-            }
-
-            return {
-              tag,
-              stats,
-              passRate,
-              failRate,
-              flakyRate,
-              skippedRate,
-              qualityScore,
-              health,
-              healthIcon,
-              healthUrl
-            };
-          });
 
           // Markdown table for tag-execution-summary.md
           const rows = tagEntries.map(item => {
