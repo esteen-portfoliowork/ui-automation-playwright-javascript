@@ -746,10 +746,17 @@ jobs:
               return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% |`;
             });
           const content = [
+            '# 🏷️ Tag Execution Summary',
+            '',
             '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |',
             '|------|------:|------:|------:|------:|------:|----------:|----------:|----------:|----------:|----------:|',
-            ...rows
+            ...(rows.length ? rows : ['| No tagged tests found | - | - | - | - | - | - | - | - | - | - |'])
           ].join('\n');
+
+          // Generate Markdown file
+          fs.writeFileSync(outputPath, `${content}\n`);
+
+          // Generate Slack output
           const slackText = rows.length
             ? rows.map(row => row.replace(/\|/g, ' | ').trim()).join('\n')
             : 'No tagged tests found.';
@@ -757,7 +764,10 @@ jobs:
           fs.appendFileSync(
             process.env.GITHUB_OUTPUT,
             `TAG_SUMMARY_TEXT=${JSON.stringify(slackText)}\n`
-          );    
+          );
+
+          console.log('Tag Execution Summary generated: ' + outputPath);
+          console.log(content);
           NODE
 
       - name: 🔍 Debug Breakdown Tables
@@ -775,8 +785,31 @@ jobs:
           echo "===== SLACK TABLE OUTPUTS ====="
           echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
-          echo '${{ steps.tag_summary.outputs.TAG_SUMMARY_ROWS }}' | jq .
+          echo '${{ steps.tag_summary.outputs.TAG_SUMMARY_TEXT }}' | jq .
           
+      - name: 📤 Upload Application Health Dashboard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-health-dashboard
+          path: application-health-dashboard.md
+          if-no-files-found: warn
+
+      - name: 📤 Upload Module Breakdown
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-breakdown
+          path: module-breakdown.md
+          if-no-files-found: warn
+
+      - name: 📤 Upload Tag Execution Summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tag-execution-summary
+          path: tag-execution-summary.md
+          if-no-files-found: warn
 
       - name: 📄 Upload Playwright Report
         if: always()
