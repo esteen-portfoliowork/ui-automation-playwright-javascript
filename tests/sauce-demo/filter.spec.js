@@ -72,8 +72,15 @@ test.describe('SauceDemo - Filter', () => {
         },
         {
             id: 'SD-015-FAIL',
-            title: 'Filter Products by Name (A to Z)',
+            title: 'Fail Filter Products by Name (A to Z)',
             tag: ['@regression', '@e2e', '@filter', '@positive', '@sauce-demo'],
+            filter: filterOptions.nameAscending,
+            getter: 'getProductNames',
+            validator: 'validateDescendingOrder'
+        },
+        {
+            id: 'SD-016-FAIL',
+            title: 'No Tag Filter Products by Name (A to Z)',
             filter: filterOptions.nameAscending,
             getter: 'getProductNames',
             validator: 'validateDescendingOrder'

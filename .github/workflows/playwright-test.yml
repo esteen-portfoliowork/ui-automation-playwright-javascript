@@ -409,7 +409,7 @@ jobs:
         id: breakdown
         if: always()
         run: |
-          # Get Application
+          # ------- Get Application Name -------
           get_app_name() {
             case "$1" in
               expand-testing) echo "Expand Testing" ;;
@@ -420,27 +420,26 @@ jobs:
             esac
           }
 
-          # Get Health
-            get_health() {
-              local FAILED=$1
-              local FLAKY=$2
-              if [ "$FAILED" -gt 0 ]; then
-                echo "🔴 Critical"
-              elif [ "$FLAKY" -gt 0 ]; then
-                echo "🟡 Unstable"
-              else
-                echo "🟢 Healthy"
-              fi
-            }
+          # ------- Get Health -------
+          get_health() {
+            local FAILED=$1
+            local FLAKY=$2
+            if [ "$FAILED" -gt 0 ]; then
+              echo "🔴 Critical"
+            elif [ "$FLAKY" -gt 0 ]; then
+              echo "🟡 Unstable"
+            else
+              echo "🟢 Healthy"
+            fi
+          }
 
-          # Common Calculation
+          # ------- Common Calculation -------
           calculate_metrics() {
             local TOTAL=$1
             local PASSED=$2
             local FAILED=$3
             local FLAKY=$4
             local SKIPPED=$5
-
             if [ "$TOTAL" -gt 0 ]; then
               HEALTH=$(get_health "$FAILED" "$FLAKY")
               PASS_RATE=$(awk "BEGIN { printf \"%.2f\", (($PASSED + $FLAKY)/$TOTAL)*100 }")
@@ -461,21 +460,24 @@ jobs:
             fi
           }
 
-          # Table header for Application Health Dashboard
+          # ------- Table header for Application Health Dashboard -------
           echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > application-health-dashboard.md
           echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|-----------|" >> application-health-dashboard.md
 
-          # Table header for Module Breakdown
+          # ------- Table header for Module Breakdown -------
           echo "| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
           echo "|-------------|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|-----------|" >> module-breakdown.md
 
-          # Application Health Dashboard
+          # ------- Table header for Tag Execution Summary -------
+          echo "| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > tag-execution-summary.md
+          echo "|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|-----------|" >> tag-execution-summary.md
+
+          # ------- Application Health Dashboard -------
           jq -r '
           .suites[].suites[]
           | select(.file != null)
           | [
               (.file | split("/")[0]),
-
               (.specs | length),
 
               ([.specs[]
@@ -535,14 +537,13 @@ jobs:
             echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> application-health-dashboard.md
           done
 
-          # Module Breakdown
+          # ------- Module Breakdown -------
           jq -r '
           .suites[].suites[]
           | select(.file != null)
           | [
               (.file | split("/")[0]),
               (.file | split("/")[1] | sub("\\.spec\\.js$"; "")),
-
               (.specs | length),
 
               ([.specs[]
@@ -590,7 +591,139 @@ jobs:
             echo "| $APP_NAME | $MODULE | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> module-breakdown.md
           done
 
-          # Generate Slack formatted text
+          # ------- Tag Execution Summary -------
+          # Excluded tag
+          EXCLUDED_TAGS="sauce-demo orange-hrm"
+
+          # Untagged test case
+          : > untagged-test-cases.txt
+
+          # Extract test cases without valid tags.
+          jq -r '
+            def all_specs($file):
+              . as $suite |
+              (
+                $suite.specs[]? |
+                {
+                  spec: .,
+                  file: ($suite.file // $file // "Unknown file")
+                }
+              ),
+              (
+                $suite.suites[]? |
+                all_specs($suite.file // $file)
+              );
+
+            .suites[]? |
+            all_specs("")
+            | . as $item
+            | $item.spec as $spec
+            | [
+                (($spec.tags // [])[]),
+                (($spec.tests // [])[]?.tags // [])[]
+              ]
+            | map(tostring | sub("^@"; ""))
+            | unique
+            | map(select(
+                (ascii_downcase != "sauce-demo") and
+                (ascii_downcase != "orange-hrm")
+              ))
+            | select(length == 0)
+            | "\($item.spec.title // "Untitled test case")\t\($item.file)"
+          ' playwright-report/results.json > untagged-test-cases.txt
+
+          # Extract valid tags and their test case statuses.
+          jq -r '
+            def all_specs($file):
+              . as $suite |
+              (
+                $suite.specs[]? |
+                {
+                  spec: .,
+                  file: ($suite.file // $file // "Unknown file")
+                }
+              ),
+              (
+                $suite.suites[]? |
+                all_specs($suite.file // $file)
+              );
+
+            .suites[]? |
+            all_specs("")
+            | .spec as $spec
+            | [
+                (($spec.tags // [])[]),
+                (($spec.tests // [])[]?.tags // [])[]
+              ]
+            | map(tostring | sub("^@"; ""))
+            | unique
+            | map(select(
+                (ascii_downcase != "sauce-demo") and
+                (ascii_downcase != "orange-hrm")
+              ))
+            | . as $tags
+            | (
+                [$spec.tests[]?.results[]?] as $results
+                | if (($results | length) > 0 and
+                      all($results[]; .status == "skipped")) then
+                    "skipped"
+                  elif $spec.ok == false then
+                    "failed"
+                  elif any($results[]?; .status == "flaky") then
+                    "flaky"
+                  else
+                    "passed"
+                  end
+              ) as $status
+            | $tags[]
+            | "\(.)\t\($status)"
+          ' playwright-report/results.json |
+          awk -F'\t' '
+          {
+            total[$1]++
+            status[$1, $2]++
+          }
+          END {
+            for (tag in total) {
+              print tag "\t" total[tag] \
+                "\t" status[tag, "passed"]+0 \
+                "\t" status[tag, "failed"]+0 \
+                "\t" status[tag, "flaky"]+0 \
+                "\t" status[tag, "skipped"]+0
+            }
+          }' |
+          sort -k1,1 |
+          while IFS=$'\t' read -r TAG TOTAL PASSED FAILED FLAKY SKIPPED
+          do
+            calculate_metrics \
+              "$TOTAL" \
+              "$PASSED" \
+              "$FAILED" \
+              "$FLAKY" \
+              "$SKIPPED"
+
+            echo "| @$TAG | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> tag-execution-summary.md
+          done
+
+          # Add untagged test case details to the Markdown report.
+          UNTAGGED_COUNT=$(wc -l < untagged-test-cases.txt | tr -d ' ')
+          {
+            echo ""
+            echo "### ⚠️ Test Cases Without Tags"
+            echo ""
+            echo "**Total Untagged Test Cases: $UNTAGGED_COUNT**"
+            echo ""
+
+            if [ "$UNTAGGED_COUNT" -gt 0 ]; then
+              awk -F'\t' '{
+                printf "%d. **%s** — `%s`\n", NR, $1, $2
+              }' untagged-test-cases.txt
+            else
+              echo "All test cases have valid tags."
+            fi
+          } >> tag-execution-summary.md
+
+          # ------- Generate Slack formatted text -------
           node <<'NODE'
           const fs = require('fs');
           function readTable(file) {
@@ -653,123 +786,81 @@ jobs:
             process.env.GITHUB_OUTPUT,
             `MODULE_BREAKDOWN_TEXT=${JSON.stringify(moduleText)}\n`
           );
+
+          // Tag Execution Summary
+          const tagRows = readTable('tag-execution-summary.md');
+          const tagText = tagRows.slice(1)
+            .filter(row => row.length >= 12)
+            .map(row =>
+              `• *@${row[0].replace(/^@/, '')}* — Total: ${row[1]} | Passed: ${row[2]} | Failed: ${row[3]} | Flaky: ${row[4]} | Skipped: ${row[5]} | Pass Rate: ${row[6]} | Fail Rate: ${row[7]} | Flaky Rate: ${row[8]} | Skipped Rate: ${row[9]} | Quality Score: ${row[10]} | Health: ${row[11]}`
+            )
+            .join('\n');
+          const untaggedLines = fs.existsSync('untagged-test-cases.txt')
+            ? fs.readFileSync('untagged-test-cases.txt', 'utf8')
+                .split(/\r?\n/)
+                .filter(Boolean)
+            : [];
+          const untaggedText = untaggedLines.length
+            ? untaggedLines.slice(0, 15).map((line, index) => {
+                const [title, file] = line.split('\t');
+                return `${index + 1}. *${title}* — \`${file}\``;
+              }).join('\n') +
+              (untaggedLines.length > 15
+                ? `\n…and ${untaggedLines.length - 15} more.`
+                : '')
+            : 'All test cases have valid tags.';
+          const tagExecutionText = [
+            tagText || 'No tagged tests found.',
+            '',
+            `⚠️ *Test Cases Without Tags: ${untaggedLines.length}*`,
+            untaggedText
+          ].join('\n');
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `TAG_EXECUTION_TEXT=${JSON.stringify(tagExecutionText)}\n`
+          );
           NODE
 
-      - name: 🏷️ Build Tag Execution Summary
+      - name: 🔍 Debug Breakdown Tables
         if: always()
         run: |
-          node <<'NODE'
-          const fs = require('fs');
-          const reportPath = 'playwright-report/results.json';
-          const outputPath = 'tag-execution-summary.md';
-          if (!fs.existsSync(reportPath)) {
-            fs.writeFileSync(
-              outputPath,
-              'No Playwright JSON report available.\n'
-            );
-            process.exit(0);
-          }
-          const report = JSON.parse(
-            fs.readFileSync(reportPath, 'utf8')
-          );
-          const tagStats = {};
-          const excludedTags = new Set([
-            'sauce-demo',
-            'orange-hrm'
-          ]);
-          function collectSpecs(suites = []) {
-            for (const suite of suites) {
-              for (const spec of suite.specs || []) {
-                const tags = spec.tags?.length
-                  ? spec.tags
-                  : (spec.title.match(/@[a-zA-Z0-9_-]+/g) || []);
-                const uniqueTags = [...new Set(tags)].filter(tag =>
-                  !excludedTags.has(
-                    String(tag).replace(/^@/, '').toLowerCase()
-                  )
-                );
-                if (!uniqueTags.length) continue;
-                const results = (spec.tests || [])
-                  .flatMap(test => test.results || []);
-                const isFlaky = results.some(
-                  result => result.status === 'flaky'
-                );
-                const isSkipped = results.length > 0 &&
-                  results.every(result => result.status === 'skipped');
-                const isFailed = spec.ok === false;
-                const status = isSkipped
-                  ? 'skipped'
-                  : isFailed
-                    ? 'failed'
-                    : isFlaky
-                      ? 'flaky'
-                      : 'passed';
-                for (const tag of uniqueTags) {
-                  if (!tagStats[tag]) {
-                    tagStats[tag] = {
-                      total: 0,
-                      passed: 0,
-                      failed: 0,
-                      flaky: 0,
-                      skipped: 0
-                    };
-                  }
-                  tagStats[tag].total++;
-                  tagStats[tag][status]++;
-                }
-              }
-              collectSpecs(suite.suites || []);
-            }
-          }
-          collectSpecs(report.suites || []);
-          const rows = Object.entries(tagStats)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([tag, stats]) => {
-              const passRate = stats.total
-                ? ((stats.passed + stats.flaky) /
-                    stats.total * 100).toFixed(2)
-                : '0.00';
-              const failRate = stats.total
-                ? (stats.failed / stats.total * 100).toFixed(2)
-                : '0.00';
-              const flakyRate = stats.total
-                ? (stats.flaky / stats.total * 100).toFixed(2)
-                : '0.00';
-              const skippedRate = stats.total
-                ? (stats.skipped / stats.total * 100).toFixed(2)
-                : '0.00';
-              const qualityScore = stats.total
-                ? (((stats.passed + (stats.flaky * 0.05)) /
-                  stats.total) * 100).toFixed(2)
-                : '0.00';
-              return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% |`;
-            });
-          const content = [
-            '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |',
-            '|------|------:|------:|------:|------:|------:|----------:|----------:|----------:|----------:|----------:|',
-            ...rows
-          ].join('\n');
-          fs.writeFileSync(
-            outputPath,
-            rows.length
-              ? content + '\n'
-              : 'No tagged tests found in the Playwright report.\n'
-          );
-          console.log(content);
-          NODE
+          echo "===== APPLICATION HEALTH ====="
+          cat application-health-dashboard.md
 
-      # - name: 🔍 Debug Breakdown Tables
-      #   if: always()
-      #   run: |
-      #     echo "===== APPLICATION HEALTH ====="
-      #     cat application-health-dashboard.md
+          echo "===== MODULE BREAKDOWN ====="
+          cat module-breakdown.md
 
-      #     echo "===== MODULE BREAKDOWN ====="
-      #     cat module-breakdown.md
+          echo "===== TAG SUMMARY ====="
+          cat tag-execution-summary.md
 
-      #     echo "===== SLACK TABLE OUTPUTS ====="
-      #     echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
-          # echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
+          echo "===== SLACK TABLE OUTPUTS ====="
+          echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
+          echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
+          echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
+          
+      - name: 📤 Upload Application Health Dashboard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-health-dashboard
+          path: application-health-dashboard.md
+          if-no-files-found: warn
+
+      - name: 📤 Upload Module Breakdown
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-breakdown
+          path: module-breakdown.md
+          if-no-files-found: warn
+
+      - name: 📤 Upload Tag Execution Summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tag-execution-summary
+          path: tag-execution-summary.md
+          if-no-files-found: warn
 
       - name: 📄 Upload Playwright Report
         if: always()
@@ -1189,6 +1280,11 @@ jobs:
                   type: plain_text
                   text: "🏷️ Tag Execution Summary"
 
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}
+
               - type: divider
 
               - type: header
@@ -1454,6 +1550,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "🏷️ Tag Execution Summary"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}
 
               - type: divider
 
