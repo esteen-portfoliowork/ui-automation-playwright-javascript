@@ -802,52 +802,52 @@ jobs:
             };
           });
 
-        // Markdown table for tag-execution-summary.md
-        const rows = tagEntries.map(item => {
-          const { tag, stats, passRate, failRate, flakyRate,
-            skippedRate, qualityScore, health } = item;
+          // Markdown table for tag-execution-summary.md
+          const rows = tagEntries.map(item => {
+            const { tag, stats, passRate, failRate, flakyRate,
+              skippedRate, qualityScore, health } = item;
 
-          return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% | ${health} |`;
-        });
+            return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% | ${health} |`;
+          });
 
-        const content = [
-          '# 🏷️ Tag Execution Summary',
-          '',
-          '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
-          '|------|------:|------:|------:|------:|------:|----------:|----------:|----------:|----------:|----------:|----------|',
-          ...(rows.length ? rows : ['| No tagged tests found | - | - | - | - | - | - | - | - | - | - | - |'])
-        ].join('\n');
+          const content = [
+            '# 🏷️ Tag Execution Summary',
+            '',
+            '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
+            '|------|------:|------:|------:|------:|------:|----------:|----------:|----------:|----------:|----------:|----------|',
+            ...(rows.length ? rows : ['| No tagged tests found | - | - | - | - | - | - | - | - | - | - | - |'])
+          ].join('\n');
 
-        // Generate Markdown file
-        fs.writeFileSync(outputPath, `${content}\n`);
+          // Generate Markdown file
+          fs.writeFileSync(outputPath, `${content}\n`);
 
-        // Slack display
-        const slackText = tagEntries.length
-          ? tagEntries.map(item => {
-              const {
-                tag,
-                stats,
-                passRate,
-                failRate,
-                flakyRate,
-                skippedRate,
-                qualityScore,
-                health,
-                healthIcon,
-                healthUrl
-              } = item;
+          // Slack display
+          const slackText = tagEntries.length
+            ? tagEntries.map(item => {
+                const {
+                  tag,
+                  stats,
+                  passRate,
+                  failRate,
+                  flakyRate,
+                  skippedRate,
+                  qualityScore,
+                  health,
+                  healthIcon,
+                  healthUrl
+                } = item;
 
-              return `• *${tag}* — Total: ${stats.total} | Passed: ${stats.passed} | Failed: ${stats.failed} | Flaky: ${stats.flaky} | Skipped: ${stats.skipped} | Pass Rate: ${passRate}% | Fail Rate: ${failRate}% | Flaky Rate: ${flakyRate}% | Skipped Rate: ${skippedRate}% | Quality Score: ${qualityScore}% | Health: <${healthUrl}|${healthIcon}> ${health}`;
-            }).join('\n')
-          : 'No tagged tests found.';
+                return `• *${tag}* — Total: ${stats.total} | Passed: ${stats.passed} | Failed: ${stats.failed} | Flaky: ${stats.flaky} | Skipped: ${stats.skipped} | Pass Rate: ${passRate}% | Fail Rate: ${failRate}% | Flaky Rate: ${flakyRate}% | Skipped Rate: ${skippedRate}% | Quality Score: ${qualityScore}% | Health: <${healthUrl}|${healthIcon}> ${health}`;
+              }).join('\n')
+            : 'No tagged tests found.';
 
-        fs.appendFileSync(
-          process.env.GITHUB_OUTPUT,
-          `TAG_SUMMARY_TEXT=${JSON.stringify(slackText)}\n`
-        );
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `TAG_SUMMARY_TEXT=${JSON.stringify(slackText)}\n`
+          );
 
-        console.log('Tag Execution Summary generated: ' + outputPath);
-        console.log(content);
+          console.log('Tag Execution Summary generated: ' + outputPath);
+          console.log(content);
           NODE
 
       - name: 🔍 Debug Breakdown Tables
