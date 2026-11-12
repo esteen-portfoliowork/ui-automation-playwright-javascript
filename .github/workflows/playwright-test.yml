@@ -1257,7 +1257,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT }}
+                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -1270,7 +1270,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT }}
+                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -1283,7 +1283,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}
+                  text: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -1425,35 +1425,35 @@ jobs:
                   - - type: raw_text
                       text: "🔢 PR Number"
                     - type: raw_text
-                      text: "#${{ env.PR_NUMBER }}"
+                      text: "#${{ env.PR_NUMBER || github.event.pull_request.number || 'N/A' }}"
                   - - type: raw_text
                       text: "📝 PR Title"
                     - type: raw_text
-                      text: "${{ env.PR_TITLE }}"
+                      text: "${{ env.PR_TITLE || github.event.pull_request.title || 'N/A' }}"
                   - - type: raw_text
                       text: "🔗 PR URL"
                     - type: raw_text
-                      text: "${{ env.PR_URL }}"
+                      text: "${{ env.PR_URL || github.event.pull_request.html_url || 'N/A' }}"
                   - - type: raw_text
                       text: "👤 Author"
                     - type: raw_text
-                      text: "${{ env.PR_AUTHOR }}"
+                      text: "${{ env.PR_AUTHOR || github.event.pull_request.user.login || 'N/A' }}"
                   - - type: raw_text
                       text: "🌿 Source Branch"
                     - type: raw_text
-                      text: "${{ env.PR_BRANCH }}"
+                      text: "${{ env.PR_BRANCH || github.event.pull_request.head.ref || 'N/A' }}"
                   - - type: raw_text
                       text: "🎯 Target Branch"
                     - type: raw_text
-                      text: "${{ env.PR_BASE_BRANCH }}"
+                      text: "${{ env.PR_BASE_BRANCH || github.event.pull_request.base.ref || 'N/A' }}"
                   - - type: raw_text
                       text: "🏷️ Label"
                     - type: raw_text
-                      text: "${{ env.PR_LABELS }}"
+                      text: "${{ env.PR_LABELS || 'No labels' }}"
                   - - type: raw_text
                       text: "🔖 Commit SHA"
                     - type: raw_text
-                      text: "${{ env.PR_SHA }}"
+                      text: "${{ env.PR_SHA || github.event.pull_request.head.sha || github.sha || 'N/A' }}"
 
               - type: divider
 
@@ -1528,7 +1528,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT }}
+                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -1541,7 +1541,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT }}
+                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -1554,7 +1554,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}
+                  text: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
 
               - type: divider
 
