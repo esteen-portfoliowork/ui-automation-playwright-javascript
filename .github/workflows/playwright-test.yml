@@ -754,12 +754,11 @@ jobs:
             outputPath,
             rows.length
               ? content + '\n'
-              : 'No tagged tests found in the Playwright report.\n'
+              : 'No tagged tests found in the Playwright report.';
           fs.appendFileSync(
             process.env.GITHUB_OUTPUT,
-            `TAG_SUMMARY_TEXT=${JSON.stringify(moduleText)}\n`
+            `TAG_SUMMARY_TEXT=${JSON.stringify(slackText)}\n`
           );          
-          console.log(content);
           NODE
 
       - name: 🔍 Debug Breakdown Tables
