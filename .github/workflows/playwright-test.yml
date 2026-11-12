@@ -755,22 +755,30 @@ jobs:
             rows.length
               ? content + '\n'
               : 'No tagged tests found in the Playwright report.\n'
-          );
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `TAG_SUMMARY_TEXT=${JSON.stringify(moduleText)}\n`
+          );          
           console.log(content);
           NODE
 
-      # - name: 🔍 Debug Breakdown Tables
-      #   if: always()
-      #   run: |
-      #     echo "===== APPLICATION HEALTH ====="
-      #     cat application-health-dashboard.md
+      - name: 🔍 Debug Breakdown Tables
+        if: always()
+        run: |
+          echo "===== APPLICATION HEALTH ====="
+          cat application-health-dashboard.md
 
-      #     echo "===== MODULE BREAKDOWN ====="
-      #     cat module-breakdown.md
+          echo "===== MODULE BREAKDOWN ====="
+          cat module-breakdown.md
 
-      #     echo "===== SLACK TABLE OUTPUTS ====="
-      #     echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
-          # echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
+          echo "===== TAG SUMMARY ====="
+          cat tag-execution-summary.md
+
+          echo "===== SLACK TABLE OUTPUTS ====="
+          echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
+          echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
+          echo '${{ steps.tag_summary.outputs.TAG_SUMMARY_ROWS }}' | jq .
+          
 
       - name: 📄 Upload Playwright Report
         if: always()
