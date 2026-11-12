@@ -656,6 +656,7 @@ jobs:
           NODE
 
       - name: 🏷️ Build Tag Execution Summary
+        id: tag_summary
         if: always()
         run: |
           node <<'NODE'
