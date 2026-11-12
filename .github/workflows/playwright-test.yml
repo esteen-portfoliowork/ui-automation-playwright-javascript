@@ -655,6 +655,109 @@ jobs:
           );
           NODE
 
+      - name: 🏷️ Build Tag Execution Summary
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const reportPath = 'playwright-report/results.json';
+          const outputPath = 'tag-execution-summary.md';
+          if (!fs.existsSync(reportPath)) {
+            fs.writeFileSync(
+              outputPath,
+              'No Playwright JSON report available.\n'
+            );
+            process.exit(0);
+          }
+          const report = JSON.parse(
+            fs.readFileSync(reportPath, 'utf8')
+          );
+          const tagStats = {};
+          const excludedTags = new Set([
+            'sauce-demo',
+            'orange-hrm'
+          ]);
+          function collectSpecs(suites = []) {
+            for (const suite of suites) {
+              for (const spec of suite.specs || []) {
+                const tags = spec.tags?.length
+                  ? spec.tags
+                  : (spec.title.match(/@[a-zA-Z0-9_-]+/g) || []);
+                const uniqueTags = [...new Set(tags)].filter(tag =>
+                  !excludedTags.has(
+                    String(tag).replace(/^@/, '').toLowerCase()
+                  )
+                );
+                if (!uniqueTags.length) continue;
+                const results = (spec.tests || [])
+                  .flatMap(test => test.results || []);
+                const isFlaky = results.some(
+                  result => result.status === 'flaky'
+                );
+                const isSkipped = results.length > 0 &&
+                  results.every(result => result.status === 'skipped');
+                const isFailed = spec.ok === false;
+                const status = isSkipped
+                  ? 'skipped'
+                  : isFailed
+                    ? 'failed'
+                    : isFlaky
+                      ? 'flaky'
+                      : 'passed';
+                for (const tag of uniqueTags) {
+                  if (!tagStats[tag]) {
+                    tagStats[tag] = {
+                      total: 0,
+                      passed: 0,
+                      failed: 0,
+                      flaky: 0,
+                      skipped: 0
+                    };
+                  }
+                  tagStats[tag].total++;
+                  tagStats[tag][status]++;
+                }
+              }
+              collectSpecs(suite.suites || []);
+            }
+          }
+          collectSpecs(report.suites || []);
+          const rows = Object.entries(tagStats)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([tag, stats]) => {
+              const passRate = stats.total
+                ? ((stats.passed + stats.flaky) /
+                    stats.total * 100).toFixed(2)
+                : '0.00';
+              const failRate = stats.total
+                ? (stats.failed / stats.total * 100).toFixed(2)
+                : '0.00';
+              const flakyRate = stats.total
+                ? (stats.flaky / stats.total * 100).toFixed(2)
+                : '0.00';
+              const skippedRate = stats.total
+                ? (stats.skipped / stats.total * 100).toFixed(2)
+                : '0.00';
+              const qualityScore = stats.total
+                ? (((stats.passed + (stats.flaky * 0.05)) /
+                  stats.total) * 100).toFixed(2)
+                : '0.00';
+              return `| ${tag} | ${stats.total} | ${stats.passed} | ${stats.failed} | ${stats.flaky} | ${stats.skipped} | ${passRate}% | ${failRate}% | ${flakyRate}% | ${skippedRate}% | ${qualityScore}% |`;
+            });
+          const content = [
+            '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score |',
+            '|------|------:|------:|------:|------:|------:|----------:|----------:|----------:|----------:|----------:|',
+            ...rows
+          ].join('\n');
+          fs.writeFileSync(
+            outputPath,
+            rows.length
+              ? content + '\n'
+              : 'No tagged tests found in the Playwright report.\n'
+          );
+          console.log(content);
+          NODE
+
       # - name: 🔍 Debug Breakdown Tables
       #   if: always()
       #   run: |
@@ -854,12 +957,17 @@ jobs:
           echo "## 🌐 Application Health Dashboard" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Module" >> $GITHUB_STEP_SUMMARY
 
