@@ -970,6 +970,10 @@ jobs:
                 ? `\n…and ${failedTests.length - 10} more failed tests.`
                 : '')
             : 'No failed tests.';
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `FAILED_TEST_TEXT=${JSON.stringify(failedTestsSlack)}\n`
+          );
 
           // ------- Generate GitHub Outputs -------
           function setOutput(name, value) {
@@ -987,30 +991,30 @@ jobs:
           console.log(`Failed tests: ${failedTests.length}`);
           NODE
 
-      - name: 🔍 Debug Breakdown Tables
-        if: always()
-        run: |
-          echo "===== APPLICATION HEALTH ====="
-          cat application-health-dashboard.md
+      # - name: 🔍 Debug Breakdown Tables
+      #   if: always()
+      #   run: |
+      #     echo "===== APPLICATION HEALTH ====="
+      #     cat application-health-dashboard.md
 
-          echo "===== MODULE BREAKDOWN ====="
-          cat module-breakdown.md
+      #     echo "===== MODULE BREAKDOWN ====="
+      #     cat module-breakdown.md
 
-          echo "===== TAG SUMMARY ====="
-          cat tag-execution-summary.md
+      #     echo "===== TAG SUMMARY ====="
+      #     cat tag-execution-summary.md
 
-          echo "===== FAILED MODULE ====="
-          cat failed-modules.md
+      #     echo "===== FAILED MODULE ====="
+      #     cat failed-modules.md
 
-          echo "===== FAILED TESTS ====="
-          cat failed-tests.md
+      #     echo "===== FAILED TESTS ====="
+      #     cat failed-tests.md
 
-          echo "===== SLACK TABLE OUTPUTS ====="
-          echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
-          echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
-          echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
-          echo '${{ steps.failed_details.outputs.FAILED_MODULES_SLACK }}'
-          echo '${{ steps.failed_details.outputs.FAILED_TESTS_SLACK }}'
+      #     echo "===== SLACK TABLE OUTPUTS ====="
+      #     echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
+      #     echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
+      #     echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
+      #     echo '${{ steps.failed_details.outputs.FAILED_MODULES_SLACK }}'
+      #     echo '${{ steps.failed_details.outputs.FAILED_TESTS_SLACK }}'
           
       - name: 📤 Upload Application Health Dashboard
         if: always()
@@ -1036,12 +1040,20 @@ jobs:
           path: tag-execution-summary.md
           if-no-files-found: warn
 
-      - name: 📤 Upload Failed Module
+      - name: 📤 Upload Failed Modules
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: failed-modules
           path: failed-modules.md
+          if-no-files-found: warn
+
+      - name: 📤 Upload Failed Tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-tests
+          path: failed-tests.md
           if-no-files-found: warn
 
       - name: 📄 Upload Playwright Report
@@ -1242,12 +1254,15 @@ jobs:
           cat tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "## ❌ Failed Module" >> $GITHUB_STEP_SUMMARY
+          echo "## ❌ Failed Modules" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat failed-modules.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat failed-tests.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
 
@@ -1476,7 +1491,7 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
-                  text: "❌ Failed Module"
+                  text: "❌ Failed Modules"
 
               - type: section
                 text:
@@ -1752,7 +1767,7 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
-                  text: "❌ Failed Module"
+                  text: "❌ Failed Modules"
 
               - type: section
                 text:
@@ -1834,7 +1849,7 @@ jobs:
           ## 🏷️ Tag Execution Summary
           $(cat tag-execution-summary.md)
 
-          ## ❌ Failed Module
+          ## ❌ Failed Modules
           $(cat failed-modules.md)
 
           ## ❌ Failed Tests
