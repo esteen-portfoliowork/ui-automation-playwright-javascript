@@ -1005,8 +1005,8 @@ jobs:
           echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
-          echo '${{ steps.failed_details.outputs.FAILED_MODULES_MARKDOWN }}'
-          echo '${{ steps.failed_details.outputs.FAILED_TESTS_MARKDOWN }}'
+          echo '${{ steps.failed_details.outputs.FAILED_MODULES_SLACK }}'
+          echo '${{ steps.failed_details.outputs.FAILED_TESTS_SLACK }}'
           
       - name: 📤 Upload Application Health Dashboard
         if: always()
@@ -1474,6 +1474,11 @@ jobs:
                   type: plain_text
                   text: "❌ Failed Module"
 
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.failed_details.outputs.FAILED_MODULES_SLACK }}
+
               - type: divider
 
               - type: header
@@ -1744,6 +1749,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "❌ Failed Module"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.failed_details.outputs.FAILED_MODULES_SLACK }}
 
               - type: divider
 
