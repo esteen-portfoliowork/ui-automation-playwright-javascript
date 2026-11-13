@@ -1863,6 +1863,7 @@ jobs:
           $(cat failed-modules.md)
 
           ## ❌ Failed Tests
+          $(cat failed-tests.md)
 
           ## 🔗 Report Links
 
