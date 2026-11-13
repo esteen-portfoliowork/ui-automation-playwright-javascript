@@ -462,15 +462,15 @@ jobs:
 
           # ------- Table header for Application Health Dashboard -------
           echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > application-health-dashboard.md
-          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|-----------|" >> application-health-dashboard.md
+          echo "|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:------------:|:-----------:|:-----------:|:-----------:|" >> application-health-dashboard.md
 
           # ------- Table header for Module Breakdown -------
           echo "| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
-          echo "|-------------|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|-----------|" >> module-breakdown.md
+          echo "|:-------------:|:-------------:|:--------:|:--------:|:--------:|:--------:|:---------:|:-----------:|:-----------:|:------------:|:--------------:|:---------------:|:-----------:|" >> module-breakdown.md
 
           # ------- Table header for Tag Execution Summary -------
           echo "| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > tag-execution-summary.md
-          echo "|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|-----------|" >> tag-execution-summary.md
+          echo "|:-------------:|:--------:|:--------:|:--------:|:--------:|:---------:|:-----------:|:-----------:|:------------:|:--------------:|:---------------:|:-----------:|" >> tag-execution-summary.md
 
           # ------- Application Health Dashboard -------
           jq -r '
@@ -912,7 +912,7 @@ jobs:
           // ------- Table header for Failed Module -------
           const moduleMarkdown = [
             '| Application | Module | Failed Tests |',
-            '|-------------|--------|-------------:|',
+            '|:-------------:|:--------:|:-------------:|',
             ...(modules.length
               ? modules.map(item =>
                   `| ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.count} |`
@@ -927,7 +927,7 @@ jobs:
           // ------- Table header for Failed Test -------
           const testMarkdown = [
             '| Application | Module | Test Case | Project | Retries |',
-            '|-------------|--------|-----------|---------|--------:|',
+            '|:-------------:|:--------:|:-----------:|:---------:|:--------:|',
             ...(failedTests.length
               ? failedTests.map(test =>
                   `| ${escapeMarkdown(test.application)} | ${escapeMarkdown(test.module)} | ${escapeMarkdown(test.title)} | ${escapeMarkdown(test.project)} | ${test.retries} |`
@@ -1174,7 +1174,7 @@ jobs:
           echo "## 📋 Execution Overview" >> $GITHUB_STEP_SUMMARY
 
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "|------:|-------:|" >> $GITHUB_STEP_SUMMARY
           echo "| 🌐 Browser | ${{ env.BROWSER }} |" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "| 📁 Test Folder | ${{ github.event.inputs.folder }} |" >> $GITHUB_STEP_SUMMARY
@@ -1200,7 +1200,7 @@ jobs:
             echo "### 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-            echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "|------:|-------:|" >> $GITHUB_STEP_SUMMARY
             echo "| 🔢 PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
             echo "| 📝 PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
             echo "| 🔗 PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
@@ -1214,7 +1214,7 @@ jobs:
           echo "## 📊 Execution Metrics" >> $GITHUB_STEP_SUMMARY
 
           echo "| Metric | Value | % |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|----------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "|:----------:|:----------:|:----------:|" >> $GITHUB_STEP_SUMMARY
           echo "| 🧪 Total Tests | ${{ env.TOTAL_TESTS }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
@@ -1778,7 +1778,7 @@ jobs:
 
           ## 📋 Execution Overview
           | Item | Value |
-          |------|-------|
+          |:------:|:-------:|
           | 🌐 Browser | ${{ env.BROWSER }} |
           | 🏷️ Executed Tag | ${{ env.EXECUTED_TAG }} |
           | 🌍 Environment | ${{ env.ENVIRONMENT }} |
@@ -1790,7 +1790,7 @@ jobs:
 
           ### 📋 Pull Request Details
           | Item | Value |
-          |--------|--------|
+          |:--------:|:--------:|
           | 🔢 PR Number | #${{ env.PR_NUMBER }} |
           | 📝 PR Title | ${{ env.PR_TITLE }} |
           | 🔗 PR URL | ${{ env.PR_URL }} |
@@ -1802,7 +1802,7 @@ jobs:
 
           ## 📊 Execution Metrics
           | Metric | Value | % |
-          |----------|----------|----------|
+          |:----------:|:----------:|:----------:|
           | 🧪 Total Tests | ${{ env.TOTAL_TESTS }} | - |
           | ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |
           | ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |
