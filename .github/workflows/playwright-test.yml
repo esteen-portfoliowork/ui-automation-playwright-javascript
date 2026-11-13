@@ -462,15 +462,15 @@ jobs:
 
           # ------- Table header for Application Health Dashboard -------
           echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > application-health-dashboard.md
-          echo "|-------------|--------|--------|--------|--------|--------|-----------|-----------|------------|-----------|-----------|-----------|" >> application-health-dashboard.md
+          echo "|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:------------:|:-----------:|:-----------:|:-----------:|" >> application-health-dashboard.md
 
           # ------- Table header for Module Breakdown -------
           echo "| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
-          echo "|-------------|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|-----------|" >> module-breakdown.md
+          echo "|:-------------:|:-------------:|:--------:|:--------:|:--------:|:--------:|:---------:|:-----------:|:-----------:|:------------:|:--------------:|:---------------:|:-----------:|" >> module-breakdown.md
 
           # ------- Table header for Tag Execution Summary -------
           echo "| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > tag-execution-summary.md
-          echo "|-------------|--------|--------|--------|--------|---------|-----------|-----------|------------|--------------|---------------|-----------|" >> tag-execution-summary.md
+          echo "|:-------------:|:--------:|:--------:|:--------:|:--------:|:---------:|:-----------:|:-----------:|:------------:|:--------------:|:---------------:|:-----------:|" >> tag-execution-summary.md
 
           # ------- Application Health Dashboard -------
           jq -r '
@@ -821,6 +821,168 @@ jobs:
           );
           NODE
 
+      - name: ❌ Generate Failed Module and Test Details
+        id: failed_details
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const reportPath = 'playwright-report/results.json';
+          const report = fs.existsSync(reportPath)
+            ? JSON.parse(fs.readFileSync(reportPath, 'utf8'))
+            : { suites: [] };
+          const failedTests = [];
+          const moduleCounts = {};
+
+          // ------- Get Application Name -------
+          function getAppName(name) {
+            const applications = {
+              'expand-testing': 'Expand Testing',
+              'orange-hrm': 'Orange HRM',
+              'qa-playground': 'QA Playground',
+              'sauce-demo': 'SauceDemo'
+            };
+            return applications[name] || name;
+          }
+
+          // ------- Markdown Escaping -------
+          function escapeMarkdown(value) {
+            return String(value || 'N/A')
+              .replace(/\|/g, '\\|')
+              .replace(/\r?\n/g, ' ')
+              .trim();
+          }
+
+          // ------- Extract Failed Tests -------
+          function walk(suites, parentFile = '') {
+            for (const suite of suites || []) {
+              const file = suite.file || parentFile || 'Unknown';
+              
+              for (const spec of suite.specs || []) {
+                const specFile = spec.file || file;
+                const parts = specFile.replace(/\\/g, '/').split('/');
+                const app = parts[0] || 'Unknown';
+                const module = (parts[1] || 'Unknown')
+                  .replace(/\.spec\.(js|ts)$/, '');
+
+                for (const test of spec.tests || []) {
+
+                  // Exclude flaky tests: they have their own section.
+                  if (test.status !== 'unexpected') continue;
+
+                  const appName = getAppName(app);
+                  const testTitle = test.title || spec.title || 'Untitled test';
+                  const project = test.projectName || 'Default';
+                  const results = test.results || [];
+                  const lastResult = results.at(-1) || {};
+                  const error =
+                    lastResult.error?.message ||
+                    lastResult.errors?.[0]?.message ||
+                    'No error details available';
+                  const key = `${appName}::${module}`;
+                  moduleCounts[key] = moduleCounts[key] || {
+                    application: appName,
+                    module,
+                    count: 0
+                  };
+                  moduleCounts[key].count++;
+                  failedTests.push({
+                    application: appName,
+                    module,
+                    title: testTitle,
+                    project,
+                    error,
+                    retries: Math.max(0, results.length - 1)
+                  });
+                }
+              }
+              walk(suite.suites, file);
+            }
+          }
+
+          walk(report.suites || []);
+
+          // ------- Failed Module Markdown -------
+          const modules = Object.values(moduleCounts)
+            .sort((a, b) =>
+              a.application.localeCompare(b.application) ||
+              a.module.localeCompare(b.module)
+            );
+
+          // ------- Table header for Failed Module -------
+          const moduleMarkdown = [
+            '| Application | Module | Failed Tests |',
+            '|:-------------:|:--------:|:-------------:|',
+            ...(modules.length
+              ? modules.map(item =>
+                  `| ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.count} |`
+                )
+              : ['| N/A | No failed modules | 0 |'])
+          ].join('\n');
+          fs.writeFileSync(
+            'failed-modules.md',
+            moduleMarkdown + '\n'
+          );
+
+          // ------- Table header for Failed Test -------
+          const testMarkdown = [
+            '| Application | Module | Test Case | Project | Retries |',
+            '|:-------------:|:--------:|:-----------:|:---------:|:--------:|',
+            ...(failedTests.length
+              ? failedTests.map(test =>
+                  `| ${escapeMarkdown(test.application)} | ${escapeMarkdown(test.module)} | ${escapeMarkdown(test.title)} | ${escapeMarkdown(test.project)} | ${test.retries} |`
+                )
+              : ['| N/A | N/A | No failed tests | N/A | 0 |'])
+          ].join('\n');
+          fs.writeFileSync(
+            'failed-tests.md',
+            testMarkdown + '\n'
+          );
+
+          // ------- Generate Slack: Failed Modules -------
+          const groupedModules = {};
+          for (const item of modules) {
+            groupedModules[item.application] =
+              groupedModules[item.application] || [];
+
+            groupedModules[item.application].push(
+              `   • \`${item.module}\` — ${item.count} failed test${item.count === 1 ? '' : 's'}`
+            );
+          }
+          const failedModulesSlack = modules.length
+            ? Object.entries(groupedModules)
+                .map(([application, items]) =>
+                  `• *${application}*\n${items.join('\n')}`
+                )
+                .join('\n\n')
+            : 'No failed modules.';
+
+          // ------- Generate Slack: Failed Tests -------
+          const failedTestsSlack = failedTests.length
+            ? failedTests.slice(0, 10).map(test =>
+                `• *${test.application} / ${test.module}*\n   - ${test.title}`
+              ).join('\n')
+              + (failedTests.length > 10
+                ? `\n…and ${failedTests.length - 10} more failed tests.`
+                : '')
+            : 'No failed tests.';
+
+          // ------- Generate GitHub Outputs -------
+          function setOutput(name, value) {
+            const delimiter = `EOF_${name}`;
+            fs.appendFileSync(
+              process.env.GITHUB_OUTPUT,
+              `${name}<<${delimiter}\n${value}\n${delimiter}\n`
+            );
+          }
+          setOutput('FAILED_MODULES_MARKDOWN', moduleMarkdown);
+          setOutput('FAILED_TESTS_MARKDOWN', testMarkdown);
+          setOutput('FAILED_MODULES_SLACK', failedModulesSlack);
+          setOutput('FAILED_TESTS_SLACK', failedTestsSlack);
+          console.log(`Failed modules: ${modules.length}`);
+          console.log(`Failed tests: ${failedTests.length}`);
+          NODE
+
       - name: 🔍 Debug Breakdown Tables
         if: always()
         run: |
@@ -833,10 +995,18 @@ jobs:
           echo "===== TAG SUMMARY ====="
           cat tag-execution-summary.md
 
+          echo "===== FAILED MODULE ====="
+          cat failed-modules.md
+
+          echo "===== FAILED TESTS ====="
+          cat failed-tests.md
+
           echo "===== SLACK TABLE OUTPUTS ====="
           echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
+          echo '${{ steps.failed_details.outputs.FAILED_MODULES_MARKDOWN }}'
+          echo '${{ steps.failed_details.outputs.FAILED_TESTS_MARKDOWN }}'
           
       - name: 📤 Upload Application Health Dashboard
         if: always()
@@ -860,6 +1030,14 @@ jobs:
         with:
           name: tag-execution-summary
           path: tag-execution-summary.md
+          if-no-files-found: warn
+
+      - name: 📤 Upload Failed Module
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-modules
+          path: failed-modules.md
           if-no-files-found: warn
 
       - name: 📄 Upload Playwright Report
@@ -1022,7 +1200,7 @@ jobs:
             echo "### 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-            echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "|------:|-------:|" >> $GITHUB_STEP_SUMMARY
             echo "| 🔢 PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
             echo "| 📝 PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
             echo "| 🔗 PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
@@ -1036,7 +1214,7 @@ jobs:
           echo "## 📊 Execution Metrics" >> $GITHUB_STEP_SUMMARY
 
           echo "| Metric | Value | % |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|----------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "|:----------:|:----------:|:----------:|" >> $GITHUB_STEP_SUMMARY
           echo "| 🧪 Total Tests | ${{ env.TOTAL_TESTS }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |" >> $GITHUB_STEP_SUMMARY
@@ -1061,6 +1239,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Module" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat failed-modules.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
 
@@ -1621,7 +1802,7 @@ jobs:
 
           ## 📊 Execution Metrics
           | Metric | Value | % |
-          |----------|----------|----------|
+          |:----------:|:----------:|:----------:|
           | 🧪 Total Tests | ${{ env.TOTAL_TESTS }} | - |
           | ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |
           | ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |
