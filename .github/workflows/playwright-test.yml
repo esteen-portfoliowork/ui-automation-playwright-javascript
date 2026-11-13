@@ -1481,7 +1481,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.failed_details.outputs.FAILED_MODULES_SLACK }}
+                  text: ${{ steps.failed_details.outputs.FAILED_MODULE_TEXT }}
 
               - type: divider
 
@@ -1757,7 +1757,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.failed_details.outputs.FAILED_MODULES_SLACK }}
+                  text: ${{ steps.failed_details.outputs.FAILED_MODULE_TEXT }}
 
               - type: divider
 
