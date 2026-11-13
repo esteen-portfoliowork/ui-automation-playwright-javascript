@@ -1032,6 +1032,14 @@ jobs:
           path: tag-execution-summary.md
           if-no-files-found: warn
 
+      - name: 📤 Upload Failed Module
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-modules
+          path: failed-modules.md
+          if-no-files-found: warn
+
       - name: 📄 Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -1231,6 +1239,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Module" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat failed-modules.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
 
