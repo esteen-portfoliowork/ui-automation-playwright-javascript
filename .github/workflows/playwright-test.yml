@@ -966,6 +966,10 @@ jobs:
                 ? `\n…and ${failedTests.length - 10} more failed tests.`
                 : '')
             : 'No failed tests.';
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `FAILED_MODULE_TEXT=${JSON.stringify(failedTestsSlack)}\n`
+          );
 
           // ------- Generate GitHub Outputs -------
           function setOutput(name, value) {
