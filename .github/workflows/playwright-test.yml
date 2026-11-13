@@ -1506,6 +1506,11 @@ jobs:
                   type: plain_text
                   text: "❌ Failed Tests"
 
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.failed_details.outputs.FAILED_TEST_TEXT }}
+
               - type: divider
 
               - type: header
@@ -1781,6 +1786,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "❌ Failed Tests"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.failed_details.outputs.FAILED_TEST_TEXT }}
 
               - type: divider
 
