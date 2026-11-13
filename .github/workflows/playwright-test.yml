@@ -1835,7 +1835,7 @@ jobs:
           $(cat tag-execution-summary.md)
 
           ## ❌ Failed Module
-          $(cat failed-modules.md >> $GITHUB_STEP_SUMMARY)
+          $(cat failed-modules.md)
 
           ## ❌ Failed Tests
 
