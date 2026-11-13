@@ -1778,7 +1778,7 @@ jobs:
 
           ## 📋 Execution Overview
           | Item | Value |
-          |:------:|:-------:|
+          |------|-------|
           | 🌐 Browser | ${{ env.BROWSER }} |
           | 🏷️ Executed Tag | ${{ env.EXECUTED_TAG }} |
           | 🌍 Environment | ${{ env.ENVIRONMENT }} |
@@ -1790,7 +1790,7 @@ jobs:
 
           ### 📋 Pull Request Details
           | Item | Value |
-          |:--------:|:--------:|
+          |--------|--------|
           | 🔢 PR Number | #${{ env.PR_NUMBER }} |
           | 📝 PR Title | ${{ env.PR_TITLE }} |
           | 🔗 PR URL | ${{ env.PR_URL }} |
