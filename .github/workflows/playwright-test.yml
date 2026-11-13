@@ -956,6 +956,10 @@ jobs:
                 )
                 .join('\n\n')
             : 'No failed modules.';
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `FAILED_MODULE_TEXT=${JSON.stringify(failedModulesSlack)}\n`
+          );
 
           // ------- Generate Slack: Failed Tests -------
           const failedTestsSlack = failedTests.length
@@ -1005,8 +1009,8 @@ jobs:
           echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
-          echo '${{ steps.failed_details.outputs.FAILED_MODULES_MARKDOWN }}'
-          echo '${{ steps.failed_details.outputs.FAILED_TESTS_MARKDOWN }}'
+          echo '${{ steps.failed_details.outputs.FAILED_MODULES_SLACK }}'
+          echo '${{ steps.failed_details.outputs.FAILED_TESTS_SLACK }}'
           
       - name: 📤 Upload Application Health Dashboard
         if: always()
@@ -1200,7 +1204,7 @@ jobs:
             echo "### 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-            echo "|------:|-------:|" >> $GITHUB_STEP_SUMMARY
+            echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
             echo "| 🔢 PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
             echo "| 📝 PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
             echo "| 🔗 PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
@@ -1474,6 +1478,11 @@ jobs:
                   type: plain_text
                   text: "❌ Failed Module"
 
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.failed_details.outputs.FAILED_MODULE_TEXT }}
+
               - type: divider
 
               - type: header
@@ -1744,6 +1753,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "❌ Failed Module"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.failed_details.outputs.FAILED_MODULE_TEXT }}
 
               - type: divider
 
