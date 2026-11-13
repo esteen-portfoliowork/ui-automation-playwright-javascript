@@ -972,7 +972,7 @@ jobs:
             : 'No failed tests.';
           fs.appendFileSync(
             process.env.GITHUB_OUTPUT,
-            `FAILED_TEST_TEXT=${JSON.stringify(failedTestssSlack)}\n`
+            `FAILED_TEST_TEXT=${JSON.stringify(failedTestsSlack)}\n`
           );
 
           // ------- Generate GitHub Outputs -------
