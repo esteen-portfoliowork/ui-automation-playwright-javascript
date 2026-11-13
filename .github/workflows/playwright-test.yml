@@ -995,10 +995,18 @@ jobs:
           echo "===== TAG SUMMARY ====="
           cat tag-execution-summary.md
 
+          echo "===== FAILED MODULE ====="
+          cat failed-modules.md
+
+          echo "===== FAILED TESTS ====="
+          cat failed-tests.md
+
           echo "===== SLACK TABLE OUTPUTS ====="
           echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
           echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
+          echo '${{ steps.failed_details.outputs.FAILED_MODULES_MARKDOWN }}'
+          echo '${{ steps.failed_details.outputs.FAILED_TESTS_MARKDOWN }}'
           
       - name: 📤 Upload Application Health Dashboard
         if: always()
