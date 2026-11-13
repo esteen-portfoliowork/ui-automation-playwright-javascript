@@ -1174,7 +1174,7 @@ jobs:
           echo "## 📋 Execution Overview" >> $GITHUB_STEP_SUMMARY
 
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|------:|-------:|" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| 🌐 Browser | ${{ env.BROWSER }} |" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "| 📁 Test Folder | ${{ github.event.inputs.folder }} |" >> $GITHUB_STEP_SUMMARY
