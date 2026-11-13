@@ -956,6 +956,10 @@ jobs:
                 )
                 .join('\n\n')
             : 'No failed modules.';
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `FAILED_MODULE_TEXT=${JSON.stringify(failedModulesSlack)}\n`
+          );
 
           // ------- Generate Slack: Failed Tests -------
           const failedTestsSlack = failedTests.length
@@ -966,10 +970,6 @@ jobs:
                 ? `\n…and ${failedTests.length - 10} more failed tests.`
                 : '')
             : 'No failed tests.';
-          fs.appendFileSync(
-            process.env.GITHUB_OUTPUT,
-            `FAILED_MODULE_TEXT=${JSON.stringify(failedTestsSlack)}\n`
-          );
 
           // ------- Generate GitHub Outputs -------
           function setOutput(name, value) {
