@@ -1610,6 +1610,18 @@ jobs:
                   type: plain_text
                   text: "🔗 Report Links"
 
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: >-
+                    ${{ steps.report_links.outputs.REPORT_LINKS_SLACK }}
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: >-
+                    <${{ steps.upload_markdown_reports.outputs.artifact-url }}|📄 Markdown Execution Reports>
+
       - name: 📣 Notify Slack - PR Validation
         if: always() && github.event_name == 'pull_request'
         uses: slackapi/slack-github-action@v4
@@ -1903,6 +1915,18 @@ jobs:
                 text:
                   type: plain_text
                   text: "🔗 Report Links"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: >-
+                    ${{ steps.report_links.outputs.REPORT_LINKS_SLACK }}
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: >-
+                    <${{ steps.upload_markdown_reports.outputs.artifact-url }}|📄 Markdown Execution Reports>
 
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
