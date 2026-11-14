@@ -1139,58 +1139,6 @@ jobs:
       #       echo EOF
       #     } >> $GITHUB_OUTPUT
 
-
-      - name: 🔗 Prepare Report Links
-        id: report_links
-        if: always()
-        env:
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          PLAYWRIGHT_REPORT_URL: ${{ steps.upload_playwright_report.outputs.artifact-url }}
-          TEST_RESULTS_URL: ${{ steps.upload_test_results.outputs.artifact-url }}
-          JSON_RESULTS_URL: ${{ steps.upload_json_results.outputs.artifact-url }}
-          ALLURE_RESULTS_URL: ${{ steps.upload_allure_results.outputs.artifact-url }}
-          ALLURE_REPORT_URL: ${{ steps.upload_allure_report.outputs.artifact-url }}
-        run: |
-          # ------- Generate Markdown Report Links -------
-          {
-            echo ""
-            echo "- [GitHub Actions Run]($RUN_URL)"
-            if [ -n "$PLAYWRIGHT_REPORT_URL" ]; then
-              echo "- [Playwright HTML Report]($PLAYWRIGHT_REPORT_URL)"
-            fi
-            if [ -n "$TEST_RESULTS_URL" ]; then
-              echo "- [Test Results]($TEST_RESULTS_URL)"
-            fi
-            if [ -n "$JSON_RESULTS_URL" ]; then
-              echo "- [JSON Results]($JSON_RESULTS_URL)"
-            fi
-            if [ -n "$ALLURE_RESULTS_URL" ]; then
-              echo "- [Allure Results]($ALLURE_RESULTS_URL)"
-            fi
-            if [ -n "$ALLURE_REPORT_URL" ]; then
-              echo "- [Allure Report]($ALLURE_REPORT_URL)"
-            fi
-          } > report-links.md
-
-          # ------- Generate Slack Report Links -------
-          SLACK_LINKS="<${RUN_URL}|GitHub Actions Run>"
-          if [ -n "$PLAYWRIGHT_REPORT_URL" ]; then
-            SLACK_LINKS="$SLACK_LINKS | <${PLAYWRIGHT_REPORT_URL}|Playwright HTML Report>"
-          fi
-          if [ -n "$TEST_RESULTS_URL" ]; then
-            SLACK_LINKS="$SLACK_LINKS | <${TEST_RESULTS_URL}|Test Results>"
-          fi
-          if [ -n "$JSON_RESULTS_URL" ]; then
-            SLACK_LINKS="$SLACK_LINKS | <${JSON_RESULTS_URL}|JSON Results>"
-          fi
-          if [ -n "$ALLURE_RESULTS_URL" ]; then
-            SLACK_LINKS="$SLACK_LINKS | <${ALLURE_RESULTS_URL}|Allure Results>"
-          fi
-          if [ -n "$ALLURE_REPORT_URL" ]; then
-            SLACK_LINKS="$SLACK_LINKS | <${ALLURE_REPORT_URL}|Allure Report>"
-          fi
-          echo "REPORT_LINKS_SLACK=$SLACK_LINKS" >> "$GITHUB_OUTPUT"
-
       - name: 📤 Upload Markdown Reports
         id: upload_markdown_reports
         if: always()
@@ -1207,6 +1155,55 @@ jobs:
             report-links.md
           if-no-files-found: warn
           retention-days: 7
+
+      - name: 🔗 Prepare Report Links
+        id: report_links
+        if: always()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          PLAYWRIGHT_REPORT_URL: ${{ steps.upload_playwright_report.outputs.artifact-url }}
+          TEST_RESULTS_URL: ${{ steps.upload_test_results.outputs.artifact-url }}
+          JSON_RESULTS_URL: ${{ steps.upload_json_results.outputs.artifact-url }}
+          ALLURE_RESULTS_URL: ${{ steps.upload_allure_results.outputs.artifact-url }}
+          ALLURE_REPORT_URL: ${{ steps.upload_allure_report.outputs.artifact-url }}
+          MARKDOWN_REPORT_URL: ${{ steps.upload_markdown_reports.outputs.artifact-url }}
+        run: |
+          # ------- Generate Markdown Report Links -------
+          {
+            echo ""
+            echo "| **Report** | **Link** |"
+            echo "| ----------------------------- | -------- |"
+            echo "| 🎭 Playwright Report | ${PLAYWRIGHT_REPORT_URL:+[Download]($PLAYWRIGHT_REPORT_URL)} |"
+            echo "| 🧪 Test Results & Attachments | ${TEST_RESULTS_URL:+[Download]($TEST_RESULTS_URL)} |"
+            echo "| 📄 JSON Results | ${JSON_RESULTS_URL:+[Download]($JSON_RESULTS_URL)} |"
+            echo "| 📊 Allure Results | ${ALLURE_RESULTS_URL:+[Download]($ALLURE_RESULTS_URL)} |"
+            echo "| 📊 Allure Report | ${ALLURE_REPORT_URL:+[Download]($ALLURE_REPORT_URL)} |"
+            echo "| 📁 Markdown Execution Reports | ${MARKDOWN_REPORT_URL:+[Download]($MARKDOWN_REPORT_URL)} |"
+            echo ""
+            echo "[🔍 View GitHub Actions Run]($RUN_URL)"
+          } > report-links.md
+
+          # ------- Generate Slack Report Links -------
+          SLACK_LINKS="<${RUN_URL}|GitHub Actions Run>"
+          if [ -n "$PLAYWRIGHT_REPORT_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${PLAYWRIGHT_REPORT_URL}|Playwright Report>"
+          fi
+          if [ -n "$TEST_RESULTS_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${TEST_RESULTS_URL}|Test Results>"
+          fi
+          if [ -n "$JSON_RESULTS_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${JSON_RESULTS_URL}|JSON Results>"
+          fi
+          if [ -n "$ALLURE_RESULTS_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${ALLURE_RESULTS_URL}|Allure Results>"
+          fi
+          if [ -n "$ALLURE_REPORT_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${ALLURE_REPORT_URL}|Allure Report>"
+          fi
+          if [ -n "$MARKDOWN_REPORT_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${MARKDOWN_REPORT_URL}|Markdown Execution Reports>"
+          fi
+          echo "REPORT_LINKS_SLACK=$SLACK_LINKS" >> "$GITHUB_OUTPUT"
 
       - name: 🎨 Prepare Build Status
         if: always()
@@ -1930,8 +1927,6 @@ jobs:
 
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
-        env:
-          MARKDOWN_REPORT_URL: ${{ steps.upload_markdown_reports.outputs.artifact-url }}
         run: |
           cat <<EOF > pr-comment.md
           <!-- playwright-validation-report -->
@@ -1999,17 +1994,7 @@ jobs:
           $(cat flaky-tests.md)
 
           ## 🔗 Report Links
-          | Report | Link |
-          |------------|---------------|
-          | 🎭 Playwright Report | ${PLAYWRIGHT_REPORT_URL:+[View / Download]($PLAYWRIGHT_REPORT_URL)} |
-          | 🧪 Test Results & Attachments | ${TEST_RESULTS_URL:+[Download]($TEST_RESULTS_URL)} |
-          | 📄 JSON Results | ${JSON_RESULTS_URL:+[Download]($JSON_RESULTS_URL)} |
-          | 📊 Allure Results | ${ALLURE_RESULTS_URL:+[Download]($ALLURE_RESULTS_URL)} |
-          | 📊 Allure Report | ${ALLURE_REPORT_URL:+[Download]($ALLURE_REPORT_URL)} |
-          | 📄 Markdown Execution Reports | ${MARKDOWN_REPORT_URL:+[Download]($MARKDOWN_REPORT_URL)} |
           $(cat report-links.md)
-
-          [🔍 View GitHub Actions Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
       - name: 💬 Create or Update PR Comment
         if: always() && github.event_name == 'pull_request'
