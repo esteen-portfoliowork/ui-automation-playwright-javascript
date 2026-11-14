@@ -1009,6 +1009,10 @@ jobs:
                 ? `\n…and ${flakyTests.length - 10} more flaky tests.`
                 : '')
             : 'No flaky tests.';
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `FLAKY_TEST_TEXT=${JSON.stringify(flakyTestsSlack)}\n`
+          );
 
           // ------- Generate GitHub Outputs -------
           function setOutput(name, value) {
@@ -1568,6 +1572,19 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
+                  text: "⚠️ Flaky Tests"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.failed_flaky_details.outputs.FLAKY_TEST_TEXT }}
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
                   text: "🔗 Report Links"
 
       - name: 📣 Notify Slack - PR Validation
@@ -1842,6 +1859,19 @@ jobs:
                 text:
                   type: mrkdwn
                   text: ${{ steps.failed_flaky_details.outputs.FAILED_TEST_TEXT }}
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "⚠️ Flaky Tests"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.failed_flaky_details.outputs.FLAKY_TEST_TEXT }}
 
               - type: divider
 
