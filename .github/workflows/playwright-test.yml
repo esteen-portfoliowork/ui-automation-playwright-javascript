@@ -1094,6 +1094,14 @@ jobs:
           path: failed-tests.md
           if-no-files-found: warn
 
+      - name: 📤 Upload Flaky Tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flaky-tests
+          path: flaky-tests.md
+          if-no-files-found: warn
+
       - name: 📄 Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
