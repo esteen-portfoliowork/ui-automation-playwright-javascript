@@ -1930,6 +1930,8 @@ jobs:
 
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
+        env:
+          MARKDOWN_REPORT_URL: ${{ steps.upload_markdown_reports.outputs.artifact-url }}
         run: |
           cat <<EOF > pr-comment.md
           <!-- playwright-validation-report -->
@@ -1997,8 +1999,16 @@ jobs:
           $(cat flaky-tests.md)
 
           ## 🔗 Report Links
+          | Report | Link |
+          |------------|---------------|
+          | 🎭 Playwright Report | ${PLAYWRIGHT_REPORT_URL:+[View / Download]($PLAYWRIGHT_REPORT_URL)} |
+          | 🧪 Test Results & Attachments | ${TEST_RESULTS_URL:+[Download]($TEST_RESULTS_URL)} |
+          | 📄 JSON Results | ${JSON_RESULTS_URL:+[Download]($JSON_RESULTS_URL)} |
+          | 📊 Allure Results | ${ALLURE_RESULTS_URL:+[Download]($ALLURE_RESULTS_URL)} |
+          | 📊 Allure Report | ${ALLURE_REPORT_URL:+[Download]($ALLURE_REPORT_URL)} |
+          | 📄 Markdown Execution Reports | ${MARKDOWN_REPORT_URL:+[Download]($MARKDOWN_REPORT_URL)} |
 
-          EOF
+          [🔍 View GitHub Actions Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
       - name: 💬 Create or Update PR Comment
         if: always() && github.event_name == 'pull_request'
