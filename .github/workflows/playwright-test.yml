@@ -2007,6 +2007,7 @@ jobs:
           | 📊 Allure Results | ${ALLURE_RESULTS_URL:+[Download]($ALLURE_RESULTS_URL)} |
           | 📊 Allure Report | ${ALLURE_REPORT_URL:+[Download]($ALLURE_REPORT_URL)} |
           | 📄 Markdown Execution Reports | ${MARKDOWN_REPORT_URL:+[Download]($MARKDOWN_REPORT_URL)} |
+          $(cat report-links.md)
 
           [🔍 View GitHub Actions Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
