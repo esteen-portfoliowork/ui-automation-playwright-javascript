@@ -1107,6 +1107,7 @@ jobs:
           if-no-files-found: warn
 
       - name: 📄 Upload Playwright Report
+        id: upload_playwright_report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -1116,6 +1117,7 @@ jobs:
           retention-days: 7
 
       - name: 📸 Upload Failure Screenshots
+        id: upload_failure_screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -1125,6 +1127,7 @@ jobs:
           retention-days: 7
 
       - name: 📦 Upload Test Results
+        id: upload_test_results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -1134,6 +1137,7 @@ jobs:
           retention-days: 7
 
       - name: 📄 Upload JSON Results
+        id: upload_json_results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -1143,6 +1147,7 @@ jobs:
           retention-days: 7
 
       - name: 📊 Upload Allure Results
+        id: upload_allure_report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -1190,6 +1195,59 @@ jobs:
       #       echo "*🔖 Commit SHA:* ${{ github.sha }}"
       #       echo EOF
       #     } >> $GITHUB_OUTPUT
+
+
+      - name: 🔗 Prepare Report Links
+        id: report_links
+        if: always()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          PLAYWRIGHT_REPORT_URL: ${{ steps.upload_playwright_report.outputs.artifact-url }}
+          ALLURE_REPORT_URL: ${{ steps.upload_allure_report.outputs.artifact-url }}
+          TEST_RESULTS_URL: ${{ steps.upload_test_results.outputs.artifact-url }}
+          SCREENSHOTS_URL: ${{ steps.upload_failure_screenshots.outputs.artifact-url }}
+          JSON_RESULTS_URL: ${{ steps.upload_json_results.outputs.artifact-url }}
+        run: |
+          # ------- Generate Markdown Report Links -------
+          {
+            echo "## 🔗 Report Links"
+            echo ""
+            echo "- [GitHub Actions Run]($RUN_URL)"
+            if [ -n "$PLAYWRIGHT_REPORT_URL" ]; then
+              echo "- [Playwright HTML Report]($PLAYWRIGHT_REPORT_URL)"
+            fi
+            if [ -n "$ALLURE_REPORT_URL" ]; then
+              echo "- [Allure HTML Report]($ALLURE_REPORT_URL)"
+            fi
+            if [ -n "$TEST_RESULTS_URL" ]; then
+              echo "- [Test Results]($TEST_RESULTS_URL)"
+            fi
+            if [ -n "$SCREENSHOTS_URL" ]; then
+              echo "- [Failure Screenshots]($SCREENSHOTS_URL)"
+            fi
+            if [ -n "$JSON_RESULTS_URL" ]; then
+              echo "- [Playwright JSON Results]($JSON_RESULTS_URL)"
+            fi
+          } > report-links.md
+
+          # ------- Generate Slack Report Links -------
+          SLACK_LINKS="<${RUN_URL}|GitHub Actions Run>"
+          if [ -n "$PLAYWRIGHT_REPORT_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${PLAYWRIGHT_REPORT_URL}|Playwright HTML Report>"
+          fi
+          if [ -n "$ALLURE_REPORT_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${ALLURE_REPORT_URL}|Allure HTML Report>"
+          fi
+          if [ -n "$TEST_RESULTS_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${TEST_RESULTS_URL}|Test Results>"
+          fi
+          if [ -n "$SCREENSHOTS_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${SCREENSHOTS_URL}|Failure Screenshots>"
+          fi
+          if [ -n "$JSON_RESULTS_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${JSON_RESULTS_URL}|JSON Results>"
+          fi
+          echo "REPORT_LINKS_SLACK=$SLACK_LINKS" >> "$GITHUB_OUTPUT"
 
       - name: 🎨 Prepare Build Status
         if: always()
@@ -1320,6 +1378,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat report-links.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
       - name: 📣 Notify Slack - Manual Validation
         if: always() && github.event_name == 'workflow_dispatch'
