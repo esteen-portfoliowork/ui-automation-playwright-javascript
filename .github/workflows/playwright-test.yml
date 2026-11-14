@@ -1302,6 +1302,11 @@ jobs:
           cat failed-tests.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
+          echo "## ⚠️ Flaky Tests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat flaky-tests.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
           echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
 
       - name: 📣 Notify Slack - Manual Validation
