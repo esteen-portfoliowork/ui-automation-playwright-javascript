@@ -1946,6 +1946,9 @@ jobs:
           ## ❌ Failed Tests
           $(cat failed-tests.md)
 
+          ## ⚠️ Flaky Tests
+          $(cat flaky-tests.md)
+
           ## 🔗 Report Links
 
           EOF
