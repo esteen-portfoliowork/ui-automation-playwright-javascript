@@ -1015,6 +1015,9 @@ jobs:
           // Get Top 10 Highest-Risk Modules
           const topRiskModules = riskModules.slice(0, 10);
 
+          // Get the single highest-risk module
+          const topRiskModule = topRiskModules[0] || null;
+
           // ------- Risk Summary Metrics -------
           const totalModulesAnalyzed = riskModules.length;
           const highRiskModuleCount = riskModules.filter(
@@ -1174,6 +1177,23 @@ jobs:
           fs.appendFileSync(
             process.env.GITHUB_OUTPUT,
             `FLAKY_TEST_TEXT=${JSON.stringify(flakyTestsSlack)}\n`
+          );
+
+          // ------- Prepare Slack: Top Risk Module -------
+          const topRiskModuleSlack = topRiskModule
+            ? [
+                `🚩 *${topRiskModule.application} / ${topRiskModule.module}*`,
+                `• Failed: ${topRiskModule.failed}`,
+                `• Flaky: ${topRiskModule.flaky}`,
+                `• Failure Rate: ${topRiskModule.failureRate.toFixed(2)}%`,
+                `• Flaky Rate: ${topRiskModule.flakyRate.toFixed(2)}%`,
+                `• Risk Score: *${topRiskModule.riskScore.toFixed(2)}%*`,
+                `• Risk Level: ${topRiskModule.riskLevel}`
+              ].join('\n')
+            : 'No modules found.';
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `TOP_RISK_MODULE_TEXT=${JSON.stringify(topRiskModuleSlack)}\n`
           );
 
           // ------- Export GitHub Actions Outputs -------
@@ -1733,6 +1753,19 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
+                  text: "🏆 Top Risk Module"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.generate_failure_flakiness_risk_report.outputs.TOP_RISK_MODULE_TEXT }}
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
                   text: "❌ Failed Modules"
 
               - type: section
@@ -2032,6 +2065,19 @@ jobs:
                 text:
                   type: mrkdwn
                   text: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "🏆 Top Risk Module"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.generate_failure_flakiness_risk_report.outputs.TOP_RISK_MODULE_TEXT }}
 
               - type: divider
 
