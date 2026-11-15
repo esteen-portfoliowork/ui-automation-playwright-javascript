@@ -1083,11 +1083,10 @@ jobs:
           
           // ------- Generate Top Risk Modules Report -------
           const topRiskMarkdown = [
-            '# 🏆 Top Risk Modules',
             '',
             '> Application modules ranked by weighted failure and flaky rates.',
             '',
-            '## 📊 Risk Overview',
+            '### 📊 Risk Overview',
             '',
             `| Metric | Value |`,
             `|:---|---:|`,
@@ -1096,7 +1095,7 @@ jobs:
             `| High/Critical Risk Modules | ${highRiskModuleCount} |`,
             `| Critical Risk Modules | ${criticalRiskModuleCount} |`,
             '',
-            '## 🏆 Top 10 Highest-Risk Modules',
+            '### 🏆 Top 10 Highest-Risk Modules',
             '',
             '| Rank | Application | Module | Total | Executed | Failed | Flaky | Failure Rate | Flaky Rate | Risk Score | Risk Level |',
             '|:---:|:---|:---|---:|---:|---:|---:|---:|---:|---:|:---|',
@@ -1110,17 +1109,7 @@ jobs:
                 ]),
 
             '',
-            '## 📌 Risk Ranking Criteria',
-            '',
-            '| Risk Score | Risk Level | Description |',
-            '|---:|:---|:---|',
-            '| 50–100% | 🔴 Critical | Immediate investigation required |',
-            '| 25–49.99% | 🟠 High | Requires attention and prioritization |',
-            '| 10–24.99% | 🟡 Moderate | Monitor and investigate recurring issues |',
-            '| 0.01–9.99% | 🔵 Low | Minor risk detected |',
-            '| 0% | 🟢 Healthy | No failed or flaky tests detected |',
-            '',
-            '## 🧮 Risk Score Calculation',
+            '#### 🧮 Risk Score Calculation',
             '',
             '**Risk Score = (Failure Rate × 70%) + (Flaky Rate × 30%)**',
             '',
@@ -1491,7 +1480,7 @@ jobs:
           cat tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "## ❌ Top Rik Module" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏆 Top Risk Module" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat top-risk-modules.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
