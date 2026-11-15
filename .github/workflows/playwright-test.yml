@@ -1263,10 +1263,6 @@ jobs:
                 `• Risk Level: ${topRiskModule.riskLevel}`
               ].join('\n')
             : 'No modules found.';
-          fs.appendFileSync(
-            process.env.GITHUB_OUTPUT,
-            `TOP_RISK_MODULE_TEXT=${JSON.stringify(topRiskModuleSlack)}\n`
-          );
 
           // ------- Prepare Slack: Slowest Module -------
           const slowestModuleSlack = slowestModule
