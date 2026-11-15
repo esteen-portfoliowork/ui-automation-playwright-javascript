@@ -2174,7 +2174,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.TOP_RISK_MODULE_TEXT }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.TOP_RISK_MODULE_TEXT) }}
 
               - type: divider
 
