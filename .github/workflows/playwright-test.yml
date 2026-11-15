@@ -1255,7 +1255,7 @@ jobs:
           // ------- Prepare Slack: Slowest Module -------
           const slowestModuleSlack = slowestModule
             ? [
-                `⏱️ *${slowestModule.application} / ${slowestModule.module}*`,
+                `🐢 *${slowestModule.application} / ${slowestModule.module}*`,
                 `• Total Duration: *${formatDuration(slowestModule.durationMs)}*`,
                 `• Average Duration: ${formatDuration(slowestModule.averageDurationMs)}`,
                 `• Tests Measured: ${slowestModule.durationTestCount}`,
