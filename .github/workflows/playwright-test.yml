@@ -943,13 +943,13 @@ jobs:
                   // Collect Failed Tests
                   // ------------------------------------------
                   if (isFailed) {
-                    moduleCounts[key] = moduleCounts[key] || {
+                    failedModuleCounts[key] = failedModuleCounts[key] || {
                       application: appName,
                       module,
                       count: 0
                     };
 
-                    moduleCounts[key].count++;
+                    failedModuleCounts[key].count++;
                     failedTests.push(testDetails);
                   }
                 }
