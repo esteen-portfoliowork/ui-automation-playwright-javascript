@@ -1092,7 +1092,7 @@ jobs:
             '### 📊 Risk Overview',
             '',
             `| Metric | Value |`,
-            `|:---|---:|`,
+            `|:---:|:---:|`,
             `| Total Modules Analyzed | ${totalModulesAnalyzed} |`,
             `| Modules Ranked | ${topRiskModules.length} |`,
             `| High/Critical Risk Modules | ${highRiskModuleCount} |`,
@@ -1101,7 +1101,7 @@ jobs:
             '### 🏆 Top 10 Highest-Risk Modules',
             '',
             '| Rank | Application | Module | Total | Executed | Failed | Flaky | Failure Rate | Flaky Rate | Risk Score | Risk Level |',
-            '|:---:|:---|:---|---:|---:|---:|---:|---:|---:|---:|:---|',
+            '|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|',
 
             ...(topRiskModules.length
               ? topRiskModules.map((item, index) =>
