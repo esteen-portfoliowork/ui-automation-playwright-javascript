@@ -909,8 +909,67 @@ jobs:
               walk(suite.suites, file);
             }
           }
-
           walk(report.suites || []);
+
+          // ------- Generate Top Risk -------
+          const moduleMap = {};
+          function getModuleRisk(application, module) {
+            const key = `${application}::${module}`;
+            if (!moduleMap[key]) {
+              moduleMap[key] = {
+                application,
+                module,
+                total: 0,
+                failed: 0,
+                flaky: 0
+              };
+            }
+            return moduleMap[key];
+          }
+
+          // Populate Module Map
+          const item = getModuleRisk(appName, moduleName);
+          item.total++;
+          if (tests.some(test => test.status === 'unexpected')) {
+            item.failed++;
+          }
+          if (tests.some(test => test.status === 'flaky')) {
+            item.flaky++;
+          }
+
+          // Calculate Risk Score
+          const riskModules = Object.values(moduleMap).map(item => {
+            const failureRate = item.total
+              ? (item.failed / item.total) * 100
+              : 0;
+            const flakyRate = item.total
+              ? (item.flaky / item.total) * 100
+              : 0;
+            const riskScore = Math.min(
+              100,
+              failureRate * 0.70 + flakyRate * 0.30
+            );
+            let riskLevel = '🟢 Healthy';
+            if (riskScore >= 50) riskLevel = '🔴 Critical';
+            else if (riskScore >= 25) riskLevel = '🟠 High';
+            else if (riskScore >= 10) riskLevel = '🟡 Moderate';
+            else if (riskScore > 0) riskLevel = '🔵 Low';
+            return {
+              ...item,
+              failureRate,
+              flakyRate,
+              riskScore,
+              riskLevel
+            };
+          });
+
+          // Sort Risk Module
+          riskModules.sort((a, b) =>
+            b.riskScore - a.riskScore ||
+            b.failed - a.failed ||
+            b.flaky - a.flaky
+          );
+          const topRiskModules = riskModules.slice(0, 10);
 
           // ------- Failed Module Markdown -------
           const modules = Object.values(moduleCounts)
@@ -962,6 +1021,28 @@ jobs:
           fs.writeFileSync(
             'flaky-tests.md',
             flakyTestMarkdown + '\n'
+          );
+
+          // ------- Top Risk Modules Markdown -------
+          const topRiskMarkdown = [
+            '# 🏆 Top Risk Modules',
+            '',
+            `**Modules Analyzed:** ${riskModules.length}`,
+            `**High/Critical Risk:** ${
+              riskModules.filter(m => m.riskScore >= 25).length
+            }`,
+            '',
+            '| Rank | Application | Module | Total | Failed | Flaky | Failure Rate | Flaky Rate | Risk Score | Risk Level |',
+            '|:---:|:---|:---|---:|---:|---:|---:|---:|---:|:---|',
+            ...topRiskModules.map((m, i) =>
+              `| #${i + 1} | ${m.application} | ${m.module} | ${m.total} | ${m.failed} | ${m.flaky} | ${m.failureRate.toFixed(2)}% | ${m.flakyRate.toFixed(2)}% | ${m.riskScore.toFixed(2)}% | ${m.riskLevel} |`
+            ),
+            '',
+            '_Risk Score = (Failure Rate × 70%) + (Flaky Rate × 30%)._'
+          ].join('\n');
+          fs.writeFileSync(
+            'top-risk-modules.md', 
+            topRiskMarkdown + '\n'
           );
 
           // ------- Generate Slack: Failed Modules -------
@@ -1316,6 +1397,11 @@ jobs:
           echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## ❌ Top Rik Module" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat top-risk-modules.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Modules" >> $GITHUB_STEP_SUMMARY
