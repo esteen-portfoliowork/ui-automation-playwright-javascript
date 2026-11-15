@@ -409,7 +409,7 @@ jobs:
         id: breakdown
         if: always()
         run: |
-          # ------- Get Application Name -------
+          # ------- Application Name Mapping -------
           get_app_name() {
             case "$1" in
               expand-testing) echo "Expand Testing" ;;
@@ -821,8 +821,8 @@ jobs:
           );
           NODE
 
-      - name: ❌ Generate Failed and Flaky Details
-        id: failed_flaky_details
+      - name: 📊 Generate Failure, Flakiness & Risk Reports
+        id: generate_failure_flakiness_risk_report
         if: always()
         run: |
           node <<'NODE'
@@ -831,11 +831,14 @@ jobs:
           const report = fs.existsSync(reportPath)
             ? JSON.parse(fs.readFileSync(reportPath, 'utf8'))
             : { suites: [] };
+
+          // ------- Initialize Test Result Collections -------
           const failedTests = [];
           const flakyTests = [];
-          const moduleCounts = {};
+          const failedModuleCounts = {};
+          const moduleRiskCounts = {};
 
-          // ------- Get Application Name -------
+          // ------- Application Name Mapping -------
           function getAppName(name) {
             const applications = {
               'expand-testing': 'Expand Testing',
@@ -846,7 +849,7 @@ jobs:
             return applications[name] || name;
           }
 
-          // ------- Markdown Escaping -------
+          // ------- Markdown Formatting Utilities -------
           function escapeMarkdown(value) {
             return String(value || 'N/A')
               .replace(/\|/g, '\\|')
@@ -854,31 +857,71 @@ jobs:
               .trim();
           }
 
-          // ------- Extract Failed and Flaky Tests -------
+          // ------- Collect Test Results & Aggregate Module Metrics -------
           function walk(suites, parentFile = '') {
             for (const suite of suites || []) {
               const file = suite.file || parentFile || 'Unknown';
-              
+
               for (const spec of suite.specs || []) {
                 const specFile = spec.file || file;
                 const parts = specFile.replace(/\\/g, '/').split('/');
+
                 const app = parts[0] || 'Unknown';
                 const module = (parts[1] || 'Unknown')
                   .replace(/\.spec\.(js|ts)$/, '');
 
-                for (const test of spec.tests || []) {
-                  // Include only failed and flaky tests.
-                  if (!['unexpected', 'flaky'].includes(test.status)) continue;
+                const appName = getAppName(app);
+                const tests = spec.tests || [];
 
-                  const appName = getAppName(app);
+                // ------------------------------------------
+                // Aggregate Module Test Metrics
+                // ------------------------------------------
+                const key = `${appName}::${module}`;
+
+                moduleRiskCounts[key] = moduleRiskCounts[key] || {
+                  application: appName,
+                  module,
+                  total: 0,
+                  executed: 0,
+                  failed: 0,
+                  flaky: 0
+                };
+
+                const riskItem = moduleRiskCounts[key];
+
+                for (const test of tests) {
+                  // Count every test entry, including passed and skipped.
+                  riskItem.total++;
+
+                  // Exclude skipped tests from risk-rate calculations.
+                  if (test.status !== 'skipped') {
+                    riskItem.executed++;
+                  }
+
+                  const isFailed = test.status === 'unexpected';
+                  const isFlaky = test.status === 'flaky';
+
+                  if (isFailed) {
+                    riskItem.failed++;
+                  }
+
+                  if (isFlaky) {
+                    riskItem.flaky++;
+                  }
+
+                  // Only collect detailed information for failed/flaky tests.
+                  if (!isFailed && !isFlaky) continue;
+
                   const testTitle = test.title || spec.title || 'Untitled test';
                   const project = test.projectName || 'Default';
                   const results = test.results || [];
                   const lastResult = results.at(-1) || {};
+
                   const error =
                     lastResult.error?.message ||
                     lastResult.errors?.[0]?.message ||
                     'No error details available';
+
                   const testDetails = {
                     application: appName,
                     module,
@@ -888,38 +931,112 @@ jobs:
                     retries: Math.max(0, results.length - 1)
                   };
 
+                  // ------------------------------------------
                   // Collect Flaky Tests
-                  if (test.status === 'flaky') {
+                  // ------------------------------------------
+                  if (isFlaky) {
                     flakyTests.push(testDetails);
                     continue;
                   }
 
+                  // ------------------------------------------
                   // Collect Failed Tests
-                  const key = `${appName}::${module}`;
-                  moduleCounts[key] = moduleCounts[key] || {
-                    application: appName,
-                    module,
-                    count: 0
-                  };
+                  // ------------------------------------------
+                  if (isFailed) {
+                    failedModuleCounts[key] = failedModuleCounts[key] || {
+                      application: appName,
+                      module,
+                      count: 0
+                    };
 
-                  moduleCounts[key].count++;
-                  failedTests.push(testDetails);
+                    failedModuleCounts[key].count++;
+                    failedTests.push(testDetails);
+                  }
                 }
               }
+
+              // Continue traversing nested suites.
               walk(suite.suites, file);
             }
           }
 
           walk(report.suites || []);
 
-          // ------- Failed Module Markdown -------
-          const modules = Object.values(moduleCounts)
+          
+          // ------- Module Risk Analysis -------
+          const riskModules = Object.values(moduleRiskCounts).map(item => {
+
+            // Calculate Failure Rate
+            const failureRate = item.executed > 0
+              ? (item.failed / item.executed) * 100
+              : 0;
+
+            // Calculate Flaky Rate
+            const flakyRate = item.executed > 0
+              ? (item.flaky / item.executed) * 100
+              : 0;
+
+            // Calculate Weighted Risk Score
+            const riskScore = Math.min(
+              100,
+              (failureRate * 0.70) + (flakyRate * 0.30)
+            );
+
+            // Assign Risk Level
+            let riskLevel = '🟢 Healthy';
+            if (riskScore >= 50) {
+              riskLevel = '🔴 Critical';
+            } else if (riskScore >= 25) {
+              riskLevel = '🟠 High';
+            } else if (riskScore >= 10) {
+              riskLevel = '🟡 Moderate';
+            } else if (riskScore > 0) {
+              riskLevel = '🔵 Low';
+            }
+
+            return {
+              ...item,
+              failureRate,
+              flakyRate,
+              riskScore,
+              riskLevel
+            };
+          });
+
+          // ------- Rank Modules by Risk -------
+          riskModules.sort((a, b) =>
+            b.riskScore - a.riskScore ||
+            b.failed - a.failed ||
+            b.flaky - a.flaky ||
+            a.application.localeCompare(b.application) ||
+            a.module.localeCompare(b.module)
+          );
+
+          // Get Top 10 Highest-Risk Modules
+          const topRiskModules = riskModules.slice(0, 10);
+
+          // ------- Risk Summary Metrics -------
+          const totalModulesAnalyzed = riskModules.length;
+          const highRiskModuleCount = riskModules.filter(
+            item => item.riskScore >= 25
+          ).length;
+          const criticalRiskModuleCount = riskModules.filter(
+            item => item.riskScore >= 50
+          ).length;
+
+          console.log('Module Risk Analysis:');
+          console.log(`Total Modules: ${totalModulesAnalyzed}`);
+          console.log(`High/Critical Risk Modules: ${highRiskModuleCount}`);
+          console.log(`Critical Risk Modules: ${criticalRiskModuleCount}`);
+
+          // ------- Generate Failed Modules Report -------
+          const modules = Object.values(failedModuleCounts)
             .sort((a, b) =>
               a.application.localeCompare(b.application) ||
               a.module.localeCompare(b.module)
             );
 
-          // ------- Table header for Failed Module -------
+          // ------- Failed Modules Table -------
           const failedModuleMarkdown = [
             '| Application | Module | Failed Tests |',
             '|:-------------:|:--------:|:-------------:|',
@@ -934,7 +1051,7 @@ jobs:
             failedModuleMarkdown + '\n'
           );
 
-          // ------- Table header for Failed Test -------
+          // ------- Failed Tests Table -------
           const failedTestMarkdown = [
             '| Application | Module | Test Case | Project | Retries |',
             '|:-------------:|:--------:|:-----------:|:---------:|:--------:|',
@@ -949,7 +1066,7 @@ jobs:
             failedTestMarkdown + '\n'
           );
 
-          // ------- Flaky Tests Markdown -------
+          // ------- Generate Flaky Tests Report -------
           const flakyTestMarkdown = [
             '| Application | Module | Test Case | Project | Retries |',
             '|:-------------:|:--------:|:-----------:|:---------:|:--------:|',
@@ -963,8 +1080,53 @@ jobs:
             'flaky-tests.md',
             flakyTestMarkdown + '\n'
           );
+          
+          // ------- Generate Top Risk Modules Report -------
+          const topRiskMarkdown = [
+            '',
+            '> Application modules ranked by weighted failure and flaky rates.',
+            '',
+            '### 📊 Risk Overview',
+            '',
+            `| Metric | Value |`,
+            `|:---|---:|`,
+            `| Total Modules Analyzed | ${totalModulesAnalyzed} |`,
+            `| Modules Ranked | ${topRiskModules.length} |`,
+            `| High/Critical Risk Modules | ${highRiskModuleCount} |`,
+            `| Critical Risk Modules | ${criticalRiskModuleCount} |`,
+            '',
+            '### 🏆 Top 10 Highest-Risk Modules',
+            '',
+            '| Rank | Application | Module | Total | Executed | Failed | Flaky | Failure Rate | Flaky Rate | Risk Score | Risk Level |',
+            '|:---:|:---|:---|---:|---:|---:|---:|---:|---:|---:|:---|',
 
-          // ------- Generate Slack: Failed Modules -------
+            ...(topRiskModules.length
+              ? topRiskModules.map((item, index) =>
+                  `| #${index + 1} | ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.total} | ${item.executed} | ${item.failed} | ${item.flaky} | ${item.failureRate.toFixed(2)}% | ${item.flakyRate.toFixed(2)}% | ${item.riskScore.toFixed(2)}% | ${item.riskLevel} |`
+                )
+              : [
+                  '| - | N/A | No modules found | 0 | 0 | 0 | 0 | 0.00% | 0.00% | 0.00% | 🟢 Healthy |'
+                ]),
+
+            '',
+            '#### 🧮 Risk Score Calculation',
+            '',
+            '**Risk Score = (Failure Rate × 70%) + (Flaky Rate × 30%)**',
+            '',
+            '- Failure Rate = (Failed Tests / Executed Tests) × 100',
+            '- Flaky Rate = (Flaky Tests / Executed Tests) × 100',
+            '- Skipped tests are excluded from the rate denominator.',
+            '- Maximum risk score is capped at 100%.',
+            '',
+            '_Only the top 10 highest-risk modules are displayed._'
+          ].join('\n');
+
+          fs.writeFileSync(
+            'top-risk-modules.md',
+            topRiskMarkdown + '\n'
+          );
+
+          // ------- Prepare Slack: Failed Modules -------
           const groupedModules = {};
           for (const item of modules) {
             groupedModules[item.application] =
@@ -986,7 +1148,7 @@ jobs:
             `FAILED_MODULE_TEXT=${JSON.stringify(failedModulesSlack)}\n`
           );
 
-          // ------- Generate Slack: Failed Tests -------
+          // ------- Prepare Slack: Failed Tests -------
           const failedTestsSlack = failedTests.length
             ? failedTests.slice(0, 10).map(test =>
                 `• *${test.application} / ${test.module}*\n   - ${test.title}`
@@ -1000,7 +1162,7 @@ jobs:
             `FAILED_TEST_TEXT=${JSON.stringify(failedTestsSlack)}\n`
           );
 
-          // ------- Generate Slack: Flaky Tests -------
+          // ------- Prepare Slack: Flaky Tests -------
           const flakyTestsSlack = flakyTests.length
             ? flakyTests.slice(0, 10).map(test =>
                 `• *${test.application} / ${test.module}*\n   - ${test.title} (Retries: ${test.retries})`
@@ -1014,7 +1176,7 @@ jobs:
             `FLAKY_TEST_TEXT=${JSON.stringify(flakyTestsSlack)}\n`
           );
 
-          // ------- Generate GitHub Outputs -------
+          // ------- Export GitHub Actions Outputs -------
           function setOutput(name, value) {
             const delimiter = `EOF_${name}`;
             fs.appendFileSync(
@@ -1055,8 +1217,8 @@ jobs:
       #     echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
       #     echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
       #     echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
-      #     echo '${{ steps.failed_flaky_details.outputs.FAILED_MODULES_SLACK }}'
-      #     echo '${{ steps.failed_flaky_details.outputs.FAILED_TESTS_SLACK }}'
+      #     echo '${{ steps.generate_failure_flakiness_risk_report.outputs.FAILED_MODULES_SLACK }}'
+      #     echo '${{ steps.generate_failure_flakiness_risk_report.outputs.FAILED_TESTS_SLACK }}'
 
       - name: 📄 Upload Playwright Report
         id: upload_playwright_report
@@ -1318,6 +1480,11 @@ jobs:
           cat tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
+          echo "## 🏆 Top Risk Module" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat top-risk-modules.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
           echo "## ❌ Failed Modules" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat failed-modules.md >> $GITHUB_STEP_SUMMARY
@@ -1571,7 +1738,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.failed_flaky_details.outputs.FAILED_MODULE_TEXT }}
+                  text: ${{ steps.generate_failure_flakiness_risk_report.outputs.FAILED_MODULE_TEXT }}
 
               - type: divider
 
@@ -1584,7 +1751,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.failed_flaky_details.outputs.FAILED_TEST_TEXT }}
+                  text: ${{ steps.generate_failure_flakiness_risk_report.outputs.FAILED_TEST_TEXT }}
 
               - type: divider
 
@@ -1597,7 +1764,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.failed_flaky_details.outputs.FLAKY_TEST_TEXT }}
+                  text: ${{ steps.generate_failure_flakiness_risk_report.outputs.FLAKY_TEST_TEXT }}
 
               - type: divider
 
@@ -1877,7 +2044,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.failed_flaky_details.outputs.FAILED_MODULE_TEXT }}
+                  text: ${{ steps.generate_failure_flakiness_risk_report.outputs.FAILED_MODULE_TEXT }}
 
               - type: divider
 
@@ -1890,7 +2057,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.failed_flaky_details.outputs.FAILED_TEST_TEXT }}
+                  text: ${{ steps.generate_failure_flakiness_risk_report.outputs.FAILED_TEST_TEXT }}
 
               - type: divider
 
@@ -1903,7 +2070,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.failed_flaky_details.outputs.FLAKY_TEST_TEXT }}
+                  text: ${{ steps.generate_failure_flakiness_risk_report.outputs.FLAKY_TEST_TEXT }}
 
               - type: divider
 
