@@ -1182,7 +1182,7 @@ jobs:
           // ------- Prepare Slack: Top Risk Module -------
           const topRiskModuleSlack = topRiskModule
             ? [
-                `🏆 *${topRiskModule.application} / ${topRiskModule.module}*`,
+                `🚩 *${topRiskModule.application} / ${topRiskModule.module}*`,
                 `• Failed: ${topRiskModule.failed}`,
                 `• Flaky: ${topRiskModule.flaky}`,
                 `• Failure Rate: ${topRiskModule.failureRate.toFixed(2)}%`,
