@@ -2197,6 +2197,9 @@ jobs:
           ## 🏷️ Tag Execution Summary
           $(cat tag-execution-summary.md)
 
+          ## 🏆 Top Risk Module
+          $(cat top-risk-modules.md)
+
           ## ❌ Failed Modules
           $(cat failed-modules.md)
 
