@@ -1176,6 +1176,19 @@ jobs:
             `FLAKY_TEST_TEXT=${JSON.stringify(flakyTestsSlack)}\n`
           );
 
+          // ------- Prepare Slack: Top Risk Module -------
+          const topRiskModuleSlack = topRiskModule
+            ? [
+                `🏆 *${topRiskModule.application} / ${topRiskModule.module}*`,
+                `• Failed: ${topRiskModule.failed}`,
+                `• Flaky: ${topRiskModule.flaky}`,
+                `• Failure Rate: ${topRiskModule.failureRate.toFixed(2)}%`,
+                `• Flaky Rate: ${topRiskModule.flakyRate.toFixed(2)}%`,
+                `• Risk Score: *${topRiskModule.riskScore.toFixed(2)}%*`,
+                `• Risk Level: ${topRiskModule.riskLevel}`
+              ].join('\n')
+            : 'No modules found.';
+
           // ------- Export GitHub Actions Outputs -------
           function setOutput(name, value) {
             const delimiter = `EOF_${name}`;
