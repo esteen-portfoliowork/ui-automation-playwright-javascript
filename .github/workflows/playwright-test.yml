@@ -1218,10 +1218,6 @@ jobs:
                 )
                 .join('\n\n')
             : 'No failed modules.';
-          fs.appendFileSync(
-            process.env.GITHUB_OUTPUT,
-            `FAILED_MODULE_TEXT=${JSON.stringify(failedModulesSlack)}\n`
-          );
 
           // ------- Prepare Slack: Failed Tests -------
           const failedTestsSlack = failedTests.length
@@ -1232,10 +1228,6 @@ jobs:
                 ? `\n…and ${failedTests.length - 10} more failed tests.`
                 : '')
             : 'No failed tests.';
-          fs.appendFileSync(
-            process.env.GITHUB_OUTPUT,
-            `FAILED_TEST_TEXT=${JSON.stringify(failedTestsSlack)}\n`
-          );
 
           // ------- Prepare Slack: Flaky Tests -------
           const flakyTestsSlack = flakyTests.length
@@ -1246,10 +1238,6 @@ jobs:
                 ? `\n…and ${flakyTests.length - 10} more flaky tests.`
                 : '')
             : 'No flaky tests.';
-          fs.appendFileSync(
-            process.env.GITHUB_OUTPUT,
-            `FLAKY_TEST_TEXT=${JSON.stringify(flakyTestsSlack)}\n`
-          );
 
           // ------- Prepare Slack: Top Risk Module -------
           const topRiskModuleSlack = topRiskModule
@@ -1284,13 +1272,15 @@ jobs:
               `${name}<<${delimiter}\n${value}\n${delimiter}\n`
             );
           }
+            setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
           setOutput('FAILED_MODULES_MARKDOWN', failedModuleMarkdown);
           setOutput('FAILED_TESTS_MARKDOWN', failedTestMarkdown);
           setOutput('FLAKY_TESTS_MARKDOWN', flakyTestMarkdown);
-          setOutput('FAILED_MODULES_SLACK', failedModulesSlack);
-          setOutput('FAILED_TESTS_SLACK', failedTestsSlack);
-          setOutput('FLAKY_TESTS_SLACK', flakyTestsSlack);
+          setOutput('SLOWEST_MODULE_MARKDOWN', slowestModuleMarkdown);
           setOutput('TOP_RISK_MODULE_TEXT', topRiskModuleSlack);
+          setOutput('FAILED_MODULE_TEXT', failedModulesSlack);
+          setOutput('FAILED_TEST_TEXT', failedTestsSlack);
+          setOutput('FLAKY_TEST_TEXT', flakyTestsSlack);
           setOutput('SLOWEST_MODULE_TEXT', slowestModuleSlack);
           console.log(`Failed modules: ${modules.length}`);
           console.log(`Failed tests: ${failedTests.length}`);
@@ -1860,7 +1850,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_MODULE_TEXT }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_MODULE_TEXT) }}
 
               - type: divider
 
@@ -1873,7 +1863,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TEST_TEXT }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TEST_TEXT) }}
 
               - type: divider
 
@@ -1886,7 +1876,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FLAKY_TEST_TEXT }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.FLAKY_TEST_TEXT) }}
 
               - type: divider
 
@@ -1895,6 +1885,11 @@ jobs:
                 text:
                   type: plain_text
                   text: "⏱️ Slowest Module"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.SLOWEST_MODULE_TEXT) }}
 
               - type: divider
 
@@ -2187,7 +2182,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_MODULE_TEXT }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_MODULE_TEXT) }}
 
               - type: divider
 
@@ -2200,7 +2195,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TEST_TEXT }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TEST_TEXT) }}
 
               - type: divider
 
@@ -2213,7 +2208,20 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FLAKY_TEST_TEXT }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.FLAKY_TEST_TEXT) }}
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "⏱️ Slowest Module"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.SLOWEST_MODULE_TEXT) }}
 
               - type: divider
 
