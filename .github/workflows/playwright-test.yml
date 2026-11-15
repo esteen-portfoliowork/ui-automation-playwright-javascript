@@ -1609,6 +1609,11 @@ jobs:
           cat flaky-tests.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
+          echo "## ⏱️ Slowest Module" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat slowest-module >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
           echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat report-links.md >> $GITHUB_STEP_SUMMARY
@@ -1895,11 +1900,6 @@ jobs:
                 text:
                   type: plain_text
                   text: "⏱️ Slowest Module"
-
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FLAKY_TEST_TEXT }}
 
               - type: divider
 
