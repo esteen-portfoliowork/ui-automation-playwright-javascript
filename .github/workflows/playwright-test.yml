@@ -2314,6 +2314,9 @@ jobs:
           ## ⚠️ Flaky Tests
           $(cat flaky-tests.md)
 
+          ## ⏱️ Slowest Module
+          $(cat slowest-module.md)
+
           ## 🔗 Report Links
           $(cat report-links.md)
 
