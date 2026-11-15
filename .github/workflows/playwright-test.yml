@@ -1015,6 +1015,9 @@ jobs:
           // Get Top 10 Highest-Risk Modules
           const topRiskModules = riskModules.slice(0, 10);
 
+          // Get the single highest-risk module
+          const topRiskModule = topRiskModules[0] || null;
+
           // ------- Risk Summary Metrics -------
           const totalModulesAnalyzed = riskModules.length;
           const highRiskModuleCount = riskModules.filter(
@@ -1177,20 +1180,20 @@ jobs:
           );
 
           // ------- Prepare Slack: Top Risk Module -------
-          const topRiskModulesSlack = topRiskModules
+          const topRiskModuleSlack = topRiskModule
             ? [
-                `🏆 *${topRiskModules.application} / ${topRiskModules.module}*`,
-                `• Failed: ${topRiskModules.failed}`,
-                `• Flaky: ${topRiskModules.flaky}`,
-                `• Failure Rate: ${topRiskModules.failureRate.toFixed(2)}%`,
-                `• Flaky Rate: ${topRiskModules.flakyRate.toFixed(2)}%`,
-                `• Risk Score: *${topRiskModules.riskScore.toFixed(2)}%*`,
-                `• Risk Level: ${topRiskModules.riskLevel}`
+                `🏆 *${topRiskModule.application} / ${topRiskModule.module}*`,
+                `• Failed: ${topRiskModule.failed}`,
+                `• Flaky: ${topRiskModule.flaky}`,
+                `• Failure Rate: ${topRiskModule.failureRate.toFixed(2)}%`,
+                `• Flaky Rate: ${topRiskModule.flakyRate.toFixed(2)}%`,
+                `• Risk Score: *${topRiskModule.riskScore.toFixed(2)}%*`,
+                `• Risk Level: ${topRiskModule.riskLevel}`
               ].join('\n')
             : 'No modules found.';
           fs.appendFileSync(
             process.env.GITHUB_OUTPUT,
-            `TOP_RISK_MODULE_TEXT=${JSON.stringify(topRiskModulesSlack)}\n`
+            `TOP_RISK_MODULE_TEXT=${JSON.stringify(topRiskModuleSlack)}\n`
           );
 
           // ------- Export GitHub Actions Outputs -------
