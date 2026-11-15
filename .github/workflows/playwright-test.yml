@@ -1268,7 +1268,6 @@ jobs:
             `TOP_RISK_MODULE_TEXT=${JSON.stringify(topRiskModuleSlack)}\n`
           );
 
-
           // ------- Prepare Slack: Slowest Module -------
           const slowestModuleSlack = slowestModule
             ? [
@@ -1611,7 +1610,7 @@ jobs:
 
           echo "## ⏱️ Slowest Module" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat slowest-module >> $GITHUB_STEP_SUMMARY
+          cat slowest-module.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
@@ -1852,7 +1851,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.TOP_RISK_MODULE_TEXT }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.TOP_RISK_MODULE_TEXT) }}
 
               - type: divider
 
