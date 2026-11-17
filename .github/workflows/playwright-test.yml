@@ -2015,7 +2015,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.RELEASE_READINESS_TEXT || 'N/A' }}
+                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT || 'N/A' }}
 
               - type: divider
 
