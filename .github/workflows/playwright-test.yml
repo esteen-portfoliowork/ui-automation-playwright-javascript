@@ -1458,7 +1458,7 @@ jobs:
             `• Test Pass Rate: ${RELEASE_READINESS_CONFIG.weights.passRate}% , ${passRateScore.toFixed(2)}`,
             `• Failure Rate: ${RELEASE_READINESS_CONFIG.weights.failureRate}% , ${failureRateScore.toFixed(2)}`,
             `• Flaky Rate: ${RELEASE_READINESS_CONFIG.weights.flakyRate}% , ${flakyRateScore.toFixed(2)}`,
-            `• Module Risk: ${RELEASE_READINESS_CONFIG.weights.moduleRisk}% , {moduleRiskScore.toFixed(2)}`,
+            `• Module Risk: ${RELEASE_READINESS_CONFIG.weights.moduleRisk}% , ${moduleRiskScore.toFixed(2)}`,
             `• Performance: ${RELEASE_READINESS_CONFIG.weights.performance}% , ${performanceScore.toFixed(2)}`,
             `• Total: 100% , ${readinessScore.toFixed(2)}/100`
           ].join('\n');
