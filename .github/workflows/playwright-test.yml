@@ -2015,7 +2015,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT || 'N/A' }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT) }}
 
               - type: divider
 
@@ -2360,7 +2360,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT || 'N/A' }}
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT) }}
 
               - type: divider
 
