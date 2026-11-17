@@ -1862,6 +1862,11 @@ jobs:
           cat application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
+          echo "## 🚦 Release Readiness" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat release-readiness.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
