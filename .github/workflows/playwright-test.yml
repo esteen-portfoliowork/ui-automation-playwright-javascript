@@ -1015,7 +1015,7 @@ jobs:
           } else {
             console.log('No execution duration data found.');
           }
-          
+
           // ------- Module Risk Analysis -------
           const riskModules = Object.values(moduleRiskCounts).map(item => {
 
@@ -1264,6 +1264,243 @@ jobs:
               ].join('\n')
             : 'No execution duration data available.';
 
+          // ------- Generate Release Readiness Report -------
+          const RELEASE_READINESS_CONFIG = {
+            failureRateThreshold: 5,       // NO-GO when failure rate exceeds 5%
+            flakyRateThreshold: 5,         // 5% flaky rate reaches zero flaky score
+            slowTestThresholdMs: 10000,    // 10 seconds average duration per test
+            weights: {
+              passRate: 40,
+              failureRate: 25,
+              flakyRate: 15,
+              moduleRisk: 10,
+              performance: 10
+            },
+            decisions: {
+              go: 90,
+              conditionalGo: 75
+            }
+          };
+
+          // Aggregate module execution metrics
+          const readinessMetrics = Object.values(moduleRiskCounts).reduce(
+            (totals, module) => {
+              totals.total += module.total || 0;
+              totals.executed += module.executed || 0;
+              totals.failed += module.failed || 0;
+              totals.flaky += module.flaky || 0;
+              return totals;
+            },
+            {
+              total: 0,
+              executed: 0,
+              failed: 0,
+              flaky: 0
+            }
+          );
+          const {
+            total,
+            executed,
+            failed,
+            flaky
+          } = readinessMetrics;
+
+          // Note: A flaky test is counted separately from a fully passing test
+          const passed = Math.max(0, executed - failed - flaky);
+          const failureRate = executed > 0
+            ? (failed / executed) * 100
+            : 0;
+          const flakyRate = executed > 0
+            ? (flaky / executed) * 100
+            : 0;
+          const passRate = executed > 0
+            ? (passed / executed) * 100
+            : 0;
+
+          // Highest module risk score
+          const highestModuleRisk = riskModules.length > 0
+            ? Math.max(...riskModules.map(module => module.riskScore))
+            : 0;
+
+          // Slowest module's average test duration
+          const averageTestDurationMs = slowestModule
+            ? slowestModule.averageDurationMs
+            : 0;
+
+          // Calculate individual weighted scores
+          const passRateScore =
+            (passRate / 100) *
+            RELEASE_READINESS_CONFIG.weights.passRate;
+          const failureRateScore =
+            Math.max(0, 100 - failureRate) / 100 *
+            RELEASE_READINESS_CONFIG.weights.failureRate;
+          const flakyRateScore =
+            Math.max(
+              0,
+              100 - (
+                flakyRate /
+                RELEASE_READINESS_CONFIG.flakyRateThreshold
+              ) * 100
+            ) / 100 *
+            RELEASE_READINESS_CONFIG.weights.flakyRate;
+          const moduleRiskScore =
+            Math.max(0, 100 - highestModuleRisk) / 100 *
+            RELEASE_READINESS_CONFIG.weights.moduleRisk;
+          const performanceScore =
+            Math.max(
+              0,
+              100 - (
+                averageTestDurationMs /
+                RELEASE_READINESS_CONFIG.slowTestThresholdMs
+              ) * 100
+            ) / 100 *
+            RELEASE_READINESS_CONFIG.weights.performance;
+          const readinessScore = Number((
+            passRateScore +
+            failureRateScore +
+            flakyRateScore +
+            moduleRiskScore +
+            performanceScore
+          ).toFixed(2));
+
+          // Determine release readiness
+          let readinessStatus;
+          let readinessReason;
+          if (executed === 0) {
+            readinessStatus = 'NO-GO';
+            readinessReason = 'No executed tests were found.';
+          } else if (
+            failureRate >
+            RELEASE_READINESS_CONFIG.failureRateThreshold
+          ) {
+            readinessStatus = 'NO-GO';
+            readinessReason =
+              `Failure rate (${failureRate.toFixed(2)}%) exceeds ` +
+              `the ${RELEASE_READINESS_CONFIG.failureRateThreshold}% threshold.`;
+          } else if (
+            readinessScore >= RELEASE_READINESS_CONFIG.decisions.go &&
+            failed === 0
+          ) {
+            readinessStatus = 'GO';
+            readinessReason =
+              'All readiness scoring criteria are satisfied.';
+          } else if (
+            readinessScore >= RELEASE_READINESS_CONFIG.decisions.conditionalGo
+          ) {
+            readinessStatus = 'CONDITIONAL GO';
+            readinessReason =
+              'Review outstanding test failures, flaky tests, or risk areas.';
+          } else {
+            readinessStatus = 'NO-GO';
+            readinessReason =
+              'The readiness score is below the minimum release threshold.';
+          }
+
+          // Final readiness result
+          const releaseReadiness = {
+            status: readinessStatus,
+            score: readinessScore,
+            reason: readinessReason,
+            metrics: {
+              totalTests: total,
+              executedTests: executed,
+              passedTests: passed,
+              failedTests: failed,
+              flakyTests: flaky,
+              passRate: Number(passRate.toFixed(2)),
+              failureRate: Number(failureRate.toFixed(2)),
+              flakyRate: Number(flakyRate.toFixed(2)),
+              highestModuleRisk: Number(highestModuleRisk.toFixed(2)),
+              averageTestDurationMs: Number(
+                averageTestDurationMs.toFixed(2)
+              )
+            },
+            componentScores: {
+              passRate: Number(passRateScore.toFixed(2)),
+              failureRate: Number(failureRateScore.toFixed(2)),
+              flakyRate: Number(flakyRateScore.toFixed(2)),
+              moduleRisk: Number(moduleRiskScore.toFixed(2)),
+              performance: Number(performanceScore.toFixed(2))
+            },
+            thresholds: RELEASE_READINESS_CONFIG
+          };
+
+          console.log('\n🚦 Release Readiness');
+          console.log(`Status: ${readinessStatus}`);
+          console.log(`Score: ${readinessScore}/100`);
+          console.log(`Reason: ${readinessReason}`);
+
+          // ------- Release Readiness Report -------
+          const readinessStatusEmoji = {
+            'GO': '🟢',
+            'CONDITIONAL GO': '🟡',
+            'NO-GO': '🔴'
+          }[releaseReadiness.status] || '⚪';
+          const readinessMarkdown = `# 🚦 Release Readiness
+
+          ## ${readinessStatusEmoji} ${releaseReadiness.status}
+
+          | Metric | Value |
+          |:---:|:---:|
+          | **Readiness Score** | **${releaseReadiness.score}/100** |
+          | Total Tests | ${total} |
+          | Executed Tests | ${executed} |
+          | Passed Tests | ${passed} |
+          | Failed Tests | ${failed} |
+          | Flaky Tests | ${flaky} |
+          | Pass Rate | ${passRate.toFixed(2)}% |
+          | Failure Rate | ${failureRate.toFixed(2)}% |
+          | Flaky Rate | ${flakyRate.toFixed(2)}% |
+          | Highest Module Risk | ${highestModuleRisk.toFixed(2)}% |
+          | Slowest Module Average Duration | ${formatDuration(averageTestDurationMs)} |
+
+          ## Scoring Breakdown
+
+          | Category | Weight | Score |
+          |:---:|:---:|:---:|
+          | Test Pass Rate | ${RELEASE_READINESS_CONFIG.weights.passRate}% | ${passRateScore.toFixed(2)} |
+          | Failure Rate | ${RELEASE_READINESS_CONFIG.weights.failureRate}% | ${failureRateScore.toFixed(2)} |
+          | Flaky Rate | ${RELEASE_READINESS_CONFIG.weights.flakyRate}% | ${flakyRateScore.toFixed(2)} |
+          | Module Risk | ${RELEASE_READINESS_CONFIG.weights.moduleRisk}% | ${moduleRiskScore.toFixed(2)} |
+          | Performance | ${RELEASE_READINESS_CONFIG.weights.performance}% | ${performanceScore.toFixed(2)} |
+          | **Total** | **100%** | **${readinessScore.toFixed(2)}/100** |
+
+          ## Decision
+
+          **${releaseReadiness.status}**
+
+          ${releaseReadiness.reason}
+
+          ## Thresholds
+
+          - Failure Rate: ${RELEASE_READINESS_CONFIG.failureRateThreshold}%
+          - Flaky Rate: ${RELEASE_READINESS_CONFIG.flakyRateThreshold}%
+          - Slow Test Threshold: ${formatDuration(RELEASE_READINESS_CONFIG.slowTestThresholdMs)}
+          - GO: ${RELEASE_READINESS_CONFIG.decisions.go}–100
+          - CONDITIONAL GO: ${RELEASE_READINESS_CONFIG.decisions.conditionalGo}–${(RELEASE_READINESS_CONFIG.decisions.go - 0.01).toFixed(2)}
+          - NO-GO: Below ${RELEASE_READINESS_CONFIG.decisions.conditionalGo}
+
+          ---
+          _Generated by Playwright Validation_
+          `;
+
+          // Save Markdown report
+          fs.writeFileSync(
+            'release-readiness.md',
+            readinessMarkdown,
+            'utf8'
+          );
+
+          // Save structured JSON report
+          fs.writeFileSync(
+            'release-readiness.json',
+            JSON.stringify(releaseReadiness, null, 2),
+            'utf8'
+          );
+
+          console.log('✅ Generated release-readiness.md');
+          console.log('✅ Generated release-readiness.json');
+
           // ------- Export GitHub Actions Outputs -------
           function setOutput(name, value) {
             const delimiter = `EOF_${name}`;
@@ -1272,16 +1509,77 @@ jobs:
               `${name}<<${delimiter}\n${value}\n${delimiter}\n`
             );
           }
-            setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
+
+          // ==========================================
+          // GITHUB ACTIONS WORKFLOW SUMMARY
+          // ==========================================
+
+          const workflowSummary = `
+          ## 🚦 Release Readiness
+
+          ### ${readinessStatusEmoji} ${releaseReadiness.status}
+
+          **Readiness Score: ${releaseReadiness.score}/100**
+
+          ${releaseReadiness.reason}
+
+          | Metric | Value |
+          |---|---:|
+          | Total Tests | ${total} |
+          | Passed | ${passed} |
+          | Failed | ${failed} |
+          | Flaky | ${flaky} |
+          | Pass Rate | ${passRate.toFixed(2)}% |
+          | Failure Rate | ${failureRate.toFixed(2)}% |
+          | Flaky Rate | ${flakyRate.toFixed(2)}% |
+          | Highest Module Risk | ${highestModuleRisk.toFixed(2)}% |
+          | Slowest Module Average | ${formatDuration(averageTestDurationMs)} |
+
+          <details>
+          <summary>View Readiness Score Breakdown</summary>
+
+          | Category | Weight | Score |
+          |---|---:|---:|
+          | Test Pass Rate | 40% | ${passRateScore.toFixed(2)} |
+          | Failure Rate | 25% | ${failureRateScore.toFixed(2)} |
+          | Flaky Rate | 15% | ${flakyRateScore.toFixed(2)} |
+          | Module Risk | 10% | ${moduleRiskScore.toFixed(2)} |
+          | Performance | 10% | ${performanceScore.toFixed(2)} |
+
+          </details>
+          `;
+
+          if (process.env.GITHUB_STEP_SUMMARY) {
+            fs.appendFileSync(
+              process.env.GITHUB_STEP_SUMMARY,
+              workflowSummary + '\n'
+            );
+          }
+
+          console.log('✅ Added Release Readiness to workflow summary');
+          
+          // Markdown
+          setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
+          setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
           setOutput('FAILED_MODULES_MARKDOWN', failedModuleMarkdown);
           setOutput('FAILED_TESTS_MARKDOWN', failedTestMarkdown);
           setOutput('FLAKY_TESTS_MARKDOWN', flakyTestMarkdown);
           setOutput('SLOWEST_MODULE_MARKDOWN', slowestModuleMarkdown);
+
+          // Slack
           setOutput('TOP_RISK_MODULE_TEXT', topRiskModuleSlack);
           setOutput('FAILED_MODULE_TEXT', failedModulesSlack);
           setOutput('FAILED_TEST_TEXT', failedTestsSlack);
           setOutput('FLAKY_TEST_TEXT', flakyTestsSlack);
           setOutput('SLOWEST_MODULE_TEXT', slowestModuleSlack);
+
+          // Release Readiness outputs
+          setOutput('RELEASE_READINESS_STATUS', releaseReadiness.status);
+          setOutput('RELEASE_READINESS_SCORE', String(releaseReadiness.score));
+          setOutput('RELEASE_READINESS_REASON', releaseReadiness.reason);
+          setOutput('RELEASE_READINESS_JSON', JSON.stringify(releaseReadiness, null, 2));
+
+          // Logs
           console.log(`Failed modules: ${modules.length}`);
           console.log(`Failed tests: ${failedTests.length}`);
           console.log(`Flaky tests: ${flakyTests.length}`);
