@@ -1375,14 +1375,14 @@ jobs:
           *Readiness Score:* ${releaseReadiness.score}/100
           ${releaseReadiness.reason}
           ### Scoring Breakdown
-          | Category | Weight | Score |
-          |:---:|:---:|:---:|
-          | Test Pass Rate | ${RELEASE_READINESS_CONFIG.weights.passRate}% | ${passRateScore.toFixed(2)} |
-          | Failure Rate | ${RELEASE_READINESS_CONFIG.weights.failureRate}% | ${failureRateScore.toFixed(2)} |
-          | Flaky Rate | ${RELEASE_READINESS_CONFIG.weights.flakyRate}% | ${flakyRateScore.toFixed(2)} |
-          | Module Risk | ${RELEASE_READINESS_CONFIG.weights.moduleRisk}% | ${moduleRiskScore.toFixed(2)} |
-          | Performance | ${RELEASE_READINESS_CONFIG.weights.performance}% | ${performanceScore.toFixed(2)} |
-          | **Total** | **100%** | **${readinessScore.toFixed(2)}/100** |
+          | Category | Actual Rate | Weight | Points |
+          |:---:|:---:|:---:|:---:|
+          | Test Pass Rate | ${passRate.toFixed(2)}% | 40% | ${passRateScore.toFixed(2)} |
+          | Failure Rate | ${failureRate.toFixed(2)}% | 25% | ${failureRateScore.toFixed(2)} |
+          | Flaky Rate | ${flakyRate.toFixed(2)}% | 15% | ${flakyRateScore.toFixed(2)} |
+          | Module Risk | ${highestModuleRisk.toFixed(2)}% | 10% | ${moduleRiskScore.toFixed(2)} |
+          | Performance | ${formatDuration(averageTestDurationMs)} | 10% | ${performanceScore.toFixed(2)} |
+          | **Total** | — | **100%** | **${readinessScore.toFixed(2)}/100** |
           `;
 
           // Save Markdown report
@@ -1467,12 +1467,12 @@ jobs:
             `${readinessStatusEmoji} *${releaseReadiness.status}*`,
             `*Reason:* ${releaseReadiness.reason}`,
             `*Readiness Score:* ${releaseReadiness.score}/100`,
-            `• Test Pass Rate: ${RELEASE_READINESS_CONFIG.weights.passRate}% , ${passRateScore.toFixed(2)}`,
-            `• Failure Rate: ${RELEASE_READINESS_CONFIG.weights.failureRate}% , ${failureRateScore.toFixed(2)}`,
-            `• Flaky Rate: ${RELEASE_READINESS_CONFIG.weights.flakyRate}% , ${flakyRateScore.toFixed(2)}`,
-            `• Module Risk: ${RELEASE_READINESS_CONFIG.weights.moduleRisk}% , ${moduleRiskScore.toFixed(2)}`,
-            `• Performance: ${RELEASE_READINESS_CONFIG.weights.performance}% , ${performanceScore.toFixed(2)}`,
-            `• Total: 100% , ${readinessScore.toFixed(2)}/100`
+            `• Test Pass Rate: ${passRate.toFixed(2)}% | 40% | ${passRateScore.toFixed(2)}`,
+            `• Failure Rate: ${failureRate.toFixed(2)}% | 25% | ${failureRateScore.toFixed(2)}`,
+            `• Flaky Rate: ${flakyRate.toFixed(2)}% | 15% | ${flakyRateScore.toFixed(2)}`,
+            `• Module Risk: ${highestModuleRisk.toFixed(2)}% | ${moduleRiskScore.toFixed(2)}`,
+            `• Performance: ${formatDuration(averageTestDurationMs)} | 10% | ${performanceScore.toFixed(2)}`,
+            `• Total: 100% | ${readinessScore.toFixed(2)}/100`
           ].join('\n');
 
           // ------- Export GitHub Actions Outputs -------
