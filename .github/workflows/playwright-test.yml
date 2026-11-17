@@ -2527,6 +2527,9 @@ jobs:
           | 🏷️ Label | ${{ env.PR_LABELS }} |
           | 🔖 Commit SHA | ${{ env.PR_SHA }} |
 
+          ## 🚦 Release Readiness
+          $(cat release-readiness.md)
+
           ## 📊 Execution Metrics
           | Metric | Value | % |
           |:----------:|:----------:|:----------:|
