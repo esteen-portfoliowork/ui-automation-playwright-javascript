@@ -231,7 +231,7 @@ jobs:
             .suites[].suites[].specs[]
             | select(.ok == true)
             | select(
-                any(.tests[].results[]?; .status=="flaky") | not
+                any(.tests[]?; .status == "flaky") | not
               )
           ]
           | length
@@ -249,7 +249,7 @@ jobs:
           [
             .suites[].suites[].specs[]
             | select(
-                any(.tests[].results[]?; .status=="flaky")
+                any(.tests[]?; .status == "flaky")
               )
           ]
           | length
@@ -483,7 +483,7 @@ jobs:
               ([.specs[]
                 | select(.ok == true)
                 | select(
-                    any(.tests[].results[]?; .status=="flaky") | not
+                    any(.tests[]?; .status == "flaky") | not
                   )
               ] | length),
 
@@ -493,7 +493,7 @@ jobs:
 
               ([.specs[]
                 | select(
-                    any(.tests[].results[]?; .status=="flaky")
+                    any(.tests[]?; .status == "flaky")
                   )
               ] | length),
 
@@ -549,7 +549,7 @@ jobs:
               ([.specs[]
                 | select(.ok == true)
                 | select(
-                    any(.tests[].results[]?; .status=="flaky") | not
+                    any(.tests[]?; .status == "flaky") | not
                 )
               ] | length),
 
@@ -559,8 +559,8 @@ jobs:
 
               ([.specs[]
                 | select(
-                    any(.tests[].results[]?; .status=="flaky")
-                )
+                    any(.tests[]?; .status == "flaky")
+                  )
               ] | length),
 
               ([.specs[]
@@ -669,7 +669,7 @@ jobs:
                     "skipped"
                   elif $spec.ok == false then
                     "failed"
-                  elif any($results[]?; .status == "flaky") then
+                  elif any($spec.tests[]?; .status == "flaky") then
                     "flaky"
                   else
                     "passed"
@@ -957,7 +957,19 @@ jobs:
               walk(suite.suites, file);
             }
           }
+
           walk(report.suites || []);
+
+          // Reconcile module flaky counts with the Flaky Tests collection.
+          for (const item of Object.values(moduleRiskCounts)) {
+            item.flaky = 0;
+          }
+          for (const test of flakyTests) {
+            const key = `${test.application}::${test.module}`;
+            if (moduleRiskCounts[key]) {
+              moduleRiskCounts[key].flaky++;
+            }
+          }
 
           // ------- Slowest Module Analysis -------
           const slowestModules = Object.values(moduleRiskCounts)
@@ -1229,9 +1241,9 @@ jobs:
           const {
             total,
             executed,
-            failed,
-            flaky
+            failed
           } = readinessMetrics;
+          const flaky = flakyTests.length;
 
           // Note: A flaky test is counted separately from a fully passing test
           const passed = Math.max(0, executed - failed - flaky);
@@ -1363,14 +1375,14 @@ jobs:
           *Readiness Score:* ${releaseReadiness.score}/100
           ${releaseReadiness.reason}
           ### Scoring Breakdown
-          | Category | Weight | Score |
-          |:---:|:---:|:---:|
-          | Test Pass Rate | ${RELEASE_READINESS_CONFIG.weights.passRate}% | ${passRateScore.toFixed(2)} |
-          | Failure Rate | ${RELEASE_READINESS_CONFIG.weights.failureRate}% | ${failureRateScore.toFixed(2)} |
-          | Flaky Rate | ${RELEASE_READINESS_CONFIG.weights.flakyRate}% | ${flakyRateScore.toFixed(2)} |
-          | Module Risk | ${RELEASE_READINESS_CONFIG.weights.moduleRisk}% | ${moduleRiskScore.toFixed(2)} |
-          | Performance | ${RELEASE_READINESS_CONFIG.weights.performance}% | ${performanceScore.toFixed(2)} |
-          | **Total** | **100%** | **${readinessScore.toFixed(2)}/100** |
+          | Category | Actual Rate | Weight | Points |
+          |:---:|:---:|:---:|:---:|
+          | Test Pass Rate | ${passRate.toFixed(2)}% | 40% | ${passRateScore.toFixed(2)} |
+          | Failure Rate | ${failureRate.toFixed(2)}% | 25% | ${failureRateScore.toFixed(2)} |
+          | Flaky Rate | ${flakyRate.toFixed(2)}% | 15% | ${flakyRateScore.toFixed(2)} |
+          | Module Risk | ${highestModuleRisk.toFixed(2)}% | 10% | ${moduleRiskScore.toFixed(2)} |
+          | Performance | ${formatDuration(averageTestDurationMs)} | 10% | ${performanceScore.toFixed(2)} |
+          | **Total** | — | **100%** | **${readinessScore.toFixed(2)}/100** |
           `;
 
           // Save Markdown report
@@ -1455,12 +1467,12 @@ jobs:
             `${readinessStatusEmoji} *${releaseReadiness.status}*`,
             `*Reason:* ${releaseReadiness.reason}`,
             `*Readiness Score:* ${releaseReadiness.score}/100`,
-            `• Test Pass Rate: ${RELEASE_READINESS_CONFIG.weights.passRate}% , ${passRateScore.toFixed(2)}`,
-            `• Failure Rate: ${RELEASE_READINESS_CONFIG.weights.failureRate}% , ${failureRateScore.toFixed(2)}`,
-            `• Flaky Rate: ${RELEASE_READINESS_CONFIG.weights.flakyRate}% , ${flakyRateScore.toFixed(2)}`,
-            `• Module Risk: ${RELEASE_READINESS_CONFIG.weights.moduleRisk}% , ${moduleRiskScore.toFixed(2)}`,
-            `• Performance: ${RELEASE_READINESS_CONFIG.weights.performance}% , ${performanceScore.toFixed(2)}`,
-            `• Total: 100% , ${readinessScore.toFixed(2)}/100`
+            `• Test Pass Rate: ${passRate.toFixed(2)}% | 40% | ${passRateScore.toFixed(2)}`,
+            `• Failure Rate: ${failureRate.toFixed(2)}% | 25% | ${failureRateScore.toFixed(2)}`,
+            `• Flaky Rate: ${flakyRate.toFixed(2)}% | 15% | ${flakyRateScore.toFixed(2)}`,
+            `• Module Risk: ${highestModuleRisk.toFixed(2)}% | ${moduleRiskScore.toFixed(2)}`,
+            `• Performance: ${formatDuration(averageTestDurationMs)} | 10% | ${performanceScore.toFixed(2)}`,
+            `• Total: 100% | ${readinessScore.toFixed(2)}/100`
           ].join('\n');
 
           // ------- Export GitHub Actions Outputs -------
