@@ -1449,6 +1449,18 @@ jobs:
               ].join('\n')
             : 'No execution duration data available.';
 
+          // ------- Prepare Slack: Release Readiness -------
+          const releaseReadinessSlack = [
+            `${readinessStatusEmoji} *${releaseReadiness.status}*`,
+            `*Readiness Score:* ${releaseReadiness.score}/100`,
+            `• Pass Rate: ${passRate.toFixed(2)}%`,
+            `• Failure Rate: ${failureRate.toFixed(2)}%`,
+            `• Flaky Rate: ${flakyRate.toFixed(2)}%`,
+            `• Highest Module Risk: ${highestModuleRisk.toFixed(2)}%`,
+            `• Slowest Module Average: ${formatDuration(averageTestDurationMs)}`,
+            `*Reason:* ${releaseReadiness.reason}`
+          ].join('\n');
+
           // ------- Export GitHub Actions Outputs -------
           function setOutput(name, value) {
             const delimiter = `EOF_${name}`;
@@ -1459,14 +1471,15 @@ jobs:
           }
           
           // Markdown
-          setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
-          setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
-          setOutput('FAILED_MODULES_MARKDOWN', failedModuleMarkdown);
-          setOutput('FAILED_TESTS_MARKDOWN', failedTestMarkdown);
-          setOutput('FLAKY_TESTS_MARKDOWN', flakyTestMarkdown);
-          setOutput('SLOWEST_MODULE_MARKDOWN', slowestModuleMarkdown);
+          // setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
+          // setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
+          // setOutput('FAILED_MODULES_MARKDOWN', failedModuleMarkdown);
+          // setOutput('FAILED_TESTS_MARKDOWN', failedTestMarkdown);
+          // setOutput('FLAKY_TESTS_MARKDOWN', flakyTestMarkdown);
+          // setOutput('SLOWEST_MODULE_MARKDOWN', slowestModuleMarkdown);
 
           // Slack
+          setOutput('RELEASE_READINESS_TEXT', releaseReadinessSlack);
           setOutput('TOP_RISK_MODULE_TEXT', topRiskModuleSlack);
           setOutput('FAILED_MODULE_TEXT', failedModulesSlack);
           setOutput('FAILED_TEST_TEXT', failedTestsSlack);
@@ -1598,6 +1611,8 @@ jobs:
         with:
           name: ${{ github.event_name == 'pull_request' && format('pr-markdown-execution-reports-{0}', github.run_number) || format('markdown-execution-reports-{0}', github.run_number) }}
           path: |
+            release-readiness.md
+            release-readiness.json
             application-health-dashboard.md
             module-breakdown.md
             tag-execution-summary.md
@@ -1995,6 +2010,19 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
+                  text: "🚦 Release Readiness"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.breakdown.outputs.RELEASE_READINESS_TEXT || 'N/A' }}
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
                   text: "🌐 Application Health Dashboard"
 
               - type: section
@@ -2320,6 +2348,19 @@ jobs:
                       text: "${{ env.EXECUTION_DURATION }}"
                     - type: raw_text
                       text: "-"
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "🚦 Release Readiness"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ steps.breakdown.outputs.RELEASE_READINESS_TEXT || 'N/A' }}
 
               - type: divider
 
