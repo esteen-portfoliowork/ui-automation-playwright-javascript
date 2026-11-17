@@ -1360,6 +1360,7 @@ jobs:
             'NO-GO': '🔴'
           }[releaseReadiness.status] || '⚪';
           const readinessMarkdown = `### ${readinessStatusEmoji} ${releaseReadiness.status}
+          *Readiness Score:* ${releaseReadiness.score}/100
           ${releaseReadiness.reason}
           ### Scoring Breakdown
           | Category | Weight | Score |
@@ -1449,6 +1450,19 @@ jobs:
               ].join('\n')
             : 'No execution duration data available.';
 
+          // ------- Prepare Slack: Release Readiness -------
+          const releaseReadinessSlack = [
+            `${readinessStatusEmoji} *${releaseReadiness.status}*`,
+            `*Reason:* ${releaseReadiness.reason}`,
+            `*Readiness Score:* ${releaseReadiness.score}/100`,
+            `• Test Pass Rate: ${RELEASE_READINESS_CONFIG.weights.passRate}% , ${passRateScore.toFixed(2)}`,
+            `• Failure Rate: ${RELEASE_READINESS_CONFIG.weights.failureRate}% , ${failureRateScore.toFixed(2)}`,
+            `• Flaky Rate: ${RELEASE_READINESS_CONFIG.weights.flakyRate}% , ${flakyRateScore.toFixed(2)}`,
+            `• Module Risk: ${RELEASE_READINESS_CONFIG.weights.moduleRisk}% , ${moduleRiskScore.toFixed(2)}`,
+            `• Performance: ${RELEASE_READINESS_CONFIG.weights.performance}% , ${performanceScore.toFixed(2)}`,
+            `• Total: 100% , ${readinessScore.toFixed(2)}/100`
+          ].join('\n');
+
           // ------- Export GitHub Actions Outputs -------
           function setOutput(name, value) {
             const delimiter = `EOF_${name}`;
@@ -1459,14 +1473,15 @@ jobs:
           }
           
           // Markdown
-          setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
-          setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
-          setOutput('FAILED_MODULES_MARKDOWN', failedModuleMarkdown);
-          setOutput('FAILED_TESTS_MARKDOWN', failedTestMarkdown);
-          setOutput('FLAKY_TESTS_MARKDOWN', flakyTestMarkdown);
-          setOutput('SLOWEST_MODULE_MARKDOWN', slowestModuleMarkdown);
+          // setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
+          // setOutput('TOP_RISK_MARKDOWN', topRiskMarkdown);
+          // setOutput('FAILED_MODULES_MARKDOWN', failedModuleMarkdown);
+          // setOutput('FAILED_TESTS_MARKDOWN', failedTestMarkdown);
+          // setOutput('FLAKY_TESTS_MARKDOWN', flakyTestMarkdown);
+          // setOutput('SLOWEST_MODULE_MARKDOWN', slowestModuleMarkdown);
 
           // Slack
+          setOutput('RELEASE_READINESS_TEXT', releaseReadinessSlack);
           setOutput('TOP_RISK_MODULE_TEXT', topRiskModuleSlack);
           setOutput('FAILED_MODULE_TEXT', failedModulesSlack);
           setOutput('FAILED_TEST_TEXT', failedTestsSlack);
@@ -1598,6 +1613,8 @@ jobs:
         with:
           name: ${{ github.event_name == 'pull_request' && format('pr-markdown-execution-reports-{0}', github.run_number) || format('markdown-execution-reports-{0}', github.run_number) }}
           path: |
+            release-readiness.md
+            release-readiness.json
             application-health-dashboard.md
             module-breakdown.md
             tag-execution-summary.md
@@ -1995,6 +2012,19 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
+                  text: "🚦 Release Readiness"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT) }}
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
                   text: "🌐 Application Health Dashboard"
 
               - type: section
@@ -2320,6 +2350,19 @@ jobs:
                       text: "${{ env.EXECUTION_DURATION }}"
                     - type: raw_text
                       text: "-"
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "🚦 Release Readiness"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT) }}
 
               - type: divider
 
