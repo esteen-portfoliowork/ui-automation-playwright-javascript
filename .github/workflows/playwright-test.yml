@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/main') }}
 
 env:
   TEST_ENV: ${{ github.event.inputs.environment || 'qa' }}
@@ -1506,11 +1506,417 @@ jobs:
           setOutput('RELEASE_READINESS_REASON', releaseReadiness.reason);
           setOutput('RELEASE_READINESS_JSON', JSON.stringify(releaseReadiness, null, 2));
 
+          // Historical Trends
+          // setOutput('HISTORICAL_TREND_TEXT', historicalTrendSlack);
+          // setOutput('QUALITY_ANALYTICS_TEXT', qualityAnalyticsSlack);
+          // setOutput('TEST_CASE_GROWTH_TEXT', testCaseGrowthSlack);
+
+          // Titles
+          setOutput('ISSUE_TITLE', process.env.ISSUE_TITLE || 'N/A');
+          setOutput('PR_TITLE', process.env.PR_TITLE || 'N/A');
+
           // Logs
           console.log(`Failed modules: ${modules.length}`);
           console.log(`Failed tests: ${failedTests.length}`);
           console.log(`Flaky tests: ${flakyTests.length}`);
           NODE
+
+      - name: 📚 Retrieve Historical Test Data
+        id: retrieve_history
+        if: always()
+        run: |
+          mkdir -p history
+
+          echo "🔍 Checking historical test data..."
+
+          if git fetch origin \
+            refs/heads/test-history:refs/remotes/origin/test-history 2>/dev/null; then
+
+            echo "✅ test-history branch found."
+
+            if git show origin/test-history:history/summary.json \
+              > history/previous-summary.json 2>/dev/null; then
+              echo "✅ Previous execution history retrieved."
+            else
+              echo '{"runs":[]}' > history/previous-summary.json
+              echo "⚠️ History file not found. Starting a new history."
+            fi
+
+          else
+            echo "⚠️ test-history branch does not exist yet."
+            echo '{"runs":[]}' > history/previous-summary.json
+          fi
+
+          if jq -e '.runs | length > 0' history/previous-summary.json >/dev/null; then
+            echo "HISTORY_AVAILABLE=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "HISTORY_AVAILABLE=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 📈 Generate Historical Test Trend
+        id: historical_test_trend
+        if: always()
+        env:
+          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
+          PASSED_TESTS: ${{ env.PASSED_TESTS }}
+          FAILED_TESTS: ${{ env.FAILED_TESTS }}
+          FLAKY_TESTS: ${{ env.FLAKY_TESTS }}
+          SKIPPED_TESTS: ${{ env.SKIPPED_TESTS }}
+          PASS_RATE: ${{ env.PASS_RATE }}
+          FAILURE_RATE: ${{ env.FAILURE_RATE }}
+          FLAKY_RATE: ${{ env.FLAKY_RATE }}
+          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const historyPath = 'history/previous-summary.json';
+          const history = JSON.parse(
+            fs.existsSync(historyPath)
+              ? fs.readFileSync(historyPath, 'utf8')
+              : '{"runs":[]}'
+          );
+
+          const runs = Array.isArray(history.runs) ? history.runs : [];
+
+          const current = {
+            total: Number(process.env.TOTAL_TESTS || 0),
+            passed: Number(process.env.PASSED_TESTS || 0),
+            failed: Number(process.env.FAILED_TESTS || 0),
+            flaky: Number(process.env.FLAKY_TESTS || 0),
+            skipped: Number(process.env.SKIPPED_TESTS || 0),
+            passRate: Number(process.env.PASS_RATE || 0),
+            failRate: Number(process.env.FAILURE_RATE || 0),
+            flakyRate: Number(process.env.FLAKY_RATE || 0),
+            duration: process.env.EXECUTION_DURATION || '0s'
+          };
+
+          function durationToSeconds(value) {
+            const input = String(value).trim();
+
+            if (/^\d+(\.\d+)?$/.test(input)) {
+              return Number(input);
+            }
+
+            const regex = /(\d+(?:\.\d+)?)\s*(h|hr|hrs|m|min|mins|s|sec|secs)/gi;
+            let match;
+            let total = 0;
+
+            while ((match = regex.exec(input)) !== null) {
+              const amount = Number(match[1]);
+              const unit = match[2].toLowerCase();
+
+              if (unit.startsWith('h')) total += amount * 3600;
+              else if (unit.startsWith('m')) total += amount * 60;
+              else total += amount;
+            }
+
+            return total;
+          }
+
+          function formatDuration(seconds) {
+            if (!Number.isFinite(seconds)) return 'N/A';
+
+            const rounded = Math.round(seconds);
+            const hours = Math.floor(rounded / 3600);
+            const minutes = Math.floor((rounded % 3600) / 60);
+            const secs = rounded % 60;
+
+            if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+            if (minutes > 0) return `${minutes}m ${secs}s`;
+            return `${secs}s`;
+          }
+
+          function relativeChange(currentValue, previousValue, lowerIsBetter = false) {
+            if (!Number.isFinite(previousValue) || previousValue === 0) {
+              return { text: 'N/A', favorable: null };
+            }
+
+            const change =
+              ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
+
+            const sign = change > 0 ? '+' : '';
+            const favorable = lowerIsBetter ? change < 0 : change > 0;
+
+            return {
+              text: `${sign}${change.toFixed(2)}%`,
+              favorable: change === 0 ? null : favorable
+            };
+          }
+
+          function percentagePointChange(currentValue, previousValue, lowerIsBetter = false) {
+            if (!Number.isFinite(previousValue)) {
+              return { text: 'N/A', favorable: null };
+            }
+
+            const change = currentValue - previousValue;
+            const sign = change > 0 ? '+' : '';
+            const favorable = lowerIsBetter ? change < 0 : change > 0;
+
+            return {
+              text: `${sign}${change.toFixed(2)} pp`,
+              favorable: change === 0 ? null : favorable
+            };
+          }
+
+          function indicator(favorable) {
+            if (favorable === true) return '🟢';
+            if (favorable === false) return '🔴';
+            return '⚪';
+          }
+
+          const previous = [...runs]
+            .reverse()
+            .find(run => run.successful === true);
+
+          const currentDurationSeconds = durationToSeconds(current.duration);
+
+          const metrics = [
+            {
+              name: '🧪 Test Cases',
+              current: current.total,
+              previous: previous?.total,
+              change: previous
+                ? relativeChange(current.total, previous.total)
+                : null
+            },
+            {
+              name: '✅ Pass Rate',
+              current: current.passRate,
+              previous: previous?.passRate,
+              change: previous
+                ? percentagePointChange(current.passRate, previous.passRate)
+                : null
+            },
+            {
+              name: '❌ Fail Rate',
+              current: current.failRate,
+              previous: previous?.failRate,
+              change: previous
+                ? percentagePointChange(current.failRate, previous.failRate, true)
+                : null
+            },
+            {
+              name: '⚠️ Flaky Rate',
+              current: current.flakyRate,
+              previous: previous?.flakyRate,
+              change: previous
+                ? percentagePointChange(current.flakyRate, previous.flakyRate, true)
+                : null
+            },
+            {
+              name: '⏱️ Duration',
+              current: currentDurationSeconds,
+              previous: previous?.durationSeconds,
+              change: previous
+                ? relativeChange(currentDurationSeconds, previous.durationSeconds, true)
+                : null
+            }
+          ];
+
+          const markdownRows = metrics.map(metric => {
+            const previousValue =
+              metric.previous === undefined
+                ? 'N/A'
+                : metric.name === '⏱️ Duration'
+                  ? formatDuration(metric.previous)
+                  : metric.name.includes('Rate')
+                    ? `${metric.previous.toFixed(2)}%`
+                    : metric.previous;
+
+            const currentValue =
+              metric.name === '⏱️ Duration'
+                ? formatDuration(metric.current)
+                : metric.name.includes('Rate')
+                  ? `${metric.current.toFixed(2)}%`
+                  : metric.current;
+
+            const change = metric.change
+              ? `${indicator(metric.change.favorable)} ${metric.change.text}`
+              : '⚪ No baseline';
+
+            return `| ${metric.name} | ${previousValue} | ${currentValue} | ${change} |`;
+          });
+
+          const heading = previous
+            ? `Compared with successful main run #${previous.runNumber || 'N/A'}`
+            : 'No previous successful main run is available yet.';
+
+          const markdown = [
+            `> ${heading}`,
+            '',
+            '| Metric | Previous Run | Current Run | Change |',
+            '|---|---:|---:|---:|',
+            ...markdownRows,
+            '',
+            '> Rate changes are shown in percentage points (pp). Test-case and duration changes are relative percentages.',
+            '> Test-case growth represents suite growth, not automatically an improvement in quality.'
+          ].join('\n');
+
+          const slack = [
+            previous
+              ? `*Compared with successful main run #${previous.runNumber || 'N/A'}*`
+              : '*Historical baseline: Not available yet*',
+            ...metrics.map(metric => {
+              const value = metric.name === '⏱️ Duration'
+                ? formatDuration(metric.current)
+                : metric.name.includes('Rate')
+                  ? `${metric.current.toFixed(2)}%`
+                  : metric.current;
+
+              const change = metric.change
+                ? `${indicator(metric.change.favorable)} ${metric.change.text}`
+                : '⚪ No baseline';
+
+              return `${metric.name}: *${value}*  |  ${change}`;
+            })
+          ].join('\n');
+
+          fs.writeFileSync('historical-test-trend.md', markdown + '\n');
+          fs.writeFileSync('history/current-trend-slack.txt', slack + '\n');
+
+          const delimiter = 'HISTORICAL_TREND_EOF';
+
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `HISTORICAL_TREND_TEXT<<${delimiter}\n${slack}\n${delimiter}\n`
+          );
+
+          console.log('✅ Historical test trend generated.');
+          console.log(markdown);
+          NODE
+
+      - name: 💾 Save Historical Test Data
+        if: >-
+          always() &&
+          github.event_name == 'push' &&
+          github.ref == 'refs/heads/main' &&
+          env.TOTAL_TESTS != '0' &&
+          env.FAILED_TESTS == '0'
+        env:
+          HISTORY_TOKEN: ${{ secrets.HISTORY_TOKEN }}
+          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
+          PASSED_TESTS: ${{ env.PASSED_TESTS }}
+          FAILED_TESTS: ${{ env.FAILED_TESTS }}
+          FLAKY_TESTS: ${{ env.FLAKY_TESTS }}
+          SKIPPED_TESTS: ${{ env.SKIPPED_TESTS }}
+          PASS_RATE: ${{ env.PASS_RATE }}
+          FAILURE_RATE: ${{ env.FAILURE_RATE }}
+          FLAKY_RATE: ${{ env.FLAKY_RATE }}
+          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ID: ${{ github.run_id }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -e
+
+          echo "📚 Preparing historical storage..."
+
+          if git ls-remote --exit-code --heads origin test-history >/dev/null 2>&1; then
+            echo "✅ Existing test-history branch found."
+
+            git fetch origin test-history
+
+            git worktree add -B test-history \
+              .test-history origin/test-history
+          else
+            echo "🆕 Creating test-history branch."
+
+            git worktree add --detach .test-history HEAD
+
+            git -C .test-history checkout --orphan test-history
+
+            find .test-history -mindepth 1 -maxdepth 1 \
+              ! -name .git -exec rm -rf {} +
+          fi
+
+          mkdir -p .test-history/history
+
+          node <<'NODE'
+          const fs = require('fs');
+          const path = '.test-history/history/summary.json';
+
+          let history = { runs: [] };
+
+          if (fs.existsSync(path)) {
+            history = JSON.parse(fs.readFileSync(path, 'utf8'));
+          }
+
+          if (!Array.isArray(history.runs)) {
+            history.runs = [];
+          }
+
+          function durationToSeconds(value) {
+            const input = String(value).trim();
+
+            if (/^\d+(\.\d+)?$/.test(input)) {
+              return Number(input);
+            }
+
+            const regex = /(\d+(?:\.\d+)?)\s*(h|hr|hrs|m|min|mins|s|sec|secs)/gi;
+            let match;
+            let total = 0;
+
+            while ((match = regex.exec(input)) !== null) {
+              const amount = Number(match[1]);
+              const unit = match[2].toLowerCase();
+
+              if (unit.startsWith('h')) total += amount * 3600;
+              else if (unit.startsWith('m')) total += amount * 60;
+              else total += amount;
+            }
+
+            return total;
+          }
+
+          const run = {
+            runNumber: Number(process.env.RUN_NUMBER),
+            runId: process.env.RUN_ID,
+            timestamp: new Date().toISOString(),
+            commitSha: process.env.COMMIT_SHA,
+            successful: true,
+            total: Number(process.env.TOTAL_TESTS || 0),
+            passed: Number(process.env.PASSED_TESTS || 0),
+            failed: Number(process.env.FAILED_TESTS || 0),
+            flaky: Number(process.env.FLAKY_TESTS || 0),
+            skipped: Number(process.env.SKIPPED_TESTS || 0),
+            passRate: Number(process.env.PASS_RATE || 0),
+            failRate: Number(process.env.FAILURE_RATE || 0),
+            flakyRate: Number(process.env.FLAKY_RATE || 0),
+            duration: process.env.EXECUTION_DURATION || '0s',
+            durationSeconds: durationToSeconds(
+              process.env.EXECUTION_DURATION || '0s'
+            )
+          };
+
+          history.runs.push(run);
+
+          // Keep the latest 365 successful main-branch runs.
+          history.runs = history.runs
+            .filter(item => item.successful === true)
+            .slice(-365);
+
+          fs.writeFileSync(path, JSON.stringify(history, null, 2) + '\n');
+
+          console.log(`✅ Stored main run #${run.runNumber}`);
+          console.log(`📊 Total historical records: ${history.runs.length}`);
+          NODE
+
+          git -C .test-history config user.name "github-actions[bot]"
+          git -C .test-history config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git -C .test-history add history/summary.json
+
+          git -C .test-history commit \
+            -m "chore: update Playwright test history [skip ci]"
+
+          AUTH=$(printf 'x-access-token:%s' "$HISTORY_TOKEN" | base64 -w 0)
+
+          git -C .test-history \
+            -c http.extraheader="AUTHORIZATION: basic $AUTH" \
+            push origin test-history
+
+          echo "✅ Historical test data saved."
 
       # - name: 🔍 Debug Breakdown Tables
       #   if: always()
@@ -1636,6 +2042,7 @@ jobs:
             flaky-tests.md
             slowest-module.md
             report-links.md
+            historical-test-trend.md
           if-no-files-found: warn
           retention-days: 7
 
@@ -1828,6 +2235,11 @@ jobs:
           echo "## ⏱️ Slowest Module" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat slowest-module.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## 📈 Historical Test Trend" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat historical-test-trend.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
