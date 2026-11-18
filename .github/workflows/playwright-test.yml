@@ -310,6 +310,11 @@ jobs:
 
           echo "QUALITY_SCORE=$QUALITY_SCORE" >> $GITHUB_ENV
 
+      - name: 📊 Generate Analytics Dataset
+        if: always()
+        run: |
+          node .github/scripts/analytics/generate-analytics.js
+
       # - name: 🔍 Debug Specs
       #   if: always()
       #   run: |
