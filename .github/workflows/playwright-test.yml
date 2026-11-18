@@ -3015,6 +3015,9 @@ jobs:
           ## ⏱️ Slowest Module
           $(cat slowest-module.md)
 
+          ## 📈 Historical Test Trend
+          $(cat historical-test-trend.md)
+
           ## 🔗 Report Links
           $(cat report-links.md)
 
