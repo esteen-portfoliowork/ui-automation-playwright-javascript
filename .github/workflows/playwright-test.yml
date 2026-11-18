@@ -10,7 +10,7 @@ run-name: >
   }}
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 concurrency:
@@ -1507,9 +1507,9 @@ jobs:
           setOutput('RELEASE_READINESS_JSON', JSON.stringify(releaseReadiness, null, 2));
 
           // Historical Trends
-          setOutput('HISTORICAL_TREND_TEXT', historicalTrendSlack);
-          setOutput('QUALITY_ANALYTICS_TEXT', qualityAnalyticsSlack);
-          setOutput('TEST_CASE_GROWTH_TEXT', testCaseGrowthSlack);
+          // setOutput('HISTORICAL_TREND_TEXT', historicalTrendSlack);
+          // setOutput('QUALITY_ANALYTICS_TEXT', qualityAnalyticsSlack);
+          // setOutput('TEST_CASE_GROWTH_TEXT', testCaseGrowthSlack);
 
           // Titles
           setOutput('ISSUE_TITLE', process.env.ISSUE_TITLE || 'N/A');
