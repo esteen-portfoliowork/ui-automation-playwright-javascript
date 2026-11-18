@@ -315,6 +315,11 @@ jobs:
         run: |
           node .github/scripts/analytics/generate-analytics.js
 
+      - name: 🔍 Debug Analytics
+        if: always()
+        run: |
+          cat analytics.json
+
       # - name: 🔍 Debug Specs
       #   if: always()
       #   run: |
