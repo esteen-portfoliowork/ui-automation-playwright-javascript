@@ -2034,6 +2034,14 @@ jobs:
       #       echo EOF
       #     } >> $GITHUB_OUTPUT
 
+      - name: 📦 Upload Analytics Dataset
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analytics-dataset-${{ github.run_number }}
+          path: analytics.json
+          retention-days: 7
+
       - name: 📤 Upload Markdown Reports
         id: upload_markdown_reports
         if: always()
