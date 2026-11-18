@@ -2553,6 +2553,19 @@ jobs:
                 level: 2
                 text:
                   type: plain_text
+                  text: "📈 Historical Test Trend"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ toJson(steps.historical_test_trend.outputs.HISTORICAL_TREND_TEXT) }}
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
                   text: "🔗 Report Links"
 
               - type: section
@@ -2891,6 +2904,19 @@ jobs:
                 text:
                   type: mrkdwn
                   text: ${{ toJson(steps.generate_failure_flakiness_risk_performance_report.outputs.SLOWEST_MODULE_TEXT) }}
+
+              - type: divider
+
+              - type: header
+                level: 2
+                text:
+                  type: plain_text
+                  text: "📈 Historical Test Trend"
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ${{ toJson(steps.historical_test_trend.outputs.HISTORICAL_TREND_TEXT) }}
 
               - type: divider
 
