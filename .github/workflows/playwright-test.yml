@@ -831,6 +831,10 @@ jobs:
       #     );
       #     NODE
 
+      - name: 🔍 Debug Analytics Files
+        run: |
+          ls -R .github/scripts/analytics
+
       - name: 📦 Build Breakdown Data
         id: breakdown
         if: always()
