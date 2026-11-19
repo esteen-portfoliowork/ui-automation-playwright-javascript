@@ -45,6 +45,15 @@ const APPLICATIONS = {
   'sauce-demo': 'SauceDemo'
 };
 
+const {
+  calculateMetrics
+} = require('./metrics');
+
+const applications = {};
+
+const modules = {};
+
+const tags = {};
 
 // analytics.modules.push({
 //   application,
@@ -61,6 +70,53 @@ const APPLICATIONS = {
 //   qualityScore,
 //   health
 // });
+
+function walkSuites(suites, parentFile = '') {
+  for (const suite of suites || []) {
+    const file = suite.file || parentFile;
+
+    for (const spec of suite.specs || []) {
+
+      const specFile = file || 'Unknown';
+      const parts = specFile.split('/');
+
+      const applicationKey = parts[0] || 'Unknown';
+      const moduleKey =
+        (parts[1] || 'Unknown')
+          .replace('.spec.js', '')
+          .replace('.spec.ts', '');
+
+      const application =
+        getApplicationName(applicationKey);
+
+      const key =
+        `${application}::${moduleKey}`;
+
+      const tests = spec.tests || [];
+
+      const isFailed =
+        spec.ok === false;
+
+      const isFlaky =
+        tests.some(
+          test => test.status === 'flaky'
+        );
+
+      const isSkipped =
+        tests.length > 0 &&
+        tests.every(test =>
+          (test.results || []).every(
+            result => result.status === 'skipped'
+          )
+        );
+
+      const isPassed =
+        spec.ok === true &&
+        !isFlaky;
+
+function getApplicationName(app) {
+  return APPLICATIONS[app] || app;
+}
 
 fs.writeFileSync(
   'analytics.json',
