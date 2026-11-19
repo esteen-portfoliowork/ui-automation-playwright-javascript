@@ -12,10 +12,7 @@ function setOutput(name, value) {
 
   fs.appendFileSync(
     process.env.GITHUB_OUTPUT,
-    `${name}<<${delimiter}
-${value}
-${delimiter}
-`
+    `${name}<<${delimiter}\n${value}\n${delimiter}\n`
   );
 }
 
@@ -89,4 +86,22 @@ setOutput(
 setOutput(
   'MODULE_BREAKDOWN_TEXT',
   moduleBreakdownText
+);
+
+// temporary
+setOutput(
+  'TAG_EXECUTION_TEXT',
+  'Tag summary refactoring not implemented yet.'
+);
+fs.writeFileSync(
+  'tag-execution-summary.md',
+  '# Tag Summary\n\nRefactoring in progress.\n'
+);
+fs.writeFileSync(
+  'tag-execution-summary.md',
+  '# Tag Execution Summary\n\nRefactoring not implemented yet.\n'
+);
+setOutput(
+  'TAG_EXECUTION_TEXT',
+  'Tag Summary not migrated yet.'
 );
