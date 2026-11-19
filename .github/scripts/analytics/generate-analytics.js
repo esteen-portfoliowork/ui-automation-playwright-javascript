@@ -38,6 +38,14 @@ const analytics = {
   generatedAt: new Date().toISOString()
 };
 
+const APPLICATIONS = {
+  'expand-testing': 'Expand Testing',
+  'orange-hrm': 'Orange HRM',
+  'qa-playground': 'QA Playground',
+  'sauce-demo': 'SauceDemo'
+};
+
+
 // analytics.modules.push({
 //   application,
 //   module,
