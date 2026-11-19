@@ -38,6 +38,22 @@ const analytics = {
   generatedAt: new Date().toISOString()
 };
 
+analytics.modules.push({
+  application,
+  module,
+  total,
+  passed,
+  failed,
+  flaky,
+  skipped,
+  passRate,
+  failRate,
+  flakyRate,
+  skippedRate,
+  qualityScore,
+  health
+});
+
 fs.writeFileSync(
   'analytics.json',
   JSON.stringify(
