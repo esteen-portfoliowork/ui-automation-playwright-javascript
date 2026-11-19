@@ -2489,7 +2489,8 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
+                  text: >-
+                    ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -2502,7 +2503,8 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
+                  text: >-
+                    ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -2515,7 +2517,8 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
+                  text: >-
+                    ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -2847,7 +2850,8 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
+                  text: >-
+                    ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -2860,7 +2864,8 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
+                  text: >-
+                    ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
 
               - type: divider
 
@@ -2873,7 +2878,8 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
+                  text: >-
+                    ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
 
               - type: divider
 
