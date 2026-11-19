@@ -514,7 +514,7 @@ jobs:
               ] | length)
           ]
           | @tsv
-          ' playwright-report/analytics.json |
+          ' playwright-report/results.json |
           awk -F'\t' '
           {
               total[$1] += $2
@@ -580,7 +580,7 @@ jobs:
               ] | length)
           ]
           | @tsv
-          ' playwright-report/analytics.json |
+          ' playwright-report/results.json |
           while IFS=$'\t' read -r APP MODULE TOTAL PASSED FAILED FLAKY SKIPPED
           do
             APP_NAME=$(get_app_name "$APP")
@@ -640,7 +640,7 @@ jobs:
               ))
             | select(length == 0)
             | "\($item.spec.title // "Untitled test case")\t\($item.file)"
-          ' playwright-report/analytics.json > untagged-test-cases.txt
+          ' playwright-report/results.json > untagged-test-cases.txt
 
           # Extract valid tags and their test case statuses.
           jq -r '
@@ -687,7 +687,7 @@ jobs:
               ) as $status
             | $tags[]
             | "\(.)\t\($status)"
-          ' playwright-report/analytics.json |
+          ' playwright-report/results.json |
           awk -F'\t' '
           {
             total[$1]++
