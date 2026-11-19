@@ -310,6 +310,16 @@ jobs:
 
           echo "QUALITY_SCORE=$QUALITY_SCORE" >> $GITHUB_ENV
 
+      - name: 📊 Generate Analytics Dataset
+        if: always()
+        run: |
+          node .github/scripts/analytics/generate-analytics.js
+
+      - name: 🔍 Debug Analytics
+        if: always()
+        run: |
+          cat analytics.json
+
       # - name: 🔍 Debug Specs
       #   if: always()
       #   run: |
@@ -2023,6 +2033,14 @@ jobs:
       #       echo "*🔖 Commit SHA:* ${{ github.sha }}"
       #       echo EOF
       #     } >> $GITHUB_OUTPUT
+
+      - name: 📦 Upload Analytics Dataset
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analytics-dataset-${{ github.run_number }}
+          path: analytics.json
+          retention-days: 7
 
       - name: 📤 Upload Markdown Reports
         id: upload_markdown_reports

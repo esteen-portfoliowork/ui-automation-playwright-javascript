@@ -1,0 +1,50 @@
+const fs = require('fs');
+
+const reportPath = 'playwright-report/results.json';
+
+if (!fs.existsSync(reportPath)) {
+  console.log('results.json not found');
+
+  fs.writeFileSync(
+    'analytics.json',
+    JSON.stringify(
+      {
+        execution: {},
+        applications: [],
+        modules: [],
+        tags: [],
+        failedTests: [],
+        flakyTests: []
+      },
+      null,
+      2
+    )
+  );
+
+  process.exit(0);
+}
+
+const report = JSON.parse(
+  fs.readFileSync(reportPath, 'utf8')
+);
+
+const analytics = {
+  execution: {},
+  applications: [],
+  modules: [],
+  tags: [],
+  failedTests: [],
+  flakyTests: [],
+  generatedAt: new Date().toISOString()
+};
+
+fs.writeFileSync(
+  'analytics.json',
+  JSON.stringify(
+    analytics,
+    null,
+    2
+  )
+);
+
+console.log('analytics.json generated');
