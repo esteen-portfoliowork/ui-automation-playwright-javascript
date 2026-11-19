@@ -71,6 +71,10 @@ const tags = {};
 //   health
 // });
 
+function getApplicationName(app) {
+  return APPLICATIONS[app] || app;
+}
+
 function walkSuites(suites, parentFile = '') {
   for (const suite of suites || []) {
     const file = suite.file || parentFile;
@@ -114,9 +118,104 @@ function walkSuites(suites, parentFile = '') {
         spec.ok === true &&
         !isFlaky;
 
-function getApplicationName(app) {
-  return APPLICATIONS[app] || app;
+      // Application Aggregation
+      if (!applications[application]) {
+        applications[application] = {
+          application,
+          total: 0,
+          passed: 0,
+          failed: 0,
+          flaky: 0,
+          skipped: 0
+        };
+      }
+
+      applications[application].total++;
+
+      if (isPassed)
+        applications[application].passed++;
+
+      if (isFailed)
+        applications[application].failed++;
+
+      if (isFlaky)
+        applications[application].flaky++;
+
+      if (isSkipped)
+        applications[application].skipped++;
+
+      // Module Aggregation
+            if (!modules[key]) {
+        modules[key] = {
+          application,
+          module: moduleKey,
+          total: 0,
+          passed: 0,
+          failed: 0,
+          flaky: 0,
+          skipped: 0
+        };
+      }
+
+      modules[key].total++;
+
+      if (isPassed)
+        modules[key].passed++;
+
+      if (isFailed)
+        modules[key].failed++;
+
+      if (isFlaky)
+        modules[key].flaky++;
+
+      if (isSkipped)
+        modules[key].skipped++;
+
+    }
+
+    walkSuites(
+      suite.suites,
+      file
+    );
+  }
 }
+
+walkSuites(report.suites || []);
+
+analytics.applications =
+  Object.values(applications)
+    .map(item => ({
+      ...item,
+      ...calculateMetrics(
+        item.total,
+        item.passed,
+        item.failed,
+        item.flaky,
+        item.skipped
+      )
+    }));
+
+analytics.modules =
+  Object.values(modules)
+    .map(item => ({
+      ...item,
+      ...calculateMetrics(
+        item.total,
+        item.passed,
+        item.failed,
+        item.flaky,
+        item.skipped
+      )
+    }));
+
+analytics.execution = {
+  totalApplications:
+    analytics.applications.length,
+
+  totalModules:
+    analytics.modules.length
+};
+
 
 fs.writeFileSync(
   'analytics.json',
