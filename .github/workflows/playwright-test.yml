@@ -1387,6 +1387,14 @@ jobs:
           BUILD_TEXT: ${{ env.BUILD_TEXT }}
           EXECUTION_HEALTH: ${{ env.EXECUTION_HEALTH }}
           RELEASE_READINESS_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT }}
+          TOP_RISK_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.TOP_RISK_MODULE_TEXT }}
+          FAILED_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_MODULE_TEXT }}
+          FAILED_TEST_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TEST_TEXT }}
+          FLAKY_TEST_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FLAKY_TEST_TEXT }}
+          SLOWEST_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.SLOWEST_MODULE_TEXT }}
+          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
+          PASS_RATE: ${{ env.PASS_RATE }}
+          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
         run: |
           node .github/scripts/notifications/generate-slack-pr.js
 
