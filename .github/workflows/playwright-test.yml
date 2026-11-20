@@ -1326,7 +1326,7 @@ jobs:
           echo "| 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |" >> $GITHUB_STEP_SUMMARY
 
-          echo "## 🌐 Application Health Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "## 🖥️ Application Health Dashboard" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -1387,6 +1387,7 @@ jobs:
           BUILD_TEXT: ${{ env.BUILD_TEXT }}
           EXECUTION_HEALTH: ${{ env.EXECUTION_HEALTH }}
           RELEASE_READINESS_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT }}
+          APPLICATION_HEALTH_TEXT: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT }}
           TOP_RISK_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.TOP_RISK_MODULE_TEXT }}
           FAILED_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_MODULE_TEXT }}
           FAILED_TEST_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TEST_TEXT }}
@@ -1464,7 +1465,7 @@ jobs:
           | 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |
           | ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |
 
-          ## 🌐 Application Health Dashboard
+          ## 🖥️ Application Health Dashboard
           $(cat application-health-dashboard.md)
 
           ## 📦 Module Breakdown

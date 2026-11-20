@@ -232,6 +232,21 @@ const payload = {
                 text: process.env.RELEASE_READINESS_TEXT || 'No release readiness data available.'
             }
         },
+        {
+            type: 'header',
+            level: 1,
+            text: {
+                type: 'plain_text',
+                text: `🖥️ Application Health Dashboard`
+            }
+        },
+        {
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: process.env.APPLICATION_HEALTH_TEXT || 'No application health available.'
+            }
+        },
     ]
 };
 
