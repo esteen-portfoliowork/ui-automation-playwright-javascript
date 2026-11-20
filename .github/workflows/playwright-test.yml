@@ -2486,11 +2486,16 @@ jobs:
                   type: plain_text
                   text: "🌐 Application Health Dashboard"
 
+              # - type: section
+              #   text:
+              #     type: mrkdwn
+              #     text: >-
+              #       ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
+
               - type: section
                 text:
                   type: mrkdwn
-                  text: >-
-                    ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
+                  text: "See Module Breakdown in workflow summary."
 
               - type: divider
 
@@ -2500,11 +2505,16 @@ jobs:
                   type: plain_text
                   text: "📦 Module Breakdown"
 
+              # - type: section
+              #   text:
+              #     type: mrkdwn
+              #     text: >-
+              #       ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
+
               - type: section
                 text:
                   type: mrkdwn
-                  text: >-
-                    ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
+                  text: "See Module Breakdown in workflow summary."
 
               - type: divider
 
@@ -2514,11 +2524,16 @@ jobs:
                   type: plain_text
                   text: "🏷️ Tag Execution Summary"
 
+              # - type: section
+              #   text:
+              #     type: mrkdwn
+              #     text: >-
+              #       ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
+
               - type: section
                 text:
                   type: mrkdwn
-                  text: >-
-                    ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
+                  text: "Tag Summary not migrated yet."
 
               - type: divider
 
@@ -2847,11 +2862,16 @@ jobs:
                   type: plain_text
                   text: "🌐 Application Health Dashboard"
 
+              # - type: section
+              #   text:
+              #     type: mrkdwn
+              #     text: >-
+              #       ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
+
               - type: section
                 text:
                   type: mrkdwn
-                  text: >-
-                    ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT || 'N/A' }}
+                  text: "See Module Breakdown in workflow summary."
 
               - type: divider
 
@@ -2861,11 +2881,16 @@ jobs:
                   type: plain_text
                   text: "📦 Module Breakdown"
 
+              # - type: section
+              #   text:
+              #     type: mrkdwn
+              #     text: >-
+              #       ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
+
               - type: section
                 text:
                   type: mrkdwn
-                  text: >-
-                    ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT || 'N/A' }}
+                  text: "See Module Breakdown in workflow summary."
 
               - type: divider
 
@@ -2878,8 +2903,18 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: >-
-                    ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
+                  text: "Tag Summary not migrated yet."
+
+              # - type: section
+              #   text:
+              #     type: mrkdwn
+              #     text: >-
+              #       ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT || 'N/A' }}
+
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "Tag Summary not migrated yet."
 
               - type: divider
 
