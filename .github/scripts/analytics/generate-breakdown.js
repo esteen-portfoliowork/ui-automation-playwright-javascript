@@ -54,7 +54,7 @@ fs.writeFileSync(
 const applicationHealthText =
   analytics.applications
     .map(app =>
-      `• *${app.application}* — Total: ${app.total} | Passed: ${app.passed} | Failed: ${app.failed} | Flaky: ${app.flaky} | Skipped: ${app.skipped}`
+      `• *${app.application}* — Total: ${app.total} | Passed: ${app.passed} | Failed: ${app.failed} | Flaky: ${app.flaky} | Skipped: ${app.skipped} | Passed Rate: ${app.passRate} | Fail Rate: ${app.failRate} | Flaky Rate: ${app.flakyRate} | Skipped Rate: ${app.skippedRate} | Quality Score: ${app.qualityScore} | Health: ${app.health}`
     )
     .join('\n');
 

@@ -1326,7 +1326,7 @@ jobs:
           echo "| 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |" >> $GITHUB_STEP_SUMMARY
 
-          echo "## 🖥️ Application Health Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "## 🖥️ Application Health" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -1465,7 +1465,7 @@ jobs:
           | 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |
           | ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |
 
-          ## 🖥️ Application Health Dashboard
+          ## 🖥️ Application Health
           $(cat application-health-dashboard.md)
 
           ## 📦 Module Breakdown

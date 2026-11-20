@@ -237,7 +237,7 @@ const payload = {
             level: 1,
             text: {
                 type: 'plain_text',
-                text: `🖥️ Application Health Dashboard`
+                text: `🖥️ Application Health`
             }
         },
         {
