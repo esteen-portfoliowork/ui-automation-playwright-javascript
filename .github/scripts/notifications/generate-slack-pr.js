@@ -20,6 +20,13 @@ const executionOverviewRows = [
   }
 ]);
 
+const pullRequestDetails = [
+    ['🔢 PR Number', process.env.PR_NUMBER],
+    ['📝 PR Title', process.env.PR_TITLE],
+    ['🔗 PR URL', process.env.PR_URL],
+    ['👤 Author', process.env.PR_AUTHOR],
+]
+
 const payload = {
     channel: process.env.SLACK_CHANNEL,
     text: 'Playwright Execution Summary',
@@ -69,7 +76,7 @@ const payload = {
             type: 'section',
             text: {
                 type: 'plain_text',
-                text: 'Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}.'
+                text: `Executed ${process.env.TOTAL_TESTS} automated tests with a pass rate of ${process.env.PASS_RATE}% in ${process.env.EXECUTION_DURATION}.`
             }
         },
         {
@@ -82,14 +89,37 @@ const payload = {
         },
         {
             type: 'table',
+            column_settings: [
+                {
+                align: 'center'
+                },
+                {
+                align: 'center'
+                }
+            ],
             rows: [
                 [
-                { type: 'raw_text', text: 'Item' },
-                { type: 'raw_text', text: 'Value' }
+                {
+                    type: 'raw_text',
+                    text: 'Item'
+                },
+                {
+                    type: 'raw_text',
+                    text: 'Value'
+                }
                 ],
                 ...executionOverviewRows
             ]
-        }
+        },
+        {
+            type: 'header',
+            level: 3,
+            text: {
+                type: 'plain_text',
+                text: `📋 Pull Request Details`
+            }
+        },
+
     ]
 };
 
