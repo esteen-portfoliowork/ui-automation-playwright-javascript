@@ -1,31 +1,39 @@
 const fs = require('fs');
 
-const executionOverviewRows = [
-  ['🌐 Browser', process.env.BROWSER],
-  ['🏷️ Executed Tag', process.env.EXECUTED_TAG],
-  ['🌍 Environment', process.env.ENVIRONMENT],
-  ['🎭 Playwright Version', process.env.PLAYWRIGHT_VERSION],
-  ['📦 Node Version', process.env.NODE_VERSION],
-  ['💻 Runner OS', process.env.RUNNER_OS_NAME],
-  ['▶️ Start Time', process.env.START_DATE],
-  ['⏹️ End Time', process.env.END_DATE]
-].map(([label, value]) => [
-  {
-    type: 'raw_text',
-    text: label
-  },
-  {
-    type: 'raw_text',
-    text: value || 'N/A'
-  }
+function buildTableRows(data) {
+  return data.map(([label, value]) => [
+    {
+      type: 'raw_text',
+      text: label
+    },
+    {
+      type: 'raw_text',
+      text: value || 'N/A'
+    }
+  ]);
+}
+
+const executionOverviewRows = buildTableRows([
+    ['🌐 Browser', process.env.BROWSER],
+    ['🏷️ Executed Tag', process.env.EXECUTED_TAG],
+    ['🌍 Environment', process.env.ENVIRONMENT],
+    ['🎭 Playwright Version', process.env.PLAYWRIGHT_VERSION],
+    ['📦 Node Version', process.env.NODE_VERSION],
+    ['💻 Runner OS', process.env.RUNNER_OS_NAME],
+    ['▶️ Start Time', process.env.START_DATE],
+    ['⏹️ End Time', process.env.END_DATE]
 ]);
 
-const pullRequestDetails = [
-    ['🔢 PR Number', process.env.PR_NUMBER],
+const prDetailsRows = buildTableRows([
+    ['🔢 PR Number', `#${process.env.PR_NUMBER}`],
     ['📝 PR Title', process.env.PR_TITLE],
     ['🔗 PR URL', process.env.PR_URL],
     ['👤 Author', process.env.PR_AUTHOR],
-]
+    ['🌿 Source Branch', process.env.PR_BRANCH],
+    ['🎯 Target Branch', process.env.PR_BASE_BRANCH],
+    ['🏷️ Labels', process.env.PR_LABELS],
+    ['🔖 Commit SHA', process.env.PR_SHA]
+]);
 
 const payload = {
     channel: process.env.SLACK_CHANNEL,
@@ -62,7 +70,7 @@ const payload = {
             level: 1,
             text: {
                 type: 'plain_text',
-                text: `🚦 Execution Health`
+                text: `❤️ Execution Health`
             }
         },
         {
@@ -119,7 +127,30 @@ const payload = {
                 text: `📋 Pull Request Details`
             }
         },
-
+        {
+            type: 'table',
+            column_settings: [
+                {
+                align: 'center'
+                },
+                {
+                align: 'center'
+                }
+            ],
+            rows: [
+                [
+                {
+                    type: 'raw_text',
+                    text: 'Item'
+                },
+                {
+                    type: 'raw_text',
+                    text: 'Value'
+                }
+                ],
+                ...prDetailsRows
+            ]
+        },
     ]
 };
 
