@@ -1,4 +1,5 @@
 const fs = require('fs');
+
 const reportPath = 'playwright-report/results.json';
 const report = fs.existsSync(reportPath)
 ? JSON.parse(fs.readFileSync(reportPath, 'utf8'))
