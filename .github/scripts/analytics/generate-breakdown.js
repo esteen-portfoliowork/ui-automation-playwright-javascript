@@ -106,8 +106,8 @@ fs.writeFileSync(
 );
 
 const tagExecutionText =
-  analytics.tag
-    .map(app =>
+  analytics.tags
+    .map(tag =>
       `• *@${tag.tag}* — Total: ${app.total} | Passed: ${app.passed} | Failed: ${app.failed} | Flaky: ${app.flaky} | Skipped: ${app.skipped} | Passed Rate: ${app.passRate} | Fail Rate: ${app.failRate} | Flaky Rate: ${app.flakyRate} | Skipped Rate: ${app.skippedRate} | Quality Score: ${app.qualityScore} | Health: ${app.health}`
     )
     .join('\n');
@@ -131,22 +131,4 @@ const finalTagExecutionText = [
 setOutput(
   'TAG_EXECUTION_TEXT',
   finalTagExecutionText
-);
-
-// temporary
-setOutput(
-  'TAG_EXECUTION_TEXT',
-  'Tag summary refactoring not implemented yet.'
-);
-fs.writeFileSync(
-  'tag-execution-summary.md',
-  '# Tag Summary\n\nRefactoring in progress.\n'
-);
-fs.writeFileSync(
-  'tag-execution-summary.md',
-  '# Tag Execution Summary\n\nRefactoring not implemented yet.\n'
-);
-setOutput(
-  'TAG_EXECUTION_TEXT',
-  'Tag Summary not migrated yet.'
 );

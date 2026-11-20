@@ -98,6 +98,13 @@ function walkSuites(suites, parentFile = '') {
 
       const tests = spec.tests || [];
 
+      const specTags = [
+        ...(spec.tags || []),
+        ...tests.flatMap(test => test.tags || [])
+      ]
+        .map(tag => String(tag).replace(/^@/, ''))
+        .filter(Boolean);
+
       const isFailed =
         spec.ok === false;
 
@@ -145,7 +152,7 @@ function walkSuites(suites, parentFile = '') {
         applications[application].skipped++;
 
       // Module Aggregation
-            if (!modules[key]) {
+      if (!modules[key]) {
         modules[key] = {
           application,
           module: moduleKey,
@@ -171,8 +178,36 @@ function walkSuites(suites, parentFile = '') {
       if (isSkipped)
         modules[key].skipped++;
 
+    // Tag Aggregation
+    for (const tag of [...new Set(specTags)]) {
+
+      if (!tags[tag]) {
+        tags[tag] = {
+          tag,
+          total: 0,
+          passed: 0,
+          failed: 0,
+          flaky: 0,
+          skipped: 0
+        };
+      }
+
+      tags[tag].total++;
+
+      if (isPassed)
+        tags[tag].passed++;
+
+      if (isFailed)
+        tags[tag].failed++;
+
+      if (isFlaky)
+        tags[tag].flaky++;
+
+      if (isSkipped)
+        tags[tag].skipped++;
     }
 
+    }
     walkSuites(
       suite.suites,
       file
@@ -197,6 +232,19 @@ analytics.applications =
 
 analytics.modules =
   Object.values(modules)
+    .map(item => ({
+      ...item,
+      ...calculateMetrics(
+        item.total,
+        item.passed,
+        item.failed,
+        item.flaky,
+        item.skipped
+      )
+    }));
+
+analytics.tags =
+  Object.values(tags)
     .map(item => ({
       ...item,
       ...calculateMetrics(
