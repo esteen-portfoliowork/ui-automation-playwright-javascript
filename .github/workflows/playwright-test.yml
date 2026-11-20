@@ -1379,9 +1379,10 @@ jobs:
             echo "[📄 Download Markdown Execution Reports](${{ steps.upload_markdown_reports.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: 📨 Generate Manual Slack Payload
+      - name: 📨 Generate Slack Payload
         if: always()
         env:
+          SLACK_CHANNEL: C0CDR49PPSL
           BUILD_EMOJI: ${{ env.BUILD_EMOJI }}
           BUILD_TEXT: ${{ env.BUILD_TEXT }}
           EXECUTION_HEALTH: ${{ env.EXECUTION_HEALTH }}
