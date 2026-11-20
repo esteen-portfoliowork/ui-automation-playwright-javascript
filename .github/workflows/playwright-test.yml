@@ -1395,6 +1395,14 @@ jobs:
           TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
           PASS_RATE: ${{ env.PASS_RATE }}
           EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
+          BROWSER: ${{ env.BROWSER }}
+          EXECUTED_TAG: ${{ env.EXECUTED_TAG }}
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+          PLAYWRIGHT_VERSION: ${{ env.PLAYWRIGHT_VERSION }}
+          NODE_VERSION: ${{ env.NODE_VERSION }}
+          RUNNER_OS_NAME: ${{ env.RUNNER_OS_NAME }}
+          START_DATE: ${{ env.START_DATE }}
+          END_DATE: ${{ env.END_DATE }}
         run: |
           node .github/scripts/notifications/generate-slack-pr.js
 
