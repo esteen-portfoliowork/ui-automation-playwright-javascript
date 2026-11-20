@@ -6,6 +6,7 @@ const payload = {
     blocks: [
         {
             type: 'header',
+            level: 1,
             text: {
                 type: 'plain_text',
                 text: '🎭 Playwright Execution Summary'
@@ -16,6 +17,7 @@ const payload = {
         },
         {
             type: 'header',
+            level: 2,
             text: {
                 type: 'plain_text',
                 text: `${process.env.BUILD_EMOJI} Pull Request Validation`
