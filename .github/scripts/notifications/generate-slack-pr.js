@@ -1,33 +1,52 @@
 const fs = require('fs');
 
 function buildTableRows(data) {
-  return data.map(([label, value]) => [
-    {
-      type: 'raw_text',
-      text: label
-    },
-    {
-      type: 'raw_text',
-      text: value || 'N/A'
-    }
-  ]);
+    return data.map(([label, value]) => [
+        {
+        type: 'raw_text',
+        text: label
+        },
+        {
+        type: 'raw_text',
+        text: value || 'N/A'
+        }
+    ]);
 }
 
 function buildTableRows3(data) {
-  return data.map(([col1, col2, col3]) => [
-    {
-      type: 'raw_text',
-      text: col1 || 'N/A'
-    },
-    {
-      type: 'raw_text',
-      text: col2 || 'N/A'
-    },
-    {
-      type: 'raw_text',
-      text: col3 || 'N/A'
-    }
-  ]);
+    return data.map(([col1, col2, col3]) => [
+        {
+        type: 'raw_text',
+        text: col1 || 'N/A'
+        },
+        {
+        type: 'raw_text',
+        text: col2 || 'N/A'
+        },
+        {
+        type: 'raw_text',
+        text: col3 || 'N/A'
+        }
+    ]);
+}
+
+function markdownSection(title, content, notAvailable) {
+    return [
+        {
+            type: 'header',
+            text: {
+                type: 'plain_text',
+                text: title
+            }
+        },
+        {
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: content || notAvailable
+            }
+        }
+    ];
 }
 
 const executionOverviewRows = buildTableRows([
@@ -217,19 +236,34 @@ const payload = {
                 ...executionMetrics
             ]
         },
+        ...markdownSection(
+            '🛡️ Release Readiness',
+            process.env.RELEASE_READINESS_TEXT,
+            'No release readiness data available.'
+        ),
+        ...markdownSection(
+            '🖥️ Application Health',
+            process.env.APPLICATION_HEALTH_TEXT,
+            'No application health data available.'
+        ),
+        ...markdownSection(
+            '📦 Module Breakdown',
+            process.env.MODULE_BREAKDOWN_TEXT,
+            'No module available.'
+        ),
         {
             type: 'header',
             level: 1,
             text: {
                 type: 'plain_text',
-                text: `🛡️ Release Readiness`
+                text: `🏷️ Test Tag Analytics`
             }
         },
         {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: process.env.RELEASE_READINESS_TEXT || 'No release readiness data available.'
+                text: process.env.TAG_EXECUTION_TEXT || 'No tag available.'
             }
         },
         {
@@ -237,14 +271,14 @@ const payload = {
             level: 1,
             text: {
                 type: 'plain_text',
-                text: `🖥️ Application Health`
+                text: `🏆 Top Risk Module`
             }
         },
         {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: process.env.APPLICATION_HEALTH_TEXT || 'No application health available.'
+                text: process.env.TOP_RISK_MODULE_TEXT || 'No risk module available.'
             }
         },
     ]

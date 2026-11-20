@@ -1336,7 +1336,7 @@ jobs:
           cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "## 🏷️ Tag Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏷️ Test Tag Analytics" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -1388,6 +1388,8 @@ jobs:
           EXECUTION_HEALTH: ${{ env.EXECUTION_HEALTH }}
           RELEASE_READINESS_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT }}
           APPLICATION_HEALTH_TEXT: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT }}
+          MODULE_BREAKDOWN_TEXT: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT }}
+          TAG_EXECUTION_TEXT: ${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}
           TOP_RISK_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.TOP_RISK_MODULE_TEXT }}
           FAILED_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_MODULE_TEXT }}
           FAILED_TEST_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TEST_TEXT }}
@@ -1471,7 +1473,7 @@ jobs:
           ## 📦 Module Breakdown
           $(cat module-breakdown.md)
 
-          ## 🏷️ Tag Execution Summary
+          ## 🏷️ Test Tag Analytics
           $(cat tag-execution-summary.md)
 
           ## 🏆 Top Risk Module
