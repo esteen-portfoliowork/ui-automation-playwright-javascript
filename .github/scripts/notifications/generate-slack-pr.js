@@ -32,6 +32,6 @@ const payload = {
 };
 
 fs.writeFileSync(
-  'manual-slack.json',
+  'pr-slack.json',
   JSON.stringify(payload, null, 2)
 );
