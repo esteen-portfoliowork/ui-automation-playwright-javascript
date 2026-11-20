@@ -1396,7 +1396,7 @@ jobs:
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
-          payload-file-path: pr-slack.json
+          payload-file-path: .github/templates/pr-slack.json
 
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
