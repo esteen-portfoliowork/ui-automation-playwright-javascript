@@ -217,6 +217,21 @@ const payload = {
                 ...executionMetrics
             ]
         },
+        {
+            type: 'header',
+            level: 1,
+            text: {
+                type: 'plain_text',
+                text: `🛡️ Release Readiness`
+            }
+        },
+        {
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: process.env.RELEASE_READINESS_TEXT || 'No release readiness data available.'
+            }
+        },
     ]
 };
 
