@@ -1392,9 +1392,6 @@ jobs:
           FAILED_TEST_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TEST_TEXT }}
           FLAKY_TEST_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FLAKY_TEST_TEXT }}
           SLOWEST_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.SLOWEST_MODULE_TEXT }}
-          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
-          PASS_RATE: ${{ env.PASS_RATE }}
-          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
           BROWSER: ${{ env.BROWSER }}
           EXECUTED_TAG: ${{ env.EXECUTED_TAG }}
           ENVIRONMENT: ${{ env.ENVIRONMENT }}

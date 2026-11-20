@@ -13,6 +13,23 @@ function buildTableRows(data) {
   ]);
 }
 
+function buildTableRows3(data) {
+  return data.map(([col1, col2, col3]) => [
+    {
+      type: 'raw_text',
+      text: col1 || 'N/A'
+    },
+    {
+      type: 'raw_text',
+      text: col2 || 'N/A'
+    },
+    {
+      type: 'raw_text',
+      text: col3 || 'N/A'
+    }
+  ]);
+}
+
 const executionOverviewRows = buildTableRows([
     ['🌐 Browser', process.env.BROWSER],
     ['🏷️ Executed Tag', process.env.EXECUTED_TAG],
@@ -33,6 +50,16 @@ const prDetailsRows = buildTableRows([
     ['🎯 Target Branch', process.env.PR_BASE_BRANCH],
     ['🏷️ Labels', process.env.PR_LABELS],
     ['🔖 Commit SHA', process.env.PR_SHA]
+]);
+
+const executionMetrics = buildTableRows3([
+    ['🧪 Total Tests', process.env.TOTAL_TESTS, '-'],
+    ['✅ Passed', process.env.PASSED_TESTS, `${process.env.PASS_RATE}%`],
+    ['❌ Failed', process.env.FAILED_TESTS, `${process.env.FAILURE_RATE}%`],
+    ['⚠️ Flaky', process.env.FLAKY_TESTS, `${process.env.FLAKY_RATE}%`],
+    ['⏭️ Skipped', process.env.SKIPPED_TESTS, `${process.env.SKIPPED_RATE}%`],
+    ['🏆 Quality Score', '-', `${process.env.QUALITY_SCORE}%`],
+    ['⏱️ Duration', process.env.EXECUTION_DURATION, '-']
 ]);
 
 const payload = {
@@ -149,6 +176,45 @@ const payload = {
                 }
                 ],
                 ...prDetailsRows
+            ]
+        },
+        {
+            type: 'header',
+            level: 1,
+            text: {
+                type: 'plain_text',
+                text: `📊 Execution Metrics`
+            }
+        },
+        {
+            type: 'table',
+            column_settings: [
+                {
+                align: 'center'
+                },
+                {
+                align: 'center'
+                },
+                {
+                align: 'center'
+                }
+            ],
+            rows: [
+                [
+                {
+                    type: 'raw_text',
+                    text: 'Item'
+                },
+                {
+                    type: 'raw_text',
+                    text: 'Value'
+                },
+                {
+                    type: 'raw_text',
+                    text: 'Value'
+                }
+                ],
+                ...executionMetrics
             ]
         },
     ]
