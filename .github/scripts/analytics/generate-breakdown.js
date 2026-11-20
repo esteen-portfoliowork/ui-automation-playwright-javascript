@@ -108,7 +108,7 @@ fs.writeFileSync(
 const tagExecutionText =
   analytics.tags
     .map(tag =>
-      `• *@${tag.tag}* — Total: ${app.total} | Passed: ${app.passed} | Failed: ${app.failed} | Flaky: ${app.flaky} | Skipped: ${app.skipped} | Passed Rate: ${app.passRate} | Fail Rate: ${app.failRate} | Flaky Rate: ${app.flakyRate} | Skipped Rate: ${app.skippedRate} | Quality Score: ${app.qualityScore} | Health: ${app.health}`
+      `• *@${tag.tag}* — Total: ${tag.total} | Passed: ${tag.passed} | Failed: ${tag.failed} | Flaky: ${tag.flaky} | Skipped: ${tag.skipped} | Passed Rate: ${tag.passRate} | Fail Rate: ${tag.failRate} | Flaky Rate: ${tag.flakyRate} | Skipped Rate: ${tag.skippedRate} | Quality Score: ${tag.qualityScore} | Health: ${tag.health}`
     )
     .join('\n');
 
