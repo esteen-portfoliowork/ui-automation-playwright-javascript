@@ -81,38 +81,38 @@ const executionMetrics = buildTableRows3([
     ['⏱️ Duration', process.env.EXECUTION_DURATION, '-']
 ]);
 
-const releaseReadiness =
-  readFile('release-readiness.md');
+// const releaseReadiness =
+//   readFile('release-readiness.md');
 
-const applicationHealth =
-  readFile('application-health-dashboard.md');
+// const applicationHealth =
+//   readFile('application-health-dashboard.md');
 
-const moduleBreakdown =
-  readFile('module-breakdown.md');
+// const moduleBreakdown =
+//   readFile('module-breakdown.md');
 
-const tagAnalytics =
-  readFile('tag-execution-summary.md');
+// const tagAnalytics =
+//   readFile('tag-execution-summary.md');
 
-const topRisk =
-  readFile('top-risk-modules.md');
+// const topRisk =
+//   readFile('top-risk-modules.md');
 
-const failedModules =
-  readFile('failed-modules.md');
+// const failedModules =
+//   readFile('failed-modules.md');
 
-const failedTests =
-  readFile('failed-tests.md');
+// const failedTests =
+//   readFile('failed-tests.md');
 
-const flakyTests =
-  readFile('flaky-tests.md');
+// const flakyTests =
+//   readFile('flaky-tests.md');
 
-const slowestModule =
-  readFile('slowest-module.md');
+// const slowestModule =
+//   readFile('slowest-module.md');
 
-const historicalTrend =
-  readFile('historical-test-trend.md');
+// const historicalTrend =
+//   readFile('historical-test-trend.md');
 
-const reportLinks =
-  readFile('report-links.md');
+// const reportLinks =
+//   readFile('report-links.md');
 
 const comment = `
 <!-- playwright-validation-report -->
