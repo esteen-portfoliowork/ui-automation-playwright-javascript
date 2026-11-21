@@ -7,6 +7,7 @@ function getHealth(failed, flaky, total = 0) {
     if (total === 0) {
         return '⚪ Unknown';
     }
+
     if (failed > 0) {
         return '🔴 Critical';
     }
@@ -38,9 +39,9 @@ function validateMetricCounts(
 
     for (const [name, value] of Object.entries(counts)) {
         if (!Number.isInteger(value) || value < 0) {
-        throw new Error(
-            `Invalid metric count: ${name} must be a non-negative integer.`
-        );
+            throw new Error(
+                `Invalid metric count: ${name} must be a non-negative integer.`
+            );
         }
     }
 
@@ -49,8 +50,8 @@ function validateMetricCounts(
 
     if (total !== calculatedTotal) {
         throw new Error(
-        `Inconsistent test counts: total is ${total}, ` +
-        `but status counts add up to ${calculatedTotal}.`
+            `Inconsistent test counts: total is ${total}, ` +
+            `but status counts add up to ${calculatedTotal}.`
         );
     }
 }
