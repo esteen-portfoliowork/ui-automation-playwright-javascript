@@ -1,7 +1,15 @@
 // Historical analytics
 // Compare the current test execution against a previous successful run
 // Show whether your testing results are improving, declining, or staying the same
+
+// Import fs
 const fs = require('fs');
+
+// Import functions from report-utils.js
+const {
+    escapeMarkdown,
+    writeMarkdown
+} = require('../reporting/report-utils');
 
 // ---------- read historical execution data ----------
 const historyPath = 'history/previous-summary.json';
@@ -178,6 +186,31 @@ const metrics = [
 ];
 // ---------- ----------
 
+const historicalTrend = {
+    generatedAt: new Date().toISOString(),
+
+    baseline: previous
+        ? {
+            runNumber: previous.runNumber || null,
+            total: previous.total,
+            passRate: previous.passRate,
+            failRate: previous.failRate,
+            flakyRate: previous.flakyRate,
+            durationSeconds: previous.durationSeconds
+        }
+        : null,
+
+    current,
+
+    metrics
+};
+
+fs.writeFileSync(
+    'historical-trend.json',
+    JSON.stringify(historicalTrend, null, 2),
+    'utf8'
+);
+
 // ---------- generate outputs ----------
 // markdown
 const markdownRows = metrics.map(metric => {
@@ -221,36 +254,13 @@ const markdown = [
     '> Test-case growth represents suite growth, not automatically an improvement in quality.'
 ].join('\n');
 
-// slack for the change
-const slack = [
-    previous
-        ? `*Compared with successful main run #${previous.runNumber || 'N/A'}*`
-        : '*Historical baseline: Not available yet*',
-    ...metrics.map(metric => {
-        const value = metric.name === '⏱️ Duration'
-        ? formatDuration(metric.current)
-        : metric.name.includes('Rate')
-            ? `${metric.current.toFixed(2)}%`
-            : metric.current;
-
-        const change = metric.change
-        ? `${indicator(metric.change.favorable)} ${metric.change.text}`
-        : '⚪ No baseline';
-
-        return `${metric.name}: *${value}*  |  ${change}`;
-    })
-].join('\n');
-
 // writeFileSync
-fs.writeFileSync('historical-test-trend.md', markdown + '\n');
-fs.writeFileSync('history/current-trend-slack.txt', slack + '\n');
+writeMarkdown(
+    'historical-test-trend.md',
+    markdown
+);
 
 const delimiter = 'HISTORICAL_TREND_EOF';
-
-fs.appendFileSync(
-    process.env.GITHUB_OUTPUT,
-    `HISTORICAL_TREND_TEXT<<${delimiter}\n${slack}\n${delimiter}\n`
-);
 
 // log console
 console.log('✅ Historical test trend generated.');

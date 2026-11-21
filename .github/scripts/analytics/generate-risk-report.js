@@ -20,6 +20,12 @@ const {
     countTests
 } = require('../core/test-aggregation');
 
+// Import functions from report-utils.js
+const {
+    escapeMarkdown,
+    writeMarkdown
+} = require('../reporting/report-utils');
+
 // ---------- Initialize Test Collections ----------
 const tests = readPlaywrightResults();
 
@@ -76,16 +82,6 @@ for (const test of tests) {
 
         failedModuleCounts[key].count++;
     }
-}
-// ---------- ----------
-
-// ---------- escapeMarkdown() ----------
-// escapeMarkdown: Markdown formatting
-function escapeMarkdown(value) {
-    return String(value || 'N/A')
-        .replace(/\|/g, '\\|')
-        .replace(/\r?\n/g, ' ')
-        .trim();
 }
 // ---------- ----------
 
@@ -216,9 +212,9 @@ const failedModuleMarkdown = [
         : ['| N/A | No failed modules | 0 |'])
 ].join('\n');
 
-fs.writeFileSync(
+writeMarkdown(
     'failed-modules.md',
-    failedModuleMarkdown + '\n'
+    failedModuleMarkdown
 );
 
 // Failed Tests Markdown
@@ -232,9 +228,9 @@ const failedTestMarkdown = [
         : ['| N/A | N/A | No failed tests | N/A | 0 |'])
 ].join('\n');
 
-fs.writeFileSync(
+writeMarkdown(
     'failed-tests.md',
-    failedTestMarkdown + '\n'
+    failedTestMarkdown
 );
 
 // Flaky Tests Markdown
@@ -248,9 +244,9 @@ const flakyTestMarkdown = [
         : ['| N/A | N/A | No flaky tests | N/A | 0 |'])
 ].join('\n');
 
-fs.writeFileSync(
+writeMarkdown(
     'flaky-tests.md',
-    flakyTestMarkdown + '\n'
+    flakyTestMarkdown
 );
 // Top Risk Modules Markdown
 const topRiskMarkdown = [
@@ -290,9 +286,9 @@ const topRiskMarkdown = [
     '_Only the top 10 highest-risk modules are displayed._'
 ].join('\n');
 
-fs.writeFileSync(
+writeMarkdown(
     'top-risk-modules.md',
-    topRiskMarkdown + '\n'
+    topRiskMarkdown
 );
 
 // Slowest Module Markdown
@@ -309,9 +305,9 @@ const slowestModuleMarkdown = [
         ])
 ].join('\n');
 
-fs.writeFileSync(
+writeMarkdown(
     'slowest-module.md',
-    slowestModuleMarkdown + '\n'
+    slowestModuleMarkdown
 );
 // ---------- ----------
 
@@ -486,6 +482,37 @@ const releaseReadiness = {
     thresholds: RELEASE_READINESS_CONFIG
 };
 
+// Structured source for notification generation
+const riskAnalysis = {
+    generatedAt: new Date().toISOString(),
+
+    summary: {
+        totalModulesAnalyzed,
+        highRiskModuleCount,
+        criticalRiskModuleCount,
+        failedModuleCount: modules.length,
+        failedTestCount: failedTests.length,
+        flakyTestCount: flakyTests.length
+    },
+
+    failedModules: modules,
+    failedTests,
+    flakyTests,
+
+    topRiskModules,
+    topRiskModule,
+
+    slowestModule,
+
+    releaseReadiness
+};
+
+fs.writeFileSync(
+    'risk-analysis.json',
+    JSON.stringify(riskAnalysis, null, 2),
+    'utf8'
+);
+
 // Readiness Markdown
 const readinessStatusEmoji = {
     'GO': '🟢',
@@ -511,10 +538,9 @@ ${releaseReadiness.reason}
 `;
 
 // Write Readiness Reports
-fs.writeFileSync(
+writeMarkdown(
     'release-readiness.md',
-    readinessMarkdown,
-    'utf8'
+    readinessMarkdown
 );
 
 fs.writeFileSync(
@@ -524,122 +550,6 @@ fs.writeFileSync(
 );
 // ---------- ----------
 
-// ---------- Slack-Specific Formatting ----------
-// Group failed modules by application.
-const groupedModules = {};
-
-for (const item of modules) {
-    groupedModules[item.application] =
-        groupedModules[item.application] || [];
-
-    groupedModules[item.application].push(
-        `   • \`${item.module}\` — ${item.count} failed test${item.count === 1 ? '' : 's'}`
-    );
-}
-
-const failedModulesSlack = modules.length
-    ? Object.entries(groupedModules)
-        .map(([application, items]) =>
-            `• *${application}*\n${items.join('\n')}`
-        )
-        .join('\n\n')
-    : 'No failed modules.';
-
-// Failed tests.
-const failedTestsSlack = failedTests.length
-    ? failedTests.slice(0, 10).map(test =>
-        `• *${test.application} / ${test.module}*\n   - ${test.title}`
-    ).join('\n')
-        + (failedTests.length > 10
-            ? `\n…and ${failedTests.length - 10} more failed tests.`
-            : '')
-    : 'No failed tests.';
-
-// Flaky tests.
-const flakyTestsSlack = flakyTests.length
-    ? flakyTests.slice(0, 10).map(test =>
-        `• *${test.application} / ${test.module}*\n   - ${test.title} (Retries: ${test.retries})`
-    ).join('\n')
-        + (flakyTests.length > 10
-            ? `\n…and ${flakyTests.length - 10} more flaky tests.`
-            : '')
-    : 'No flaky tests.';
-
-// Top risk module.
-const topRiskModuleSlack = topRiskModule
-    ? [
-        `🚩 *${topRiskModule.application} / ${topRiskModule.module}*`,
-        `• Failed: ${topRiskModule.failed}`,
-        `• Flaky: ${topRiskModule.flaky}`,
-        `• Failure Rate: ${topRiskModule.failureRate.toFixed(2)}%`,
-        `• Flaky Rate: ${topRiskModule.flakyRate.toFixed(2)}%`,
-        `• Risk Score: *${topRiskModule.riskScore.toFixed(2)}%*`,
-        `• Risk Level: ${topRiskModule.riskLevel}`
-    ].join('\n')
-    : 'No modules found.';
-
-// Slowest module.
-const slowestModuleSlack = slowestModule
-    ? [
-        `🐢 *${slowestModule.application} / ${slowestModule.module}*`,
-        `• Total Duration: *${formatDuration(slowestModule.durationMs)}*`,
-        `• Average Duration: ${formatDuration(slowestModule.averageDurationMs)}`,
-        `• Tests Measured: ${slowestModule.durationTestCount}`,
-        `• Failed: ${slowestModule.failed}`,
-        `• Flaky: ${slowestModule.flaky}`
-    ].join('\n')
-    : 'No execution duration data available.';
-
-// Release readiness
-const releaseReadinessSlack = [
-    `${readinessStatusEmoji} *${releaseReadiness.status}*`,
-    `*Reason:* ${releaseReadiness.reason}`,
-    `*Readiness Score:* ${releaseReadiness.score}/100`,
-    '• Category | Actual Rate | Weight | Points',
-    `• Test Pass Rate: ${passRate.toFixed(2)}% | 40% | ${passRateScore.toFixed(2)}`,
-    `• Failure Rate: ${failureRate.toFixed(2)}% | 25% | ${failureRateScore.toFixed(2)}`,
-    `• Flaky Rate: ${flakyRate.toFixed(2)}% | 15% | ${flakyRateScore.toFixed(2)}`,
-    `• Module Risk: ${highestModuleRisk.toFixed(2)}% | 10% | ${moduleRiskScore.toFixed(2)}`,
-    `• Performance: ${formatDuration(averageTestDurationMs)} | 10% | ${performanceScore.toFixed(2)}`,
-    `• Total: 100% | ${readinessScore.toFixed(2)}/100`
-].join('\n');
-
-// setOutput(): GitHub Actions Outputs
-function setOutput(name, value) {
-    // Allow local execution without GitHub Actions.
-    if (!process.env.GITHUB_OUTPUT) {
-        return;
-    }
-
-    const delimiter = `EOF_${name}`;
-
-    fs.appendFileSync(
-        process.env.GITHUB_OUTPUT,
-        `${name}<<${delimiter}\n${value}\n${delimiter}\n`
-    );
-}
-
-// Slack outputs: keep the existing names.
-setOutput('RELEASE_READINESS_TEXT', releaseReadinessSlack);
-setOutput('TOP_RISK_MODULE_TEXT', topRiskModuleSlack);
-setOutput('FAILED_MODULE_TEXT', failedModulesSlack);
-setOutput('FAILED_TEST_TEXT', failedTestsSlack);
-setOutput('FLAKY_TEST_TEXT', flakyTestsSlack);
-setOutput('SLOWEST_MODULE_TEXT', slowestModuleSlack);
-
-// Release readiness outputs.
-setOutput('RELEASE_READINESS_STATUS', releaseReadiness.status);
-setOutput('RELEASE_READINESS_SCORE', String(releaseReadiness.score));
-setOutput('RELEASE_READINESS_REASON', releaseReadiness.reason);
-setOutput(
-    'RELEASE_READINESS_JSON',
-    JSON.stringify(releaseReadiness, null, 2)
-);
-
-// Titles.
-setOutput('ISSUE_TITLE', process.env.ISSUE_TITLE || 'N/A');
-setOutput('PR_TITLE', process.env.PR_TITLE || 'N/A');
-
 // Logs
 console.log(`Failed modules: ${modules.length}`);
 console.log(`Failed tests: ${failedTests.length}`);
@@ -647,4 +557,3 @@ console.log(`Flaky tests: ${flakyTests.length}`);
 console.log(`Total modules analyzed: ${totalModulesAnalyzed}`);
 console.log(`Release readiness: ${releaseReadiness.status}`);
 console.log(`Readiness score: ${releaseReadiness.score}/100`);
-// ---------- ----------

@@ -1,5 +1,7 @@
 // Markdown breakdown reports
 // Reads analytics and creates report content
+
+// Import fs
 const fs = require('fs');
 
 const analytics = JSON.parse(
@@ -9,14 +11,11 @@ const analytics = JSON.parse(
   )
 );
 
-function setOutput(name, value) {
-  const delimiter = `EOF_${name}`;
-
-  fs.appendFileSync(
-    process.env.GITHUB_OUTPUT,
-    `${name}<<${delimiter}\n${value}\n${delimiter}\n`
-  );
-}
+// Import functions from report-utils.js
+const {
+    escapeMarkdown,
+    writeMarkdown
+} = require('../reporting/report-utils');
 
 // ---------- Application Health ----------
 const applicationLines = [
@@ -30,21 +29,9 @@ for (const app of analytics.applications) {
   );
 }
 
-fs.writeFileSync(
+writeMarkdown(
   'application-health-dashboard.md',
   applicationLines.join('\n')
-);
-
-const applicationHealthText =
-  analytics.applications
-    .map(app =>
-      `• *${app.application}* — Total: ${app.total} | Passed: ${app.passed} | Failed: ${app.failed} | Flaky: ${app.flaky} | Skipped: ${app.skipped} | Pass Rate: ${app.passRate}% | Fail Rate: ${app.failRate}% | Flaky Rate: ${app.flakyRate}% | Skipped Rate: ${app.skippedRate}% | Quality Score: ${app.qualityScore}% | Health: ${app.health}`
-    )
-    .join('\n');
-
-setOutput(
-  'APPLICATION_HEALTH_TEXT',
-  applicationHealthText
 );
 // ---------- ----------
 
@@ -61,7 +48,7 @@ for (const module of analytics.modules) {
   );
 }
 
-fs.writeFileSync(
+writeMarkdown(
   'module-breakdown.md',
   moduleLines.join('\n')
 );
@@ -78,18 +65,6 @@ for (const module of analytics.modules) {
     `   • *${module.module}* — Total: ${module.total} | Passed: ${module.passed} | Failed: ${module.failed} | Flaky: ${module.flaky}`
   );
 }
-
-const moduleBreakdownText =
-  Object.entries(groupedModules)
-    .map(([application, modules]) =>
-      `🧩 *${application}*\n${modules.join('\n')}`
-    )
-    .join('\n\n');
-
-setOutput(
-  'MODULE_BREAKDOWN_TEXT',
-  moduleBreakdownText
-);
 // ---------- ----------
 
 // ---------- Tag Execution Summary ----------
@@ -104,36 +79,8 @@ for (const tag of analytics.tags) {
   );
 }
 
-fs.writeFileSync(
+writeMarkdown(
   'tag-execution-summary.md',
   tagLines.join('\n')
-);
-
-const tagExecutionText =
-  analytics.tags
-    .map(tag =>
-      `• *@${tag.tag}* — Total: ${tag.total} | Passed: ${tag.passed} | Failed: ${tag.failed} | Flaky: ${tag.flaky} | Skipped: ${tag.skipped} | Pass Rate: ${Number(tag.passRate).toFixed(2)}% | Fail Rate: ${Number(tag.failRate).toFixed(2)}% | Flaky Rate: ${Number(tag.flakyRate).toFixed(2)}% | Skipped Rate: ${Number(tag.skippedRate).toFixed(2)}% | Quality Score: ${tag.qualityScore} | Health: ${tag.health}`
-    )
-    .join('\n');
-
-const untaggedText =
-  analytics.untaggedTests?.length
-    ? analytics.untaggedTests
-        .map((test, index) =>
-          `${index + 1}. *${test.title}* — \`${test.file}\``
-        )
-        .join('\n')
-    : 'All test cases have valid tags.';
-
-const finalTagExecutionText = [
-  tagExecutionText,
-  '',
-  `⚠️ *Test Cases Without Tags: ${analytics.untaggedTests?.length || 0}*`,
-  untaggedText
-].join('\n');
-
-setOutput(
-  'TAG_EXECUTION_TEXT',
-  finalTagExecutionText
 );
 // ---------- ----------
