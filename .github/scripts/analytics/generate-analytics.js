@@ -55,21 +55,7 @@ const modules = {};
 
 const tags = {};
 
-// analytics.modules.push({
-//   application,
-//   module,
-//   total,
-//   passed,
-//   failed,
-//   flaky,
-//   skipped,
-//   passRate,
-//   failRate,
-//   flakyRate,
-//   skippedRate,
-//   qualityScore,
-//   health
-// });
+const untaggedTests = [];
 
 function getApplicationName(app) {
   return APPLICATIONS[app] || app;
@@ -97,8 +83,6 @@ function walkSuites(suites, parentFile = '') {
         `${application}::${moduleKey}`;
 
       const tests = spec.tests || [];
-
-      const untaggedTests = [];
 
       const EXCLUDED_TAGS = [
         'sauce-demo',
@@ -221,6 +205,12 @@ function walkSuites(suites, parentFile = '') {
       if (isSkipped)
         tags[tag].skipped++;
     }
+
+    console.log(
+      spec.title,
+      spec.tags,
+      tests.flatMap(test => test.tags || [])
+    );
 
     }
     walkSuites(
