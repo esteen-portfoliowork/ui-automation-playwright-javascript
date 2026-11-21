@@ -3,8 +3,10 @@
 
 // ---------- getHealth() ----------
 // getHealth: determine execution health (assign health status based on failed and flaky test counts)
-function getHealth(failed, flaky, total = 0) {
-    if (total === 0) {
+function getHealth(failed, flaky, total = 0, passed = 0) {
+    const executed = passed + failed + flaky;
+
+    if (total === 0 || executed === 0) {
         return '⚪ Unknown';
     }
 
@@ -18,6 +20,7 @@ function getHealth(failed, flaky, total = 0) {
 
     return '🟢 Healthy';
 }
+
 // ---------- ----------
 
 // ---------- validateMetricCounts() ----------
@@ -106,7 +109,7 @@ function calculateMetrics(
         flakyRate: Number(flakyRate.toFixed(2)),
         skippedRate: Number(skippedRate.toFixed(2)),
         qualityScore: Math.round(qualityScore),
-        health: getHealth(failed, flaky, total)
+        health: getHealth(failed, flaky, total, passed)
     };
 }
 // ---------- ----------

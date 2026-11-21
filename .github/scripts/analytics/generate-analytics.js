@@ -32,7 +32,7 @@ const modules = {};
 const tags = {};
 const untaggedTests = [];
 
-const EXCLUDED_TAGS = [
+const EXCLUDED_APPLICATIONS = [
     'sauce-demo',
     'orange-hrm'
 ];
@@ -64,11 +64,11 @@ function incrementStatus(item, status) {
 }
 // ---------- ----------
 
-// ---------- getTestTags() ----------
-// getTestTags: Get Tags of each tests
-function getTestTags(test) {
-    return test.tags.filter(
-        tag => !EXCLUDED_TAGS.includes(tag)
+// ---------- isExcludedApplication() ----------
+// isExcludedApplication: Return if tag name is an application
+function isExcludedApplication(test) {
+    return EXCLUDED_APPLICATIONS.includes(
+        test.applicationKey
     );
 }
 // ---------- ----------
@@ -98,9 +98,12 @@ for (const test of tests) {
     incrementStatus(application, test.status);
     incrementStatus(module, test.status);
 
-    const testTags = getTestTags(test);
+    const testTags = test.tags;
 
-    if (testTags.length === 0) {
+    if (
+        testTags.length === 0 &&
+        !isExcludedApplication(test)
+    ) {
         untaggedTests.push({
             title: test.title,
             file: test.file
