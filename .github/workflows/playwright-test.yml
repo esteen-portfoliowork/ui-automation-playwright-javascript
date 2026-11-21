@@ -323,6 +323,11 @@ jobs:
         if: always()
         run: node .github/scripts/analytics/generate-risk-report.js
 
+      - name: 📋 Generate Breakdown Reports
+        id: breakdown
+        if: always()
+        run: node .github/scripts/analytics/generate-breakdown.js
+
       - name: 📈 Generate Historical Trend
         if: always()
         run: node .github/scripts/analytics/generate-historical-trend.js
