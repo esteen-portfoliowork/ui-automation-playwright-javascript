@@ -145,5 +145,5 @@ Executed ${process.env.TOTAL_TESTS} automated tests with a pass rate of ${proces
 
 fs.writeFileSync(
   'pr-comment.md',
-  fullComment
+  comment
 );
