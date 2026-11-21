@@ -1,5 +1,13 @@
 const fs = require('fs');
 
+const data =
+  JSON.parse(
+    fs.readFileSync(
+      'notification-data.json',
+      'utf8'
+    )
+  );
+
 function buildTableRows(data) {
     return data.map(([label, value]) => [
         {
@@ -101,7 +109,7 @@ const payload = {
             level: 1,
             text: {
                 type: 'plain_text',
-                text: `${process.env.BUILD_EMOJI} Pull Request Validation`
+                text: `${data.buildEmoji} Pull Request Validation`
             }
         },
         {
@@ -243,7 +251,7 @@ const payload = {
         ),
         ...markdownSection(
             '🖥️ Application Health',
-            process.env.APPLICATION_HEALTH_TEXT,
+            data.applicationHealth,
             'No application health data available.'
         ),
         ...markdownSection(
@@ -263,7 +271,7 @@ const payload = {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: process.env.TAG_EXECUTION_TEXT || 'No tag available.'
+                text: data.tagExecution || 'No tag available.'
             }
         },
         {
