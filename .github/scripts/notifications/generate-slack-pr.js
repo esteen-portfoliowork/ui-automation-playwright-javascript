@@ -58,39 +58,39 @@ function markdownSection(title, content, notAvailable) {
 }
 
 const executionOverviewRows = buildTableRows([
-    ['🌐 Browser', process.env.BROWSER],
-    ['🏷️ Executed Tag', process.env.EXECUTED_TAG],
-    ['🌍 Environment', process.env.ENVIRONMENT],
-    ['🎭 Playwright Version', process.env.PLAYWRIGHT_VERSION],
-    ['📦 Node Version', process.env.NODE_VERSION],
-    ['💻 Runner OS', process.env.RUNNER_OS_NAME],
-    ['▶️ Start Time', process.env.START_DATE],
-    ['⏹️ End Time', process.env.END_DATE]
+    ['🌐 Browser', data.BROWSER],
+    ['🏷️ Executed Tag', data.EXECUTED_TAG],
+    ['🌍 Environment', data.ENVIRONMENT],
+    ['🎭 Playwright Version', data.PLAYWRIGHT_VERSION],
+    ['📦 Node Version', data.NODE_VERSION],
+    ['💻 Runner OS', data.RUNNER_OS_NAME],
+    ['▶️ Start Time', data.START_DATE],
+    ['⏹️ End Time', data.END_DATE]
 ]);
 
 const prDetailsRows = buildTableRows([
-    ['🔢 PR Number', `#${process.env.PR_NUMBER}`],
-    ['📝 PR Title', process.env.PR_TITLE],
-    ['🔗 PR URL', process.env.PR_URL],
-    ['👤 Author', process.env.PR_AUTHOR],
-    ['🌿 Source Branch', process.env.PR_BRANCH],
-    ['🎯 Target Branch', process.env.PR_BASE_BRANCH],
-    ['🏷️ Labels', process.env.PR_LABELS],
-    ['🔖 Commit SHA', process.env.PR_SHA]
+    ['🔢 PR Number', `#${data.PR_NUMBER}`],
+    ['📝 PR Title', data.PR_TITLE],
+    ['🔗 PR URL', data.PR_URL],
+    ['👤 Author', data.PR_AUTHOR],
+    ['🌿 Source Branch', data.PR_BRANCH],
+    ['🎯 Target Branch', data.PR_BASE_BRANCH],
+    ['🏷️ Labels', data.PR_LABELS],
+    ['🔖 Commit SHA', data.PR_SHA]
 ]);
 
 const executionMetrics = buildTableRows3([
-    ['🧪 Total Tests', process.env.TOTAL_TESTS, '-'],
-    ['✅ Passed', process.env.PASSED_TESTS, `${process.env.PASS_RATE}%`],
-    ['❌ Failed', process.env.FAILED_TESTS, `${process.env.FAILURE_RATE}%`],
-    ['⚠️ Flaky', process.env.FLAKY_TESTS, `${process.env.FLAKY_RATE}%`],
-    ['⏭️ Skipped', process.env.SKIPPED_TESTS, `${process.env.SKIPPED_RATE}%`],
-    ['🏆 Quality Score', '-', `${process.env.QUALITY_SCORE}%`],
-    ['⏱️ Duration', process.env.EXECUTION_DURATION, '-']
+    ['🧪 Total Tests', data.TOTAL_TESTS, '-'],
+    ['✅ Passed', data.PASSED_TESTS, `${data.PASS_RATE}%`],
+    ['❌ Failed', data.FAILED_TESTS, `${data.FAILURE_RATE}%`],
+    ['⚠️ Flaky', data.FLAKY_TESTS, `${data.FLAKY_RATE}%`],
+    ['⏭️ Skipped', data.SKIPPED_TESTS, `${data.SKIPPED_RATE}%`],
+    ['🏆 Quality Score', '-', `${data.QUALITY_SCORE}%`],
+    ['⏱️ Duration', data.EXECUTION_DURATION, '-']
 ]);
 
 const payload = {
-    channel: process.env.SLACK_CHANNEL,
+    channel: data.SLACK_CHANNEL,
     text: 'Playwright Execution Summary',
     blocks: [
         {
@@ -116,7 +116,7 @@ const payload = {
             type: 'section',
             text: {
                 type: 'plain_text',
-                text: process.env.BUILD_TEXT
+                text: data.BUILD_TEXT
             }
         },
         {
@@ -131,14 +131,14 @@ const payload = {
             type: 'section',
             text: {
                 type: 'plain_text',
-                text: process.env.EXECUTION_HEALTH
+                text: data.EXECUTION_HEALTH
             }
         },
         {
             type: 'section',
             text: {
                 type: 'plain_text',
-                text: `Executed ${process.env.TOTAL_TESTS} automated tests with a pass rate of ${process.env.PASS_RATE}% in ${process.env.EXECUTION_DURATION}.`
+                text: `Executed ${data.TOTAL_TESTS} automated tests with a pass rate of ${data.PASS_RATE}% in ${data.EXECUTION_DURATION}.`
             }
         },
         {
@@ -246,7 +246,7 @@ const payload = {
         },
         ...markdownSection(
             '🛡️ Release Readiness',
-            process.env.RELEASE_READINESS_TEXT,
+            data.RELEASE_READINESS_TEXT,
             'No release readiness data available.'
         ),
         ...markdownSection(
@@ -256,7 +256,7 @@ const payload = {
         ),
         ...markdownSection(
             '📦 Module Breakdown',
-            process.env.MODULE_BREAKDOWN_TEXT,
+            data.MODULE_BREAKDOWN_TEXT,
             'No module available.'
         ),
         {
@@ -286,7 +286,7 @@ const payload = {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: process.env.TOP_RISK_MODULE_TEXT || 'No risk modules available.'
+                text: data.TOP_RISK_MODULE_TEXT || 'No risk modules available.'
             }
         },
         {
@@ -301,7 +301,7 @@ const payload = {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: process.env.FAILED_MODULE_TEXT || 'No failed modules available.'
+                text: data.FAILED_MODULE_TEXT || 'No failed modules available.'
             }
         },
         {
@@ -316,7 +316,7 @@ const payload = {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: process.env.FAILED_TEST_TEXT || 'No failed tests available.'
+                text: data.FAILED_TEST_TEXT || 'No failed tests available.'
             }
         },
         {
@@ -331,7 +331,7 @@ const payload = {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: process.env.FLAKY_TEST_TEXT || 'No flaky tests available.'
+                text: data.FLAKY_TEST_TEXT || 'No flaky tests available.'
             }
         },
         {
@@ -346,7 +346,7 @@ const payload = {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: process.env.SLOWEST_MODULE_TEXT || 'No slowest module available.'
+                text: data.SLOWEST_MODULE_TEXT || 'No slowest module available.'
             }
         },
     ]

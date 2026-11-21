@@ -841,9 +841,9 @@ jobs:
         if: always()
         env:
           SLACK_CHANNEL: C0CDR49PPSL
-          # BUILD_EMOJI: ${{ env.BUILD_EMOJI }}
-          # BUILD_TEXT: ${{ env.BUILD_TEXT }}
-          # EXECUTION_HEALTH: ${{ env.EXECUTION_HEALTH }}
+          BUILD_EMOJI: ${{ env.BUILD_EMOJI }}
+          BUILD_TEXT: ${{ env.BUILD_TEXT }}
+          EXECUTION_HEALTH: ${{ env.EXECUTION_HEALTH }}
 
           RELEASE_READINESS_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT }}
           APPLICATION_HEALTH_TEXT: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT }}
@@ -855,6 +855,18 @@ jobs:
           FLAKY_TEST_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FLAKY_TEST_TEXT }}
           SLOWEST_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.SLOWEST_MODULE_TEXT }}
           
+          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
+          PASSED_TESTS: ${{ env.PASSED_TESTS }}
+          FAILED_TESTS: ${{ env.FAILED_TESTS }}
+          FLAKY_TESTS: ${{ env.FLAKY_TESTS }}
+          SKIPPED_TESTS: ${{ env.SKIPPED_TESTS }}
+          PASS_RATE: ${{ env.PASS_RATE }}
+          FAILURE_RATE: ${{ env.FAILURE_RATE }}
+          FLAKY_RATE: ${{ env.FLAKY_RATE }}
+          SKIPPED_RATE: ${{ env.SKIPPED_RATE }}
+          QUALITY_SCORE: ${{ env.QUALITY_SCORE }}
+          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
+
           BROWSER: ${{ env.BROWSER }}
           EXECUTED_TAG: ${{ env.EXECUTED_TAG }}
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
@@ -863,8 +875,21 @@ jobs:
           RUNNER_OS_NAME: ${{ env.RUNNER_OS_NAME }}
           START_DATE: ${{ env.START_DATE }}
           END_DATE: ${{ env.END_DATE }}
+
+          PR_NUMBER: ${{ env.PR_NUMBER }}
+          PR_TITLE: ${{ env.PR_TITLE }}
+          PR_URL: ${{ env.PR_URL }}
+          PR_AUTHOR: ${{ env.PR_AUTHOR }}
+          PR_BRANCH: ${{ env.PR_BRANCH }}
+          PR_BASE_BRANCH: ${{ env.PR_BASE_BRANCH }}
+          PR_LABELS: ${{ env.PR_LABELS }}
+          PR_SHA: ${{ env.PR_SHA }}
         run: |
           node .github/scripts/notifications/generate-notification-data.js
+
+      - name: 🔍 Debug Notification Data
+        run: |
+          cat notification-data.json
 
       - name: 📨 Generate Slack Payload
         run: |
@@ -878,7 +903,15 @@ jobs:
           token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload-file-path: pr-slack.json
 
-      - name: 💬 Create or Update PR Comment
+      - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
+        run: |
+          node .github/scripts/notifications/generate-pr-comment.js
+
+      - name: 🔍 Debug Slack Payload
+        run: |
+          cat pr-slack.json
+
+      - name: 📝 Generate PR Comment
         run: |
           node .github/scripts/notifications/generate-pr-comment.js
