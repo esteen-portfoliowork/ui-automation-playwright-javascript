@@ -310,235 +310,27 @@ jobs:
 
           echo "QUALITY_SCORE=$QUALITY_SCORE" >> $GITHUB_ENV
 
-      - name: 📊 Generate Analytics Dataset
+      - name: 📊 Generate Analytics
         if: always()
-        run: |
-          node .github/scripts/analytics/generate-analytics.js
+        run: node .github/scripts/analytics/generate-analytics.js
 
       - name: 🔍 Debug Analytics
         if: always()
         run: |
           cat analytics.json
 
-      - name: 📋 Collect PR Details
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
-          echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
-          echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
-          echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
-          echo "PR_BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
-          echo "PR_BASE_BRANCH=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
-          echo "PR_LABELS=${{ join(github.event.pull_request.labels.*.name, ', ') }}" >> $GITHUB_ENV
-          echo "PR_SHA=${{ join(github.event.pull_request.merge_commit_sha, ', ') }}" >> $GITHUB_ENV
+      - name: 🚩 Generate Risk Analysis
+        if: always()
+        run: node .github/scripts/analytics/generate-risk-report.js
 
-      - name: 🔍 Debug Analytics Files
-        run: |
-          ls -R .github/scripts/analytics
-
-      - name: 📦 Build Breakdown Data
+      - name: 📋 Generate Breakdown Reports
         id: breakdown
         if: always()
-        run: |
-          node .github/scripts/analytics/generate-breakdown.js
+        run: node .github/scripts/analytics/generate-breakdown.js
 
-      - name: 🔍 Debug Breakdown
+      - name: 📈 Generate Historical Trend
         if: always()
-        run: |
-          cat application-health-dashboard.md
-          echo ""
-          cat module-breakdown.md
-
-      - name: 📊 Generate Failure, Flakiness, Risk & Performance Reports
-        id: generate_failure_flakiness_risk_performance_report
-        if: always()
-        run: |
-          node .github/scripts/analytics/generate-risk-report.js
-
-      - name: 📚 Retrieve Historical Test Data
-        id: retrieve_history
-        if: always()
-        run: |
-          mkdir -p history
-
-          echo "🔍 Checking historical test data..."
-
-          if git fetch origin \
-            refs/heads/test-history:refs/remotes/origin/test-history 2>/dev/null; then
-
-            echo "✅ test-history branch found."
-
-            if git show origin/test-history:history/summary.json \
-              > history/previous-summary.json 2>/dev/null; then
-              echo "✅ Previous execution history retrieved."
-            else
-              echo '{"runs":[]}' > history/previous-summary.json
-              echo "⚠️ History file not found. Starting a new history."
-            fi
-
-          else
-            echo "⚠️ test-history branch does not exist yet."
-            echo '{"runs":[]}' > history/previous-summary.json
-          fi
-
-          if jq -e '.runs | length > 0' history/previous-summary.json >/dev/null; then
-            echo "HISTORY_AVAILABLE=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "HISTORY_AVAILABLE=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 📈 Generate Historical Test Trend
-        id: historical_test_trend
-        if: always()
-        env:
-          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
-          PASSED_TESTS: ${{ env.PASSED_TESTS }}
-          FAILED_TESTS: ${{ env.FAILED_TESTS }}
-          FLAKY_TESTS: ${{ env.FLAKY_TESTS }}
-          SKIPPED_TESTS: ${{ env.SKIPPED_TESTS }}
-          PASS_RATE: ${{ env.PASS_RATE }}
-          FAILURE_RATE: ${{ env.FAILURE_RATE }}
-          FLAKY_RATE: ${{ env.FLAKY_RATE }}
-          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
-        run: |
-          node .github/scripts/analytics/generate-historical-trend.js
-
-      - name: 🔍 Debug Historical Trend
-        if: always()
-        run: |
-          cat historical-test-trend.md
-
-      - name: 💾 Save Historical Test Data
-        if: >-
-          always() &&
-          github.event_name == 'push' &&
-          github.ref == 'refs/heads/main' &&
-          env.TOTAL_TESTS != '0' &&
-          env.FAILED_TESTS == '0'
-        env:
-          HISTORY_TOKEN: ${{ secrets.HISTORY_TOKEN }}
-          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
-          PASSED_TESTS: ${{ env.PASSED_TESTS }}
-          FAILED_TESTS: ${{ env.FAILED_TESTS }}
-          FLAKY_TESTS: ${{ env.FLAKY_TESTS }}
-          SKIPPED_TESTS: ${{ env.SKIPPED_TESTS }}
-          PASS_RATE: ${{ env.PASS_RATE }}
-          FAILURE_RATE: ${{ env.FAILURE_RATE }}
-          FLAKY_RATE: ${{ env.FLAKY_RATE }}
-          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
-          RUN_NUMBER: ${{ github.run_number }}
-          RUN_ID: ${{ github.run_id }}
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          set -e
-
-          echo "📚 Preparing historical storage..."
-
-          if git ls-remote --exit-code --heads origin test-history >/dev/null 2>&1; then
-            echo "✅ Existing test-history branch found."
-
-            git fetch origin test-history
-
-            git worktree add -B test-history \
-              .test-history origin/test-history
-          else
-            echo "🆕 Creating test-history branch."
-
-            git worktree add --detach .test-history HEAD
-
-            git -C .test-history checkout --orphan test-history
-
-            find .test-history -mindepth 1 -maxdepth 1 \
-              ! -name .git -exec rm -rf {} +
-          fi
-
-          mkdir -p .test-history/history
-
-          node <<'NODE'
-          const fs = require('fs');
-          const path = '.test-history/history/summary.json';
-
-          let history = { runs: [] };
-
-          if (fs.existsSync(path)) {
-            history = JSON.parse(fs.readFileSync(path, 'utf8'));
-          }
-
-          if (!Array.isArray(history.runs)) {
-            history.runs = [];
-          }
-
-          function durationToSeconds(value) {
-            const input = String(value).trim();
-
-            if (/^\d+(\.\d+)?$/.test(input)) {
-              return Number(input);
-            }
-
-            const regex = /(\d+(?:\.\d+)?)\s*(h|hr|hrs|m|min|mins|s|sec|secs)/gi;
-            let match;
-            let total = 0;
-
-            while ((match = regex.exec(input)) !== null) {
-              const amount = Number(match[1]);
-              const unit = match[2].toLowerCase();
-
-              if (unit.startsWith('h')) total += amount * 3600;
-              else if (unit.startsWith('m')) total += amount * 60;
-              else total += amount;
-            }
-
-            return total;
-          }
-
-          const run = {
-            runNumber: Number(process.env.RUN_NUMBER),
-            runId: process.env.RUN_ID,
-            timestamp: new Date().toISOString(),
-            commitSha: process.env.COMMIT_SHA,
-            successful: true,
-            total: Number(process.env.TOTAL_TESTS || 0),
-            passed: Number(process.env.PASSED_TESTS || 0),
-            failed: Number(process.env.FAILED_TESTS || 0),
-            flaky: Number(process.env.FLAKY_TESTS || 0),
-            skipped: Number(process.env.SKIPPED_TESTS || 0),
-            passRate: Number(process.env.PASS_RATE || 0),
-            failRate: Number(process.env.FAILURE_RATE || 0),
-            flakyRate: Number(process.env.FLAKY_RATE || 0),
-            duration: process.env.EXECUTION_DURATION || '0s',
-            durationSeconds: durationToSeconds(
-              process.env.EXECUTION_DURATION || '0s'
-            )
-          };
-
-          history.runs.push(run);
-
-          // Keep the latest 365 successful main-branch runs.
-          history.runs = history.runs
-            .filter(item => item.successful === true)
-            .slice(-365);
-
-          fs.writeFileSync(path, JSON.stringify(history, null, 2) + '\n');
-
-          console.log(`✅ Stored main run #${run.runNumber}`);
-          console.log(`📊 Total historical records: ${history.runs.length}`);
-          NODE
-
-          git -C .test-history config user.name "github-actions[bot]"
-          git -C .test-history config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git -C .test-history add history/summary.json
-
-          git -C .test-history commit \
-            -m "chore: update Playwright test history [skip ci]"
-
-          AUTH=$(printf 'x-access-token:%s' "$HISTORY_TOKEN" | base64 -w 0)
-
-          git -C .test-history \
-            -c http.extraheader="AUTHORIZATION: basic $AUTH" \
-            push origin test-history
-
-          echo "✅ Historical test data saved."
+        run: node .github/scripts/analytics/generate-historical-trend.js
 
       - name: 📄 Upload Playwright Report
         id: upload_playwright_report
@@ -895,13 +687,9 @@ jobs:
         run: |
           node .github/scripts/notifications/generate-slack-pr.js
 
-      - name: 📣 Notify Slack - PR Validation
-        if: always() && github.event_name == 'pull_request'
-        uses: slackapi/slack-github-action@v4
-        with:
-          method: chat.postMessage
-          token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
-          payload-file-path: pr-slack.json
+      - name: 📣 Generate Notification Data
+        if: always()
+        run: node .github/scripts/reporting/generate-notification-data.js
 
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
