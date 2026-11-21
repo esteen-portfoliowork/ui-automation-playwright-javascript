@@ -1,9 +1,13 @@
 // Validate the incoming Playwright report before processing it
 // Checks whether Playwright supplied a valid report
 
+// Import functions from constants.js
+const {
+    TEST_STATUSES
+} = require('./constants');
+
 // ---------- validatePlaywrightReport() ----------
 // validatePlaywrightReport: check Playwright report
-
 function validatePlaywrightReport(report) {
     if (!report || typeof report !== 'object' || Array.isArray(report)) {
         throw new Error(
@@ -100,14 +104,7 @@ function validateNormalizedTest(test) {
         }
     }
 
-    const validStatuses = [
-        'passed',
-        'failed',
-        'flaky',
-        'skipped'
-    ];
-
-    if (!validStatuses.includes(test.status)) {
+    if (!TEST_STATUSES.includes(test.status)) {
         throw new Error(
             `Invalid test status: ${test.status}`
         );

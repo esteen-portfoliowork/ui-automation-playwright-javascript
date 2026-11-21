@@ -14,6 +14,12 @@ const {
     calculateMetrics
 } = require('../core/metrics');
 
+// Import functions from test-aggregation.js
+const {
+    createStatusCounts,
+    addTestStatus
+} = require('../core/test-aggregation');
+
 // ---------- Initialize variables ----------
 const tests = readPlaywrightResults();
 
@@ -42,25 +48,10 @@ const EXCLUDED_APPLICATIONS = [
 // getOrCreate: Either get ot create metric collections
 function getOrCreate(collection, key, defaults) {
     if (!collection[key]) {
-        collection[key] = {
-            ...defaults,
-            total: 0,
-            passed: 0,
-            failed: 0,
-            flaky: 0,
-            skipped: 0
-        };
+        collection[key] = createStatusCounts(defaults);
     }
 
     return collection[key];
-}
-// ---------- ----------
-
-// ---------- incrementStatus() ----------
-// incrementStatus: 
-function incrementStatus(item, status) {
-    item.total++;
-    item[status]++;
 }
 // ---------- ----------
 
@@ -95,8 +86,8 @@ for (const test of tests) {
         }
     );
 
-    incrementStatus(application, test.status);
-    incrementStatus(module, test.status);
+    addTestStatus(application, test.status);
+    addTestStatus(module, test.status);
 
     const testTags = test.tags;
 
@@ -119,7 +110,7 @@ for (const test of tests) {
             }
         );
 
-        incrementStatus(tagItem, test.status);
+        addTestStatus(tagItem, test.status);
     }
 
     if (test.status === 'failed') {

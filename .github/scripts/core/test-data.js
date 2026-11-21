@@ -18,14 +18,6 @@ const APPLICATIONS = {
     'sauce-demo': 'SauceDemo'
 };
 
-// Define Status
-const VALID_STATUSES = [
-    'passed',
-    'failed',
-    'flaky',
-    'skipped'
-];
-
 // ---------- getTestStatus() ----------
 // getTestStatus: Convert Playwright status into our shared status.
 function getTestStatus(test) {

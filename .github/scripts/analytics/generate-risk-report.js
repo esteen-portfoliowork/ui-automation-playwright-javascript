@@ -13,6 +13,13 @@ const {
     calculateMetrics
 } = require('../core/metrics');
 
+// Import functions from test-aggregation.js
+const {
+    createStatusCounts,
+    addTestStatus,
+    countTests
+} = require('../core/test-aggregation');
+
 // ---------- Initialize Test Collections ----------
 const tests = readPlaywrightResults();
 
@@ -32,23 +39,19 @@ const moduleRiskCounts = {};
 for (const test of tests) {
     const key = `${test.application}::${test.module}`;
 
-    moduleRiskCounts[key] = moduleRiskCounts[key] || {
-        application: test.application,
-        module: test.module,
-        total: 0,
-        executed: 0,
-        passed: 0,
-        failed: 0,
-        flaky: 0,
-        skipped: 0,
-        durationMs: 0,
-        durationTestCount: 0
-    };
+    moduleRiskCounts[key] =
+        moduleRiskCounts[key] ||
+        createStatusCounts({
+            application: test.application,
+            module: test.module,
+            executed: 0,
+            durationMs: 0,
+            durationTestCount: 0
+        });
 
     const module = moduleRiskCounts[key];
 
-    module.total++;
-    module[test.status]++;
+    addTestStatus(module, test.status);
 
     // Exclude skipped tests from module risk denominators.
     if (test.status !== 'skipped') {
@@ -333,20 +336,7 @@ const RELEASE_READINESS_CONFIG = {
 };
 
 // Shared Readiness Metrics
-const readinessCounts = tests.reduce(
-    (counts, test) => {
-        counts.total++;
-        counts[test.status]++;
-        return counts;
-    },
-    {
-        total: 0,
-        passed: 0,
-        failed: 0,
-        flaky: 0,
-        skipped: 0
-    }
-);
+const readinessCounts = countTests(tests);
 
 const readinessMetrics = calculateMetrics(
     readinessCounts.total,
