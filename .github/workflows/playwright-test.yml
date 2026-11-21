@@ -320,38 +320,6 @@ jobs:
         run: |
           cat analytics.json
 
-      # - name: 🔍 Debug Specs
-      #   if: always()
-      #   run: |
-      #     jq '
-      #       .suites[].suites[]
-      #       | {
-      #           file,
-      #           specs
-      #         }
-      #     ' playwright-report/results.json
-
-      # - name: 🔍 Debug Playwright Structure
-        # if: always()
-        # run: |
-        #   jq '
-        #     ..
-        #     | objects
-        #     | select(has("file"))
-        #     | {file,title,status}
-        #   ' playwright-report/results.json | head -100
-
-      # - name: 🔍 Debug Spec Summary
-      #   if: always()
-      #   run: |
-      #     jq '
-      #     .suites[].suites[].specs[]
-      #     | {
-      #         title,
-      #         ok
-      #       }
-      #     ' playwright-report/results.json
-
       - name: 📋 Collect PR Details
         if: github.event_name == 'pull_request'
         run: |
@@ -363,473 +331,6 @@ jobs:
           echo "PR_BASE_BRANCH=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
           echo "PR_LABELS=${{ join(github.event.pull_request.labels.*.name, ', ') }}" >> $GITHUB_ENV
           echo "PR_SHA=${{ join(github.event.pull_request.merge_commit_sha, ', ') }}" >> $GITHUB_ENV
-
-      # - name: 🔍 Debug Playwright Report
-      #   if: always()
-      #   run: |
-      #     echo "Checking report..."
-
-      #     ls -R playwright-report || true
-
-      #     if [ -f playwright-report/results.json ]; then
-      #       echo "results.json exists"
-
-      #       echo "===== FIRST 100 LINES ====="
-      #       head -100 playwright-report/results.json
-
-      #       echo "===== TEST STATUS ENTRIES ====="
-      #       jq '.. | .status? // empty' playwright-report/results.json
-            
-      #     else
-      #       echo "results.json NOT FOUND"
-      #     fi
-
-      # - name: 🔍 Find Outcome Structure
-      #   if: always()
-      #   run: |
-      #     echo "===== SEARCH outcome ====="
-      #     grep -n "outcome" playwright-report/results.json | head -20
-
-      #     echo "===== SEARCH status ====="
-      #     grep -n "status" playwright-report/results.json | head -20
-
-      #     echo "===== SEARCH title ====="
-      #     grep -n "title" playwright-report/results.json | head -20
-
-      # - name: 🔍 Inspect Test Node
-      #   if: always()
-      #   run: |
-      #     jq '
-      #       ..
-      #       | objects
-      #       | select(has("title"))
-      #       | {title,status,outcome}
-      #     ' playwright-report/results.json | head -200
-
-      # - name: 🔍 Debug Application Paths
-      #   if: always()
-      #   run: |
-      #     jq -r '
-      #     .suites[].suites[]
-      #     | select(.file != null)
-      #     | .file
-      #     ' playwright-report/results.json
-
-      # - name: 📦 Build Breakdown Data
-      #   id: breakdown
-      #   if: always()
-      #   run: |
-      #     # ------- Application Name Mapping -------
-      #     get_app_name() {
-      #       case "$1" in
-      #         expand-testing) echo "Expand Testing" ;;
-      #         orange-hrm)     echo "Orange HRM" ;;
-      #         qa-playground)  echo "QA Playground" ;;
-      #         sauce-demo)     echo "SauceDemo" ;;
-      #         *)              echo "$1" ;;
-      #       esac
-      #     }
-
-      #     # ------- Get Health -------
-      #     get_health() {
-      #       local FAILED=$1
-      #       local FLAKY=$2
-      #       if [ "$FAILED" -gt 0 ]; then
-      #         echo "🔴 Critical"
-      #       elif [ "$FLAKY" -gt 0 ]; then
-      #         echo "🟡 Unstable"
-      #       else
-      #         echo "🟢 Healthy"
-      #       fi
-      #     }
-
-      #     # ------- Common Calculation -------
-      #     calculate_metrics() {
-      #       local TOTAL=$1
-      #       local PASSED=$2
-      #       local FAILED=$3
-      #       local FLAKY=$4
-      #       local SKIPPED=$5
-      #       if [ "$TOTAL" -gt 0 ]; then
-      #         HEALTH=$(get_health "$FAILED" "$FLAKY")
-      #         PASS_RATE=$(awk "BEGIN { printf \"%.2f\", (($PASSED + $FLAKY)/$TOTAL)*100 }")
-      #         FAIL_RATE=$(awk "BEGIN { printf \"%.2f\", ($FAILED/$TOTAL)*100 }")
-      #         FLAKY_RATE=$(awk "BEGIN { printf \"%.2f\", ($FLAKY/$TOTAL)*100 }")
-      #         SKIP_RATE=$(awk "BEGIN { printf \"%.2f\", ($SKIPPED/$TOTAL)*100 }")
-      #         QUALITY_SCORE=$(awk "BEGIN {
-      #           printf \"%.0f\",
-      #           (($PASSED + ($FLAKY * 0.5))/$TOTAL)*100
-      #         }")
-      #       else
-      #         HEALTH=$(get_health "$FAILED" "$FLAKY")
-      #         PASS_RATE=0
-      #         FAIL_RATE=0
-      #         FLAKY_RATE=0
-      #         SKIP_RATE=0
-      #         QUALITY_SCORE=0
-      #       fi
-      #     }
-
-      #     # ------- Table header for Application Health Dashboard -------
-      #     echo "| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > application-health-dashboard.md
-      #     echo "|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:------------:|:-----------:|:-----------:|:-----------:|" >> application-health-dashboard.md
-
-      #     # ------- Table header for Module Breakdown -------
-      #     echo "| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > module-breakdown.md
-      #     echo "|:-------------:|:-------------:|:--------:|:--------:|:--------:|:--------:|:---------:|:-----------:|:-----------:|:------------:|:--------------:|:---------------:|:-----------:|" >> module-breakdown.md
-
-      #     # ------- Table header for Tag Execution Summary -------
-      #     echo "| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |" > tag-execution-summary.md
-      #     echo "|:-------------:|:--------:|:--------:|:--------:|:--------:|:---------:|:-----------:|:-----------:|:------------:|:--------------:|:---------------:|:-----------:|" >> tag-execution-summary.md
-
-      #     # ------- Application Health Dashboard -------
-      #     jq -r '
-      #     .suites[].suites[]
-      #     | select(.file != null)
-      #     | [
-      #         (.file | split("/")[0]),
-      #         (.specs | length),
-
-      #         ([.specs[]
-      #           | select(.ok == true)
-      #           | select(
-      #               any(.tests[]?; .status == "flaky") | not
-      #             )
-      #         ] | length),
-
-      #         ([.specs[]
-      #           | select(.ok == false)
-      #         ] | length),
-
-      #         ([.specs[]
-      #           | select(
-      #               any(.tests[]?; .status == "flaky")
-      #             )
-      #         ] | length),
-
-      #         ([.specs[]
-      #           | select(
-      #               all(.tests[].results[]?; .status=="skipped")
-      #             )
-      #         ] | length)
-      #     ]
-      #     | @tsv
-      #     ' playwright-report/results.json |
-      #     awk -F'\t' '
-      #     {
-      #         total[$1] += $2
-      #         passed[$1] += $3
-      #         failed[$1] += $4
-      #         flaky[$1] += $5
-      #         skipped[$1] += $6
-      #     }
-      #     END {
-      #         for (app in total)
-      #             print app "\t" total[app] "\t" passed[app] "\t" failed[app] "\t" flaky[app] "\t" skipped[app]
-      #     }' |
-      #     while IFS=$'\t' read -r APP TOTAL PASSED FAILED FLAKY SKIPPED
-      #     do
-      #       APP_NAME=$(get_app_name "$APP")
-      #       if [ "$TOTAL" -gt 0 ]; then
-      #         calculate_metrics \
-      #           "$TOTAL" \
-      #           "$PASSED" \
-      #           "$FAILED" \
-      #           "$FLAKY" \
-      #           "$SKIPPED"
-      #       else
-      #         PASS_RATE=0
-      #         FAIL_RATE=0
-      #         FLAKY_RATE=0
-      #         SKIP_RATE=0
-      #         QUALITY_SCORE=0
-      #       fi
-      #       echo "| $APP_NAME | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> application-health-dashboard.md
-      #     done
-
-      #     # ------- Module Breakdown -------
-      #     jq -r '
-      #     .suites[].suites[]
-      #     | select(.file != null)
-      #     | [
-      #         (.file | split("/")[0]),
-      #         (.file | split("/")[1] | sub("\\.spec\\.js$"; "")),
-      #         (.specs | length),
-
-      #         ([.specs[]
-      #           | select(.ok == true)
-      #           | select(
-      #               any(.tests[]?; .status == "flaky") | not
-      #           )
-      #         ] | length),
-
-      #         ([.specs[]
-      #           | select(.ok == false)
-      #         ] | length),
-
-      #         ([.specs[]
-      #           | select(
-      #               any(.tests[]?; .status == "flaky")
-      #             )
-      #         ] | length),
-
-      #         ([.specs[]
-      #           | select(
-      #               all(.tests[].results[]?; .status=="skipped")
-      #           )
-      #         ] | length)
-      #     ]
-      #     | @tsv
-      #     ' playwright-report/results.json |
-      #     while IFS=$'\t' read -r APP MODULE TOTAL PASSED FAILED FLAKY SKIPPED
-      #     do
-      #       APP_NAME=$(get_app_name "$APP")
-      #       if [ "$TOTAL" -gt 0 ]; then
-      #         calculate_metrics \
-      #           "$TOTAL" \
-      #           "$PASSED" \
-      #           "$FAILED" \
-      #           "$FLAKY" \
-      #           "$SKIPPED"
-      #       else
-      #         PASS_RATE=0
-      #         FAIL_RATE=0
-      #         FLAKY_RATE=0
-      #         SKIP_RATE=0
-      #         QUALITY_SCORE=0
-      #       fi
-      #       echo "| $APP_NAME | $MODULE | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> module-breakdown.md
-      #     done
-
-      #     # ------- Tag Execution Summary -------
-      #     # Excluded tag
-      #     EXCLUDED_TAGS="sauce-demo orange-hrm"
-
-      #     # Untagged test case
-      #     : > untagged-test-cases.txt
-
-      #     # Extract test cases without valid tags.
-      #     jq -r '
-      #       def all_specs($file):
-      #         . as $suite |
-      #         (
-      #           $suite.specs[]? |
-      #           {
-      #             spec: .,
-      #             file: ($suite.file // $file // "Unknown file")
-      #           }
-      #         ),
-      #         (
-      #           $suite.suites[]? |
-      #           all_specs($suite.file // $file)
-      #         );
-
-      #       .suites[]? |
-      #       all_specs("")
-      #       | . as $item
-      #       | $item.spec as $spec
-      #       | [
-      #           (($spec.tags // [])[]),
-      #           (($spec.tests // [])[]?.tags // [])[]
-      #         ]
-      #       | map(tostring | sub("^@"; ""))
-      #       | unique
-      #       | map(select(
-      #           (ascii_downcase != "sauce-demo") and
-      #           (ascii_downcase != "orange-hrm")
-      #         ))
-      #       | select(length == 0)
-      #       | "\($item.spec.title // "Untitled test case")\t\($item.file)"
-      #     ' playwright-report/results.json > untagged-test-cases.txt
-
-      #     # Extract valid tags and their test case statuses.
-      #     jq -r '
-      #       def all_specs($file):
-      #         . as $suite |
-      #         (
-      #           $suite.specs[]? |
-      #           {
-      #             spec: .,
-      #             file: ($suite.file // $file // "Unknown file")
-      #           }
-      #         ),
-      #         (
-      #           $suite.suites[]? |
-      #           all_specs($suite.file // $file)
-      #         );
-
-      #       .suites[]? |
-      #       all_specs("")
-      #       | .spec as $spec
-      #       | [
-      #           (($spec.tags // [])[]),
-      #           (($spec.tests // [])[]?.tags // [])[]
-      #         ]
-      #       | map(tostring | sub("^@"; ""))
-      #       | unique
-      #       | map(select(
-      #           (ascii_downcase != "sauce-demo") and
-      #           (ascii_downcase != "orange-hrm")
-      #         ))
-      #       | . as $tags
-      #       | (
-      #           [$spec.tests[]?.results[]?] as $results
-      #           | if (($results | length) > 0 and
-      #                 all($results[]; .status == "skipped")) then
-      #               "skipped"
-      #             elif $spec.ok == false then
-      #               "failed"
-      #             elif any($spec.tests[]?; .status == "flaky") then
-      #               "flaky"
-      #             else
-      #               "passed"
-      #             end
-      #         ) as $status
-      #       | $tags[]
-      #       | "\(.)\t\($status)"
-      #     ' playwright-report/results.json |
-      #     awk -F'\t' '
-      #     {
-      #       total[$1]++
-      #       status[$1, $2]++
-      #     }
-      #     END {
-      #       for (tag in total) {
-      #         print tag "\t" total[tag] \
-      #           "\t" status[tag, "passed"]+0 \
-      #           "\t" status[tag, "failed"]+0 \
-      #           "\t" status[tag, "flaky"]+0 \
-      #           "\t" status[tag, "skipped"]+0
-      #       }
-      #     }' |
-      #     sort -k1,1 |
-      #     while IFS=$'\t' read -r TAG TOTAL PASSED FAILED FLAKY SKIPPED
-      #     do
-      #       calculate_metrics \
-      #         "$TOTAL" \
-      #         "$PASSED" \
-      #         "$FAILED" \
-      #         "$FLAKY" \
-      #         "$SKIPPED"
-
-      #       echo "| @$TAG | $TOTAL | $PASSED | $FAILED | $FLAKY | $SKIPPED | ${PASS_RATE}% | ${FAIL_RATE}% | ${FLAKY_RATE}% | ${SKIP_RATE}% | ${QUALITY_SCORE}% | $HEALTH |" >> tag-execution-summary.md
-      #     done
-
-      #     # Add untagged test case details to the Markdown report.
-      #     UNTAGGED_COUNT=$(wc -l < untagged-test-cases.txt | tr -d ' ')
-      #     {
-      #       echo ""
-      #       echo "### ⚠️ Test Cases Without Tags"
-      #       echo ""
-      #       echo "**Total Untagged Test Cases: $UNTAGGED_COUNT**"
-      #       echo ""
-
-      #       if [ "$UNTAGGED_COUNT" -gt 0 ]; then
-      #         awk -F'\t' '{
-      #           printf "%d. **%s** — `%s`\n", NR, $1, $2
-      #         }' untagged-test-cases.txt
-      #       else
-      #         echo "All test cases have valid tags."
-      #       fi
-      #     } >> tag-execution-summary.md
-
-      #     # ------- Generate Slack formatted text -------
-      #     node <<'NODE'
-      #     const fs = require('fs');
-      #     function readTable(file) {
-      #       return fs.readFileSync(file, 'utf8')
-      #         .split(/\r?\n/)
-      #         .filter(line => line.trim().startsWith('|'))
-      #         .filter(line => !/^\|[\s|:-]+\|$/.test(line.trim()))
-      #         .map(line => line.trim()
-      #           .replace(/^\|/, '')
-      #           .replace(/\|$/, '')
-      #           .split('|')
-      #           .map(cell => cell.trim())
-      #         );
-      #     }
-
-      #     // Application Health Dashboard
-      #     const appRows = readTable('application-health-dashboard.md');
-      #     const appText = appRows.slice(1).map(row =>
-      #       `• *${row[0]}* — Total: ${row[1]} | Passed: ${row[2]} | Failed: ${row[3]} | Flaky: ${row[4]} | Skipped: ${row[5]} | Pass Rate: ${row[6]} | Fail Rate: ${row[7]} | Flaky Rate: ${row[8]} | Skipped Rate: ${row[9]} | Quality Score: ${row[10]} | Health: ${row[11]}`
-      #     ).join('\n');
-      #     fs.appendFileSync(
-      #       process.env.GITHUB_OUTPUT,
-      #       `APPLICATION_HEALTH_TEXT=${JSON.stringify(appText)}\n`
-      #     );
-
-      #     // Module Breakdown grouped by Application
-      #     const moduleRows = readTable('module-breakdown.md').slice(1);
-      #     const grouped = {};
-      #     for (const row of moduleRows) {
-      #       const [
-      #         application,
-      #         module,
-      #         total,
-      #         passed,
-      #         failed,
-      #         flaky,
-      #         skipped,
-      #         passRate,
-      #         failRate,
-      #         flakyRate,
-      #         skippedRate,
-      #         qualityScore,
-      #         health
-      #       ] = row;
-      #       if (!grouped[application]) {
-      #         grouped[application] = [];
-      #       }
-      #       grouped[application].push(
-      #         `   • *${module}* — Total: ${total} | Passed: ${passed} | Failed: ${failed} | Flaky: ${flaky} | Skipped: ${skipped} | Pass Rate: ${passRate} | Fail Rate: ${failRate} | Flaky Rate: ${flakyRate} | Skipped Rate: ${skippedRate} | Quality Score: ${qualityScore} | Health: ${health}`
-      #       );
-      #     }
-
-      #     // Build grouped module text
-      #     const moduleText = Object.entries(grouped)
-      #       .map(([application, modules]) =>
-      #         `🧩 *${application}*\n${modules.join('\n')}`
-      #       )
-      #       .join('\n\n');
-      #     fs.appendFileSync(
-      #       process.env.GITHUB_OUTPUT,
-      #       `MODULE_BREAKDOWN_TEXT=${JSON.stringify(moduleText)}\n`
-      #     );
-
-      #     // Tag Execution Summary
-      #     const tagRows = readTable('tag-execution-summary.md');
-      #     const tagText = tagRows.slice(1)
-      #       .filter(row => row.length >= 12)
-      #       .map(row =>
-      #         `• *@${row[0].replace(/^@/, '')}* — Total: ${row[1]} | Passed: ${row[2]} | Failed: ${row[3]} | Flaky: ${row[4]} | Skipped: ${row[5]} | Pass Rate: ${row[6]} | Fail Rate: ${row[7]} | Flaky Rate: ${row[8]} | Skipped Rate: ${row[9]} | Quality Score: ${row[10]} | Health: ${row[11]}`
-      #       )
-      #       .join('\n');
-      #     const untaggedLines = fs.existsSync('untagged-test-cases.txt')
-      #       ? fs.readFileSync('untagged-test-cases.txt', 'utf8')
-      #           .split(/\r?\n/)
-      #           .filter(Boolean)
-      #       : [];
-      #     const untaggedText = untaggedLines.length
-      #       ? untaggedLines.slice(0, 15).map((line, index) => {
-      #           const [title, file] = line.split('\t');
-      #           return `${index + 1}. *${title}* — \`${file}\``;
-      #         }).join('\n') +
-      #         (untaggedLines.length > 15
-      #           ? `\n…and ${untaggedLines.length - 15} more.`
-      #           : '')
-      #       : 'All test cases have valid tags.';
-      #     const tagExecutionText = [
-      #       tagText || 'No tagged tests found.',
-      #       '',
-      #       `⚠️ *Test Cases Without Tags: ${untaggedLines.length}*`,
-      #       untaggedText
-      #     ].join('\n');
-      #     fs.appendFileSync(
-      #       process.env.GITHUB_OUTPUT,
-      #       `TAG_EXECUTION_TEXT=${JSON.stringify(tagExecutionText)}\n`
-      #     );
-      #     NODE
 
       - name: 🔍 Debug Analytics Files
         run: |
@@ -1039,31 +540,6 @@ jobs:
 
           echo "✅ Historical test data saved."
 
-      # - name: 🔍 Debug Breakdown Tables
-      #   if: always()
-      #   run: |
-      #     echo "===== APPLICATION HEALTH ====="
-      #     cat application-health-dashboard.md
-
-      #     echo "===== MODULE BREAKDOWN ====="
-      #     cat module-breakdown.md
-
-      #     echo "===== TAG SUMMARY ====="
-      #     cat tag-execution-summary.md
-
-      #     echo "===== FAILED MODULE ====="
-      #     cat failed-modules.md
-
-      #     echo "===== FAILED TESTS ====="
-      #     cat failed-tests.md
-
-      #     echo "===== SLACK TABLE OUTPUTS ====="
-      #     echo '${{ steps.breakdown.outputs.APPLICATION_HEALTH_ROWS }}' | jq .
-      #     echo '${{ steps.breakdown.outputs.MODULE_BREAKDOWN_ROWS }}' | jq .
-      #     echo '${{ steps.breakdown.outputs.TAG_EXECUTION_TEXT }}' | jq .
-      #     echo '${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_MODULES_SLACK }}'
-      #     echo '${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TESTS_SLACK }}'
-
       - name: 📄 Upload Playwright Report
         id: upload_playwright_report
         if: always()
@@ -1126,24 +602,6 @@ jobs:
           path: allure-report/
           if-no-files-found: ignore
           retention-days: 7
-
-      # - name: Create PR Info
-      #   id: pr_info
-      #   if: always() && github.event_name == 'pull_request'
-      #   run: |
-      #     {
-      #       echo 'INFO<<EOF'
-      #       echo "*🤖 Auto Merge:* Pending"
-      #       echo "*🔀 PR:* #${{ github.event.pull_request.number }}"
-      #       echo "*📝 Title:* ${{ github.event.pull_request.title }}"
-      #       echo "*🔗 Pull Request:* ${{ github.event.pull_request.html_url }}"
-      #       echo "*👤 Author:* ${{ github.event.pull_request.user.login }}"
-      #       echo "*🌿 Source Branch:* ${{ github.event.pull_request.head.ref }}"
-      #       echo "*🎯 Target Branch:* ${{ github.head_ref }}"
-      #       echo "*🏷️ Labels:* ${{ steps.labels.outputs.LABELS }}"
-      #       echo "*🔖 Commit SHA:* ${{ github.sha }}"
-      #       echo EOF
-      #     } >> $GITHUB_OUTPUT
 
       - name: 📦 Upload Analytics Dataset
         if: always()
@@ -1379,13 +837,14 @@ jobs:
             echo "[📄 Download Markdown Execution Reports](${{ steps.upload_markdown_reports.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: 📨 Generate Slack Payload
+      - name: 📨 Generate Notification Data
         if: always()
         env:
           SLACK_CHANNEL: C0CDR49PPSL
           BUILD_EMOJI: ${{ env.BUILD_EMOJI }}
           BUILD_TEXT: ${{ env.BUILD_TEXT }}
           EXECUTION_HEALTH: ${{ env.EXECUTION_HEALTH }}
+
           RELEASE_READINESS_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.RELEASE_READINESS_TEXT }}
           APPLICATION_HEALTH_TEXT: ${{ steps.breakdown.outputs.APPLICATION_HEALTH_TEXT }}
           MODULE_BREAKDOWN_TEXT: ${{ steps.breakdown.outputs.MODULE_BREAKDOWN_TEXT }}
@@ -1395,6 +854,19 @@ jobs:
           FAILED_TEST_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FAILED_TEST_TEXT }}
           FLAKY_TEST_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.FLAKY_TEST_TEXT }}
           SLOWEST_MODULE_TEXT: ${{ steps.generate_failure_flakiness_risk_performance_report.outputs.SLOWEST_MODULE_TEXT }}
+          
+          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
+          PASSED_TESTS: ${{ env.PASSED_TESTS }}
+          FAILED_TESTS: ${{ env.FAILED_TESTS }}
+          FLAKY_TESTS: ${{ env.FLAKY_TESTS }}
+          SKIPPED_TESTS: ${{ env.SKIPPED_TESTS }}
+          PASS_RATE: ${{ env.PASS_RATE }}
+          FAILURE_RATE: ${{ env.FAILURE_RATE }}
+          FLAKY_RATE: ${{ env.FLAKY_RATE }}
+          SKIPPED_RATE: ${{ env.SKIPPED_RATE }}
+          QUALITY_SCORE: ${{ env.QUALITY_SCORE }}
+          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
+
           BROWSER: ${{ env.BROWSER }}
           EXECUTED_TAG: ${{ env.EXECUTED_TAG }}
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
@@ -1403,6 +875,23 @@ jobs:
           RUNNER_OS_NAME: ${{ env.RUNNER_OS_NAME }}
           START_DATE: ${{ env.START_DATE }}
           END_DATE: ${{ env.END_DATE }}
+
+          PR_NUMBER: ${{ env.PR_NUMBER }}
+          PR_TITLE: ${{ env.PR_TITLE }}
+          PR_URL: ${{ env.PR_URL }}
+          PR_AUTHOR: ${{ env.PR_AUTHOR }}
+          PR_BRANCH: ${{ env.PR_BRANCH }}
+          PR_BASE_BRANCH: ${{ env.PR_BASE_BRANCH }}
+          PR_LABELS: ${{ env.PR_LABELS }}
+          PR_SHA: ${{ env.PR_SHA }}
+        run: |
+          node .github/scripts/notifications/generate-notification-data.js
+
+      - name: 🔍 Debug Notification Data
+        run: |
+          cat notification-data.json
+
+      - name: 📨 Generate Slack Payload
         run: |
           node .github/scripts/notifications/generate-slack-pr.js
 
@@ -1417,126 +906,12 @@ jobs:
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
         run: |
-          cat <<EOF > pr-comment.md
-          <!-- playwright-validation-report -->
+          node .github/scripts/notifications/generate-pr-comment.js
 
-          # 🎭 Playwright Execution Summary
+      - name: 🔍 Debug Slack Payload
+        run: |
+          cat pr-slack.json
 
-          ## ${{ env.BUILD_EMOJI }} Pull Request Validation
-          ${{ env.BUILD_TEXT }}
-
-          ## ❤️ Execution Health
-          ${{ env.EXECUTION_HEALTH }}
-          Executed ${{ env.TOTAL_TESTS }} automated tests with a pass rate of ${{ env.PASS_RATE }}% in ${{ env.EXECUTION_DURATION }}.
-
-          ## 📋 Execution Overview
-          | Item | Value |
-          |------|-------|
-          | 🌐 Browser | ${{ env.BROWSER }} |
-          | 🏷️ Executed Tag | ${{ env.EXECUTED_TAG }} |
-          | 🌍 Environment | ${{ env.ENVIRONMENT }} |
-          | 🎭 Playwright Version | ${{ env.PLAYWRIGHT_VERSION }} |
-          | 📦 Node Version | ${{ env.NODE_VERSION }} |
-          | 💻 Runner OS | ${{ env.RUNNER_OS_NAME }} |
-          | ▶️ Start Time | ${{ env.START_DATE }} |
-          | ⏹️ End Time | ${{ env.END_DATE }} |
-
-          ### 📋 Pull Request Details
-          | Item | Value |
-          |--------|--------|
-          | 🔢 PR Number | #${{ env.PR_NUMBER }} |
-          | 📝 PR Title | ${{ env.PR_TITLE }} |
-          | 🔗 PR URL | ${{ env.PR_URL }} |
-          | 👤 Author | ${{ env.PR_AUTHOR }} |
-          | 🌿 Source Branch | ${{ env.PR_BRANCH }} |
-          | 🎯 Target Branch | ${{ env.PR_BASE_BRANCH }} |
-          | 🏷️ Label | ${{ env.PR_LABELS }} |
-          | 🔖 Commit SHA | ${{ env.PR_SHA }} |
-
-          ## 🛡️ Release Readiness
-          $(cat release-readiness.md)
-
-          ## 📊 Execution Metrics
-          | Metric | Value | % |
-          |:----------:|:----------:|:----------:|
-          | 🧪 Total Tests | ${{ env.TOTAL_TESTS }} | - |
-          | ✅ Passed | ${{ env.PASSED_TESTS }} | ${{ env.PASS_RATE }}% |
-          | ❌ Failed | ${{ env.FAILED_TESTS }} | ${{ env.FAILURE_RATE }}% |
-          | ⚠️ Flaky | ${{ env.FLAKY_TESTS }} | ${{ env.FLAKY_RATE }}% |
-          | ⏭️ Skipped | ${{ env.SKIPPED_TESTS }} | ${{ env.SKIPPED_RATE }}% |
-          | 🏆 Quality Score | - | ${{ env.QUALITY_SCORE }}% |
-          | ⏱️ Duration | ${{ env.EXECUTION_DURATION }} | - |
-
-          ## 🖥️ Application Health
-          $(cat application-health-dashboard.md)
-
-          ## 📦 Module Breakdown
-          $(cat module-breakdown.md)
-
-          ## 🏷️ Test Tag Analytics
-          $(cat tag-execution-summary.md)
-
-          ## 🏆 Top Risk Module
-          $(cat top-risk-modules.md)
-
-          ## ❌ Failed Modules
-          $(cat failed-modules.md)
-
-          ## ❌ Failed Tests
-          $(cat failed-tests.md)
-
-          ## ⚠️ Flaky Tests
-          $(cat flaky-tests.md)
-
-          ## ⏱️ Slowest Module
-          $(cat slowest-module.md)
-
-          ## 📈 Historical Test Trend
-          $(cat historical-test-trend.md)
-
-          ## 🔗 Report Links
-          $(cat report-links.md)
-
-      - name: 💬 Create or Update PR Comment
-        if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-
-            const body = fs.readFileSync('pr-comment.md', 'utf8');
-
-            const marker = '<!-- playwright-validation-report -->';
-
-            const { data: comments } =
-              await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number
-              });
-
-            const existingComment = comments.find(
-              comment =>
-                comment.user.type === 'Bot' &&
-                comment.body.includes(marker)
-            );
-
-            if (existingComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existingComment.id,
-                body
-              });
-
-              core.info('Updated existing PR comment');
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-                body
-              });
-
-              core.info('Created new PR comment');
-            }
+      - name: 📝 Generate PR Comment
+        run: |
+          node .github/scripts/notifications/generate-pr-comment.js

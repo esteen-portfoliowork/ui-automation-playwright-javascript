@@ -1,5 +1,7 @@
+// Risk analysis and release readiness
 const fs = require('fs');
 
+// ---------- Test Result Collection ----------
 const reportPath = 'playwright-report/results.json';
 const report = fs.existsSync(reportPath)
 ? JSON.parse(fs.readFileSync(reportPath, 'utf8'))
@@ -143,8 +145,9 @@ if (moduleRiskCounts[key]) {
     moduleRiskCounts[key].flaky++;
 }
 }
+// ---------- ----------
 
-// ------- Slowest Module Analysis -------
+// ---------- Slowest Module Analysis ----------
 const slowestModules = Object.values(moduleRiskCounts)
 .filter(item => item.durationMs > 0)
 .map(item => ({
@@ -183,8 +186,9 @@ console.log(
 } else {
 console.log('No execution duration data found.');
 }
+// ---------- ----------
 
-// ------- Module Risk Analysis -------
+// ---------- Module Risk Analysis ----------
 const riskModules = Object.values(moduleRiskCounts).map(item => {
 
 // Calculate Failure Rate
@@ -252,8 +256,9 @@ console.log('Module Risk Analysis:');
 console.log(`Total Modules: ${totalModulesAnalyzed}`);
 console.log(`High/Critical Risk Modules: ${highRiskModuleCount}`);
 console.log(`Critical Risk Modules: ${criticalRiskModuleCount}`);
+// ---------- ----------
 
-// ------- Generate Failed Modules Report -------
+// ---------- Failed Modules, Failed Tests, and Flaky Tests ----------
 const modules = Object.values(failedModuleCounts)
 .sort((a, b) =>
     a.application.localeCompare(b.application) ||
@@ -310,8 +315,9 @@ fs.writeFileSync(
 'flaky-tests.md',
 flakyTestMarkdown + '\n'
 );
+// ---------- ----------
 
-// ------- Top Risk Modules Report -------
+// ---------- risk modules ----------
 const topRiskMarkdown = [
 '',
 '> Application modules ranked by weighted failure and flaky rates.',
@@ -376,8 +382,9 @@ fs.writeFileSync(
 'slowest-module.md',
 slowestModuleMarkdown + '\n'
 );
+// ---------- ----------
 
-// ------- Generate Release Readiness Report -------
+// ---------- release Readiness ----------
 const RELEASE_READINESS_CONFIG = {
 failureRateThreshold: 5,       // NO-GO when failure rate exceeds 5%
 flakyRateThreshold: 5,         // 5% flaky rate reaches zero flaky score
@@ -571,8 +578,9 @@ fs.writeFileSync(
 JSON.stringify(releaseReadiness, null, 2),
 'utf8'
 );
+// ---------- ----------
 
-// ------- Prepare Slack: Failed Modules -------
+// ---------- slack-specific formatting ----------
 const groupedModules = {};
 for (const item of modules) {
 groupedModules[item.application] =
@@ -693,3 +701,4 @@ setOutput('PR_TITLE', process.env.PR_TITLE || 'N/A');
 console.log(`Failed modules: ${modules.length}`);
 console.log(`Failed tests: ${failedTests.length}`);
 console.log(`Flaky tests: ${flakyTests.length}`);
+// ---------- ----------

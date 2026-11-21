@@ -1,3 +1,5 @@
+// Markdown breakdown reports
+// Reads analytics and creates report content
 const fs = require('fs');
 
 const analytics = JSON.parse(
@@ -16,7 +18,7 @@ function setOutput(name, value) {
   );
 }
 
-// ------- Applications -------
+// ---------- Application Health ----------
 const applicationLines = [
   '| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
   '|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|'
@@ -44,8 +46,9 @@ setOutput(
   'APPLICATION_HEALTH_TEXT',
   applicationHealthText
 );
+// ---------- ----------
 
-// ------- Modules -------
+// ---------- Module Breakdown ----------
 const moduleLines = [
   '| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
   '|:-------------:|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|'
@@ -87,8 +90,9 @@ setOutput(
   'MODULE_BREAKDOWN_TEXT',
   moduleBreakdownText
 );
+// ---------- ----------
 
-// ------- Tags -------
+// ---------- Tag Execution Summary ----------
 const tagLines = [
   '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
   '|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|'
@@ -132,3 +136,4 @@ setOutput(
   'TAG_EXECUTION_TEXT',
   finalTagExecutionText
 );
+// ---------- ----------

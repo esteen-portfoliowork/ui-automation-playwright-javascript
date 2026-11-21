@@ -1,5 +1,8 @@
+// 	Test-result aggregation
+// Generate metrics for Applications, Modules, and Tags
 const fs = require('fs');
 
+// ----------	checks for and reads results.json ----------
 const reportPath = 'playwright-report/results.json';
 
 if (!fs.existsSync(reportPath)) {
@@ -23,11 +26,13 @@ if (!fs.existsSync(reportPath)) {
 
   process.exit(0);
 }
+// ---------- ----------
 
 const report = JSON.parse(
   fs.readFileSync(reportPath, 'utf8')
 );
 
+// ---------- creates the analytics data structure ----------
 const analytics = {
   execution: {},
   applications: [],
@@ -37,14 +42,18 @@ const analytics = {
   flakyTests: [],
   generatedAt: new Date().toISOString()
 };
+// ---------- ----------
 
+// ---------- maps application folder names to display names ----------
 const APPLICATIONS = {
   'expand-testing': 'Expand Testing',
   'orange-hrm': 'Orange HRM',
   'qa-playground': 'QA Playground',
   'sauce-demo': 'SauceDemo'
 };
+// ---------- ----------
 
+// ---------- variable and function initialization ----------
 const {
   calculateMetrics
 } = require('./metrics');
@@ -60,7 +69,10 @@ const untaggedTests = [];
 function getApplicationName(app) {
   return APPLICATIONS[app] || app;
 }
+// ---------- ----------
 
+// ---------- walksuites() ----------
+// Traverses suites and processes test cases
 function walkSuites(suites, parentFile = '') {
   for (const suite of suites || []) {
     const file = suite.file || parentFile;
@@ -84,6 +96,7 @@ function walkSuites(suites, parentFile = '') {
 
       const tests = spec.tests || [];
 
+      // 	Collects tags and identifies untagged tests
       const EXCLUDED_TAGS = [
         'sauce-demo',
         'orange-hrm'
@@ -104,6 +117,7 @@ function walkSuites(suites, parentFile = '') {
         });
       }
 
+      // Determines failed, flaky, skipped, and passed status
       const isFailed =
         spec.ok === false;
 
@@ -124,7 +138,7 @@ function walkSuites(suites, parentFile = '') {
         spec.ok === true &&
         !isFlaky;
 
-      // Application Aggregation
+      // Aggregates Application statistics
       if (!applications[application]) {
         applications[application] = {
           application,
@@ -150,7 +164,7 @@ function walkSuites(suites, parentFile = '') {
       if (isSkipped)
         applications[application].skipped++;
 
-      // Module Aggregation
+      // Aggregates Module statistics
       if (!modules[key]) {
         modules[key] = {
           application,
@@ -177,7 +191,7 @@ function walkSuites(suites, parentFile = '') {
       if (isSkipped)
         modules[key].skipped++;
 
-    // Tag Aggregation
+    // Aggregates Tag statistics
     for (const tag of [...new Set(specTags)]) {
 
       if (!tags[tag]) {
@@ -206,6 +220,7 @@ function walkSuites(suites, parentFile = '') {
         tags[tag].skipped++;
     }
 
+    // log console
     console.log(
       spec.title,
       spec.tags,
@@ -221,7 +236,9 @@ function walkSuites(suites, parentFile = '') {
 }
 
 walkSuites(report.suites || []);
+// ---------- ----------
 
+// ---------- calculates metrics using metrics.js ----------
 analytics.applications =
   Object.values(applications)
     .map(item => ({
@@ -260,7 +277,9 @@ analytics.tags =
         item.skipped
       )
     }));
+// ---------- ----------
 
+// ---------- adds untagged test data and execution totals ----------
 analytics.untaggedTests = untaggedTests;
 
 analytics.execution = {
@@ -270,8 +289,9 @@ analytics.execution = {
   totalModules:
     analytics.modules.length
 };
+// ---------- ----------
 
-
+// ---------- writes analytics.json ----------
 fs.writeFileSync(
   'analytics.json',
   JSON.stringify(
@@ -280,5 +300,6 @@ fs.writeFileSync(
     2
   )
 );
+// ---------- ----------
 
 console.log('analytics.json generated');
