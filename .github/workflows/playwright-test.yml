@@ -1499,44 +1499,45 @@ jobs:
 
       - name: 💬 Create or Update PR Comment
         if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
+        env:
 
-            const body = fs.readFileSync('pr-comment.md', 'utf8');
+          BUILD_EMOJI: ${{ env.BUILD_EMOJI }}
+          BUILD_TEXT: ${{ env.BUILD_TEXT }}
+          EXECUTION_HEALTH: ${{ env.EXECUTION_HEALTH }}
 
-            const marker = '<!-- playwright-validation-report -->';
+          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
+          PASSED_TESTS: ${{ env.PASSED_TESTS }}
+          FAILED_TESTS: ${{ env.FAILED_TESTS }}
+          FLAKY_TESTS: ${{ env.FLAKY_TESTS }}
+          SKIPPED_TESTS: ${{ env.SKIPPED_TESTS }}
 
-            const { data: comments } =
-              await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number
-              });
+          PASS_RATE: ${{ env.PASS_RATE }}
+          FAILURE_RATE: ${{ env.FAILURE_RATE }}
+          FLAKY_RATE: ${{ env.FLAKY_RATE }}
+          SKIPPED_RATE: ${{ env.SKIPPED_RATE }}
 
-            const existingComment = comments.find(
-              comment =>
-                comment.user.type === 'Bot' &&
-                comment.body.includes(marker)
-            );
+          QUALITY_SCORE: ${{ env.QUALITY_SCORE }}
+          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
 
-            if (existingComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existingComment.id,
-                body
-              });
+          BROWSER: ${{ env.BROWSER }}
+          EXECUTED_TAG: ${{ env.EXECUTED_TAG }}
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
 
-              core.info('Updated existing PR comment');
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-                body
-              });
+          PLAYWRIGHT_VERSION: ${{ env.PLAYWRIGHT_VERSION }}
+          NODE_VERSION: ${{ env.NODE_VERSION }}
+          RUNNER_OS_NAME: ${{ env.RUNNER_OS_NAME }}
 
-              core.info('Created new PR comment');
-            }
+          START_DATE: ${{ env.START_DATE }}
+          END_DATE: ${{ env.END_DATE }}
+
+          PR_NUMBER: ${{ env.PR_NUMBER }}
+          PR_TITLE: ${{ env.PR_TITLE }}
+          PR_URL: ${{ env.PR_URL }}
+          PR_AUTHOR: ${{ env.PR_AUTHOR }}
+          PR_BRANCH: ${{ env.PR_BRANCH }}
+          PR_BASE_BRANCH: ${{ env.PR_BASE_BRANCH }}
+          PR_LABELS: ${{ env.PR_LABELS }}
+          PR_SHA: ${{ env.PR_SHA }}
+
+        run: |
+          node .github/scripts/notifications/generate-pr-comment.js
