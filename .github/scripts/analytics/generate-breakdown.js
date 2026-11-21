@@ -17,26 +17,38 @@ function setOutput(name, value) {
 }
 
 // ------- Applications -------
-const appLines = [
+const applicationLines = [
   '| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
-  '|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:------------:|:-----------:|:-----------:|:-----------:|'
+  '|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|'
 ];
 
 for (const app of analytics.applications) {
-  appLines.push(
+  applicationLines.push(
     `| ${app.application} | ${app.total} | ${app.passed} | ${app.failed} | ${app.flaky} | ${app.skipped} | ${app.passRate}% | ${app.failRate}% | ${app.flakyRate}% | ${app.skippedRate}% | ${app.qualityScore}% | ${app.health} |`
   );
 }
 
 fs.writeFileSync(
   'application-health-dashboard.md',
-  appLines.join('\n')
+  applicationLines.join('\n')
+);
+
+const applicationHealthText =
+  analytics.applications
+    .map(app =>
+      `• *${app.application}* — Total: ${app.total} | Passed: ${app.passed} | Failed: ${app.failed} | Flaky: ${app.flaky} | Skipped: ${app.skipped} | Pass Rate: ${app.passRate}% | Fail Rate: ${app.failRate}% | Flaky Rate: ${app.flakyRate}% | Skipped Rate: ${app.skippedRate}% | Quality Score: ${app.qualityScore}% | Health: ${app.health}`
+    )
+    .join('\n');
+
+setOutput(
+  'APPLICATION_HEALTH_TEXT',
+  applicationHealthText
 );
 
 // ------- Modules -------
 const moduleLines = [
   '| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
-  '|:-------------:|:-------------:|:--------:|:--------:|:--------:|:--------:|:---------:|:-----------:|:-----------:|:------------:|:--------------:|:---------------:|:-----------:|'
+  '|:-------------:|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|'
 ];
 
 for (const module of analytics.modules) {
@@ -50,13 +62,6 @@ fs.writeFileSync(
   'module-breakdown.md',
   moduleLines.join('\n')
 );
-
-const applicationHealthText =
-  analytics.applications
-    .map(app =>
-      `• *${app.application}* — Total: ${app.total} | Passed: ${app.passed} | Failed: ${app.failed} | Flaky: ${app.flaky} | Skipped: ${app.skipped}`
-    )
-    .join('\n');
 
 const groupedModules = {};
 
@@ -79,29 +84,51 @@ const moduleBreakdownText =
     .join('\n\n');
 
 setOutput(
-  'APPLICATION_HEALTH_TEXT',
-  applicationHealthText
-);
-
-setOutput(
   'MODULE_BREAKDOWN_TEXT',
   moduleBreakdownText
 );
 
-// temporary
-setOutput(
-  'TAG_EXECUTION_TEXT',
-  'Tag summary refactoring not implemented yet.'
-);
+// ------- Tags -------
+const tagLines = [
+  '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
+  '|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|'
+];
+
+for (const tag of analytics.tags) {
+  tagLines.push(
+    `| ${tag.tag} | ${tag.total} | ${tag.passed} | ${tag.failed} | ${tag.flaky} | ${tag.skipped} | ${tag.passRate}% | ${tag.failRate}% | ${tag.flakyRate}% | ${tag.skippedRate}% | ${tag.qualityScore}% | ${tag.health} |`
+  );
+}
+
 fs.writeFileSync(
   'tag-execution-summary.md',
-  '# Tag Summary\n\nRefactoring in progress.\n'
+  tagLines.join('\n')
 );
-fs.writeFileSync(
-  'tag-execution-summary.md',
-  '# Tag Execution Summary\n\nRefactoring not implemented yet.\n'
-);
+
+const tagExecutionText =
+  analytics.tags
+    .map(tag =>
+      `• *@${tag.tag}* — Total: ${tag.total} | Passed: ${tag.passed} | Failed: ${tag.failed} | Flaky: ${tag.flaky} | Skipped: ${tag.skipped} | Pass Rate: ${Number(tag.passRate).toFixed(2)}% | Fail Rate: ${Number(tag.failRate).toFixed(2)}% | Flaky Rate: ${Number(tag.flakyRate).toFixed(2)}% | Skipped Rate: ${Number(tag.skippedRate).toFixed(2)}% | Quality Score: ${tag.qualityScore} | Health: ${tag.health}`
+    )
+    .join('\n');
+
+const untaggedText =
+  analytics.untaggedTests?.length
+    ? analytics.untaggedTests
+        .map((test, index) =>
+          `${index + 1}. *${test.title}* — \`${test.file}\``
+        )
+        .join('\n')
+    : 'All test cases have valid tags.';
+
+const finalTagExecutionText = [
+  tagExecutionText,
+  '',
+  `⚠️ *Test Cases Without Tags: ${analytics.untaggedTests?.length || 0}*`,
+  untaggedText
+].join('\n');
+
 setOutput(
   'TAG_EXECUTION_TEXT',
-  'Tag Summary not migrated yet.'
+  finalTagExecutionText
 );

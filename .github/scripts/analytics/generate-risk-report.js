@@ -640,6 +640,7 @@ const releaseReadinessSlack = [
 `${readinessStatusEmoji} *${releaseReadiness.status}*`,
 `*Reason:* ${releaseReadiness.reason}`,
 `*Readiness Score:* ${releaseReadiness.score}/100`,
+`• Category : | Actual Rate | Weight | Points`,
 `• Test Pass Rate: ${passRate.toFixed(2)}% | 40% | ${passRateScore.toFixed(2)}`,
 `• Failure Rate: ${failureRate.toFixed(2)}% | 25% | ${failureRateScore.toFixed(2)}`,
 `• Flaky Rate: ${flakyRate.toFixed(2)}% | 15% | ${flakyRateScore.toFixed(2)}`,
