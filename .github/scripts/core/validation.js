@@ -1,6 +1,8 @@
 // Validate the incoming Playwright report before processing it
 // Checks whether Playwright supplied a valid report
 
+// ---------- validatePlaywrightReport() ----------
+// validatePlaywrightReport: check Playwright report
 function validatePlaywrightReport(report) {
     if (!report || typeof report !== 'object') {
         throw new Error(
@@ -16,7 +18,10 @@ function validatePlaywrightReport(report) {
 
     return true;
 }
+// ---------- ----------
 
+// ---------- validateNormalizedTest() ----------
+// validateNormalizedTest: check fields
 function validateNormalizedTest(test) {
     if (!test || typeof test !== 'object') {
         throw new Error(
@@ -74,6 +79,7 @@ function validateNormalizedTest(test) {
 
     return true;
 }
+// ---------- ----------
 
 module.exports = {
     validatePlaywrightReport,
