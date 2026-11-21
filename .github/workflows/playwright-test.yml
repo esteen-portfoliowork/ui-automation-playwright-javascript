@@ -312,7 +312,7 @@ jobs:
 
       - name: 📊 Generate Analytics
         if: always()
-        run: node file/analytics/generate-analytics.js
+        run: .github/scripts/analytics/generate-analytics.js
 
       - name: 🔍 Debug Analytics
         if: always()
@@ -321,7 +321,7 @@ jobs:
 
       - name: 🚩 Generate Risk Analysis
         if: always()
-        run: node file/analytics/generate-risk-report.js
+        run: .github/scripts/analytics/generate-risk-report.js
 
       - name: 📋 Generate Breakdown Reports
         id: breakdown
@@ -331,7 +331,7 @@ jobs:
 
       - name: 📈 Generate Historical Trend
         if: always()
-        run: node file/analytics/generate-historical-trend.js
+        run: .github/scripts/analytics/generate-historical-trend.js
 
       - name: 📄 Upload Playwright Report
         id: upload_playwright_report
@@ -690,7 +690,7 @@ jobs:
 
       - name: 📣 Generate Notification Data
         if: always()
-        run: node file/reporting/generate-notification-data.js
+        run: .github/scripts/reporting/generate-notification-data.js
 
       - name: 📝 Generate PR Comment
         if: always() && github.event_name == 'pull_request'
