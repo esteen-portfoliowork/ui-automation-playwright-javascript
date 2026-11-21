@@ -36,7 +36,7 @@ fs.writeFileSync(
 const applicationHealthText =
   analytics.applications
     .map(app =>
-      `• *${app.application}* — Total: ${app.total} | Passed: ${app.passed} | Failed: ${app.failed} | Flaky: ${app.flaky} | Skipped: ${app.skipped} | Passed Rate: ${app.passRate}% | Fail Rate: ${app.failRate}% | Flaky Rate: ${app.flakyRate}% | Skipped Rate: ${app.skippedRate}% | Quality Score: ${app.qualityScore}% | Health: ${app.health}`
+      `• *${app.application}* — Total: ${app.total} | Passed: ${app.passed} | Failed: ${app.failed} | Flaky: ${app.flaky} | Skipped: ${app.skipped} | Pass Rate: ${app.passRate}% | Fail Rate: ${app.failRate}% | Flaky Rate: ${app.flakyRate}% | Skipped Rate: ${app.skippedRate}% | Quality Score: ${app.qualityScore}% | Health: ${app.health}`
     )
     .join('\n');
 
@@ -108,7 +108,7 @@ fs.writeFileSync(
 const tagExecutionText =
   analytics.tags
     .map(tag =>
-      `• *@${tag.tag}* — Total: ${tag.total} | Passed: ${tag.passed} | Failed: ${tag.failed} | Flaky: ${tag.flaky} | Skipped: ${tag.skipped} | Passed Rate: ${tag.passRate} | Fail Rate: ${tag.failRate} | Flaky Rate: ${tag.flakyRate} | Skipped Rate: ${tag.skippedRate} | Quality Score: ${tag.qualityScore} | Health: ${tag.health}`
+      `• *@${tag.tag}* — Total: ${tag.total} | Passed: ${tag.passed} | Failed: ${tag.failed} | Flaky: ${tag.flaky} | Skipped: ${tag.skipped} | Pass Rate: ${Number(tag.passRate).toFixed(2)}% | Fail Rate: ${Number(tag.failRate).toFixed(2)}% | Flaky Rate: ${Number(tag.flakyRate).toFixed(2)}% | Skipped Rate: ${Number(tag.skippedRate).toFixed(2)}% | Quality Score: ${tag.qualityScore} | Health: ${tag.health}`
     )
     .join('\n');
 

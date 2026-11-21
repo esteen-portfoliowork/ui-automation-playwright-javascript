@@ -98,12 +98,27 @@ function walkSuites(suites, parentFile = '') {
 
       const tests = spec.tests || [];
 
+      const untaggedTests = [];
+
+      const EXCLUDED_TAGS = [
+        'sauce-demo',
+        'orange-hrm'
+      ];
+
       const specTags = [
         ...(spec.tags || []),
         ...tests.flatMap(test => test.tags || [])
       ]
-        .map(tag => String(tag).replace(/^@/, ''))
-        .filter(Boolean);
+        .map(tag => String(tag).replace(/^@/, '').toLowerCase())
+        .filter(Boolean)
+        .filter(tag => !EXCLUDED_TAGS.includes(tag));
+
+      if (specTags.length === 0) {
+        untaggedTests.push({
+          title: spec.title,
+          file: specFile
+        });
+      }
 
       const isFailed =
         spec.ok === false;
@@ -255,6 +270,8 @@ analytics.tags =
         item.skipped
       )
     }));
+
+analytics.untaggedTests = untaggedTests;
 
 analytics.execution = {
   totalApplications:

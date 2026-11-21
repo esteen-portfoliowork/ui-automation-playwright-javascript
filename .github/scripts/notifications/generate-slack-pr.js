@@ -278,7 +278,67 @@ const payload = {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: process.env.TOP_RISK_MODULE_TEXT || 'No risk module available.'
+                text: process.env.TOP_RISK_MODULE_TEXT || 'No risk modules available.'
+            }
+        },
+        {
+            type: 'header',
+            level: 1,
+            text: {
+                type: 'plain_text',
+                text: `❌ Failed Modules`
+            }
+        },
+        {
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: process.env.FAILED_MODULE_TEXT || 'No failed modules available.'
+            }
+        },
+        {
+            type: 'header',
+            level: 1,
+            text: {
+                type: 'plain_text',
+                text: `❌ Failed Tests`
+            }
+        },
+        {
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: process.env.FAILED_TEST_TEXT || 'No failed tests available.'
+            }
+        },
+        {
+            type: 'header',
+            level: 1,
+            text: {
+                type: 'plain_text',
+                text: `⚠️ Flaky Tests`
+            }
+        },
+        {
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: process.env.FLAKY_TEST_TEXT || 'No flaky tests available.'
+            }
+        },
+        {
+            type: 'header',
+            level: 1,
+            text: {
+                type: 'plain_text',
+                text: `⏱️ Slowest Module`
+            }
+        },
+        {
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: process.env.SLOWEST_MODULE_TEXT || 'No slowest module available.'
             }
         },
     ]
