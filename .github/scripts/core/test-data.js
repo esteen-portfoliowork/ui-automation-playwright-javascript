@@ -1,8 +1,10 @@
-// Read and normalize test results
+// Normalized test records
 
+// Import fs, path
 const fs = require('fs');
 const path = require('path');
 
+// Import functions from validation.js
 const {
     validatePlaywrightReport,
     validateNormalizedTest
