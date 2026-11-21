@@ -1,6 +1,9 @@
+// Provider-neutral data contract
+// Common data contract between reporting system and all notification destinations
 const fs = require('fs');
 
 const data = {
+  // Collect execution information
   slackChannel: process.env.SLACK_CHANNEL,
 
   buildEmoji: process.env.BUILD_EMOJI,
@@ -32,6 +35,7 @@ const data = {
   qualityScore: process.env.QUALITY_SCORE,
   executionDuration: process.env.EXECUTION_DURATION,
 
+  // Collect report content
   releaseReadiness:
     process.env.RELEASE_READINESS_TEXT,
 
@@ -59,6 +63,7 @@ const data = {
   slowestModule:
     process.env.SLOWEST_MODULE_TEXT,
 
+  // Collect pull request information
   pr: {
     number: process.env.PR_NUMBER,
     title: process.env.PR_TITLE,
@@ -71,6 +76,7 @@ const data = {
   }
 };
 
+// generate notification-data.json
 fs.writeFileSync(
   'notification-data.json',
   JSON.stringify(data, null, 2)

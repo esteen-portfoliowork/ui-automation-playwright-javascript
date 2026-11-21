@@ -1,3 +1,8 @@
+// Shared calculations
+// Calculate metrics consistently so that other scripts don't each implement their own formulas
+
+// ---------- getHealth() ----------
+// getHealth: determine execution health (assign health status based on failed and flaky test counts)
 function getHealth(failed, flaky) {
   if (failed > 0) {
     return '🔴 Critical';
@@ -9,7 +14,16 @@ function getHealth(failed, flaky) {
 
   return '🟢 Healthy';
 }
+// ---------- ----------
 
+// ---------- calculateMetrics() ----------
+// calculateMetrics: calculate rates and quality score
+// Metric	: Current formula
+// Pass Rate : (passed + flaky) / total × 100
+// Fail Rate	: failed / total × 100
+// Flaky Rate	: flaky / total × 100
+// Skipped Rate	: skipped / total × 100
+// Quality Score	: (passed + flaky × 0.5) / total × 100
 function calculateMetrics(
   total,
   passed,
@@ -54,6 +68,7 @@ function calculateMetrics(
     health: getHealth(failed, flaky)
   };
 }
+// ---------- ----------
 
 module.exports = {
   getHealth,

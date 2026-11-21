@@ -1,5 +1,6 @@
 const fs = require('fs');
 
+// ---------- Read Notification data ----------
 const data =
   JSON.parse(
     fs.readFileSync(
@@ -7,7 +8,9 @@ const data =
       'utf8'
     )
   );
+// ---------- ----------
 
+// ---------- Table-building functions ----------
 function buildTableRows(data) {
     return data.map(([label, value]) => [
         {
@@ -37,7 +40,9 @@ function buildTableRows3(data) {
         }
     ]);
 }
+// ---------- ----------
 
+// ---------- Markdown Section helper ----------
 function markdownSection(title, content, notAvailable) {
     return [
         {
@@ -56,7 +61,9 @@ function markdownSection(title, content, notAvailable) {
         }
     ];
 }
+// ---------- ----------
 
+// ---------- Execution Overview and PR details ----------
 const executionOverviewRows = buildTableRows([
     ['🌐 Browser', data.BROWSER],
     ['🏷️ Executed Tag', data.EXECUTED_TAG],
@@ -78,7 +85,9 @@ const prDetailsRows = buildTableRows([
     ['🏷️ Labels', data.PR_LABELS],
     ['🔖 Commit SHA', data.PR_SHA]
 ]);
+// ---------- ----------
 
+// ---------- Execution Metrics ----------
 const executionMetrics = buildTableRows3([
     ['🧪 Total Tests', data.TOTAL_TESTS, '-'],
     ['✅ Passed', data.PASSED_TESTS, `${data.PASS_RATE}%`],
@@ -88,7 +97,9 @@ const executionMetrics = buildTableRows3([
     ['🏆 Quality Score', '-', `${data.QUALITY_SCORE}%`],
     ['⏱️ Duration', data.EXECUTION_DURATION, '-']
 ]);
+// ---------- ----------
 
+// ---------- Slack Payload ----------
 const payload = {
     channel: data.SLACK_CHANNEL,
     text: 'Playwright Execution Summary',
@@ -356,3 +367,4 @@ fs.writeFileSync(
   'pr-slack.json',
   JSON.stringify(payload, null, 2)
 );
+// ---------- ----------
