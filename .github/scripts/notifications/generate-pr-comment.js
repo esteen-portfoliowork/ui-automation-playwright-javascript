@@ -1,5 +1,7 @@
+// 	Imports fs
 const fs = require('fs');
 
+// Reads and parses notification-data.json
 const data = JSON.parse(
   fs.readFileSync(
     'notification-data.json',
@@ -7,12 +9,14 @@ const data = JSON.parse(
   )
 );
 
+// Defines read() to load Markdown reports, or return N/A if missing
 function read(path) {
   return fs.existsSync(path)
     ? fs.readFileSync(path, 'utf8')
     : 'N/A';
 }
 
+// Builds the PR comment using a Markdown template
 const comment = `
 <!-- playwright-validation-report -->
 
@@ -41,6 +45,7 @@ ${read('module-breakdown.md')}
 ${read('tag-execution-summary.md')}
 `;
 
+// Writes the result to pr-comment.md
 fs.writeFileSync(
   'pr-comment.md',
   comment
