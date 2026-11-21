@@ -3,5 +3,7 @@ node_modules/
 allure-results/
 test-results/
 playwright-report/
+.github/scripts/core/*.test.js
+.github/scripts/analytics/*OLD.js
 *.md
 *.json
