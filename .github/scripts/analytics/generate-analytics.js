@@ -1,304 +1,171 @@
-// 	Test-result aggregation
+// Test-result aggregation
 // Generate metrics for Applications, Modules, and Tags
+
+// Import fs
 const fs = require('fs');
 
-// ----------	checks for and reads results.json ----------
-const reportPath = 'playwright-report/results.json';
-
-if (!fs.existsSync(reportPath)) {
-  console.log('results.json not found');
-
-  fs.writeFileSync(
-    'analytics.json',
-    JSON.stringify(
-      {
-        execution: {},
-        applications: [],
-        modules: [],
-        tags: [],
-        failedTests: [],
-        flakyTests: []
-      },
-      null,
-      2
-    )
-  );
-
-  process.exit(0);
-}
-// ---------- ----------
-
-const report = JSON.parse(
-  fs.readFileSync(reportPath, 'utf8')
-);
-
-// ---------- creates the analytics data structure ----------
-const analytics = {
-  execution: {},
-  applications: [],
-  modules: [],
-  tags: [],
-  failedTests: [],
-  flakyTests: [],
-  generatedAt: new Date().toISOString()
-};
-// ---------- ----------
-
-// ---------- maps application folder names to display names ----------
-const APPLICATIONS = {
-  'expand-testing': 'Expand Testing',
-  'orange-hrm': 'Orange HRM',
-  'qa-playground': 'QA Playground',
-  'sauce-demo': 'SauceDemo'
-};
-// ---------- ----------
-
-// ---------- variable and function initialization ----------
+// Import functions from test-data.js
 const {
-  calculateMetrics
-} = require('./metrics');
+    readPlaywrightResults
+} = require('../core/test-data');
+
+// Import functions from metrics.js
+const {
+    calculateMetrics
+} = require('../core/metrics');
+
+// ---------- Initialize variables ----------
+const tests = readPlaywrightResults();
+
+const analytics = {
+    execution: {},
+    applications: [],
+    modules: [],
+    tags: [],
+    failedTests: [],
+    flakyTests: [],
+    generatedAt: new Date().toISOString()
+};
 
 const applications = {};
-
 const modules = {};
-
 const tags = {};
-
 const untaggedTests = [];
 
-function getApplicationName(app) {
-  return APPLICATIONS[app] || app;
+const EXCLUDED_APPLICATIONS = [
+    'sauce-demo',
+    'orange-hrm'
+];
+// ---------- ----------
+
+// ---------- getOrCreate() ----------
+// getOrCreate: Either get ot create metric collections
+function getOrCreate(collection, key, defaults) {
+    if (!collection[key]) {
+        collection[key] = {
+            ...defaults,
+            total: 0,
+            passed: 0,
+            failed: 0,
+            flaky: 0,
+            skipped: 0
+        };
+    }
+
+    return collection[key];
 }
 // ---------- ----------
 
-// ---------- walksuites() ----------
-// Traverses suites and processes test cases
-function walkSuites(suites, parentFile = '') {
-  for (const suite of suites || []) {
-    const file = suite.file || parentFile;
+// ---------- incrementStatus() ----------
+// incrementStatus: 
+function incrementStatus(item, status) {
+    item.total++;
+    item[status]++;
+}
+// ---------- ----------
 
-    for (const spec of suite.specs || []) {
+// ---------- isExcludedApplication() ----------
+// isExcludedApplication: Return if tag name is an application
+function isExcludedApplication(test) {
+    return EXCLUDED_APPLICATIONS.includes(
+        test.applicationKey
+    );
+}
+// ---------- ----------
 
-      const specFile = file || 'Unknown';
-      const parts = specFile.split('/');
+// ---------- Counts each logical Playwright test entry ----------
+for (const test of tests) {
+    const moduleKey =
+        `${test.application}::${test.module}`;
 
-      const applicationKey = parts[0] || 'Unknown';
-      const moduleKey =
-        (parts[1] || 'Unknown')
-          .replace('.spec.js', '')
-          .replace('.spec.ts', '');
+    const application = getOrCreate(
+        applications,
+        test.application,
+        {
+            application: test.application
+        }
+    );
 
-      const application =
-        getApplicationName(applicationKey);
+    const module = getOrCreate(
+        modules,
+        moduleKey,
+        {
+            application: test.application,
+            module: test.module
+        }
+    );
 
-      const key =
-        `${application}::${moduleKey}`;
+    incrementStatus(application, test.status);
+    incrementStatus(module, test.status);
 
-      const tests = spec.tests || [];
+    const testTags = test.tags;
 
-      // 	Collects tags and identifies untagged tests
-      const EXCLUDED_TAGS = [
-        'sauce-demo',
-        'orange-hrm'
-      ];
-
-      const specTags = [
-        ...(spec.tags || []),
-        ...tests.flatMap(test => test.tags || [])
-      ]
-        .map(tag => String(tag).replace(/^@/, '').toLowerCase())
-        .filter(Boolean)
-        .filter(tag => !EXCLUDED_TAGS.includes(tag));
-
-      if (specTags.length === 0) {
+    if (
+        testTags.length === 0 &&
+        !isExcludedApplication(test)
+    ) {
         untaggedTests.push({
-          title: spec.title,
-          file: specFile
+            title: test.title,
+            file: test.file
         });
-      }
-
-      // Determines failed, flaky, skipped, and passed status
-      const isFailed =
-        spec.ok === false;
-
-      const isFlaky =
-        tests.some(
-          test => test.status === 'flaky'
-        );
-
-      const isSkipped =
-        tests.length > 0 &&
-        tests.every(test =>
-          (test.results || []).every(
-            result => result.status === 'skipped'
-          )
-        );
-
-      const isPassed =
-        spec.ok === true &&
-        !isFlaky;
-
-      // Aggregates Application statistics
-      if (!applications[application]) {
-        applications[application] = {
-          application,
-          total: 0,
-          passed: 0,
-          failed: 0,
-          flaky: 0,
-          skipped: 0
-        };
-      }
-
-      applications[application].total++;
-
-      if (isPassed)
-        applications[application].passed++;
-
-      if (isFailed)
-        applications[application].failed++;
-
-      if (isFlaky)
-        applications[application].flaky++;
-
-      if (isSkipped)
-        applications[application].skipped++;
-
-      // Aggregates Module statistics
-      if (!modules[key]) {
-        modules[key] = {
-          application,
-          module: moduleKey,
-          total: 0,
-          passed: 0,
-          failed: 0,
-          flaky: 0,
-          skipped: 0
-        };
-      }
-
-      modules[key].total++;
-
-      if (isPassed)
-        modules[key].passed++;
-
-      if (isFailed)
-        modules[key].failed++;
-
-      if (isFlaky)
-        modules[key].flaky++;
-
-      if (isSkipped)
-        modules[key].skipped++;
-
-    // Aggregates Tag statistics
-    for (const tag of [...new Set(specTags)]) {
-
-      if (!tags[tag]) {
-        tags[tag] = {
-          tag,
-          total: 0,
-          passed: 0,
-          failed: 0,
-          flaky: 0,
-          skipped: 0
-        };
-      }
-
-      tags[tag].total++;
-
-      if (isPassed)
-        tags[tag].passed++;
-
-      if (isFailed)
-        tags[tag].failed++;
-
-      if (isFlaky)
-        tags[tag].flaky++;
-
-      if (isSkipped)
-        tags[tag].skipped++;
     }
 
-    // log console
-    console.log(
-      spec.title,
-      spec.tags,
-      tests.flatMap(test => test.tags || [])
-    );
+    for (const tag of testTags) {
+        const tagItem = getOrCreate(
+            tags,
+            tag,
+            {
+                tag
+            }
+        );
 
+        incrementStatus(tagItem, test.status);
     }
-    walkSuites(
-      suite.suites,
-      file
-    );
-  }
+
+    if (test.status === 'failed') {
+        analytics.failedTests.push(test);
+    }
+
+    if (test.status === 'flaky') {
+        analytics.flakyTests.push(test);
+    }
 }
-
-walkSuites(report.suites || []);
 // ---------- ----------
 
-// ---------- calculates metrics using metrics.js ----------
-analytics.applications =
-  Object.values(applications)
-    .map(item => ({
-      ...item,
-      ...calculateMetrics(
-        item.total,
-        item.passed,
-        item.failed,
-        item.flaky,
-        item.skipped
-      )
+// ---------- addMetrics() ----------
+// addMetrics: Add metrics into collection
+function addMetrics(collection) {
+    return Object.values(collection).map(item => ({
+        ...item,
+        ...calculateMetrics(
+            item.total,
+            item.passed,
+            item.failed,
+            item.flaky,
+            item.skipped
+        )
     }));
-
-analytics.modules =
-  Object.values(modules)
-    .map(item => ({
-      ...item,
-      ...calculateMetrics(
-        item.total,
-        item.passed,
-        item.failed,
-        item.flaky,
-        item.skipped
-      )
-    }));
-
-analytics.tags =
-  Object.values(tags)
-    .map(item => ({
-      ...item,
-      ...calculateMetrics(
-        item.total,
-        item.passed,
-        item.failed,
-        item.flaky,
-        item.skipped
-      )
-    }));
+}
 // ---------- ----------
 
-// ---------- adds untagged test data and execution totals ----------
+// ---------- Analytics ----------
+analytics.applications = addMetrics(applications);
+analytics.modules = addMetrics(modules);
+analytics.tags = addMetrics(tags);
+
 analytics.untaggedTests = untaggedTests;
 
 analytics.execution = {
-  totalApplications:
-    analytics.applications.length,
-
-  totalModules:
-    analytics.modules.length
+    totalApplications: analytics.applications.length,
+    totalModules: analytics.modules.length,
+    totalTests: tests.length
 };
 // ---------- ----------
 
-// ---------- writes analytics.json ----------
+// ---------- Writes analytics.json ----------
 fs.writeFileSync(
-  'analytics.json',
-  JSON.stringify(
-    analytics,
-    null,
-    2
-  )
+    'analytics.json',
+    JSON.stringify(analytics, null, 2)
 );
 // ---------- ----------
 
