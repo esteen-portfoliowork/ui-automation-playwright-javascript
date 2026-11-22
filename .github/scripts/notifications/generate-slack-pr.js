@@ -5,10 +5,11 @@ const data = JSON.parse(
     fs.readFileSync('notification-data.json', 'utf8')
 );
 
-const context = data.context;
-const metrics = data.metrics;
-const pr = data.pr;
-const slack = data.slack;
+const context = data.context || {};
+const metrics = data.metrics || {};
+const pr = data.pr || {};
+const slack = data.slack || {};
+const links = data.links || {};
 
 const eventTitle = {
     pull_request: 'Pull Request Validation',
@@ -16,12 +17,14 @@ const eventTitle = {
     push: 'Push Validation'
 }[context.eventName] || 'Playwright Validation';
 
+const channel = data.notification?.slackChannel;
+
 function header(text) {
     return {
         type: 'header',
         text: {
             type: 'plain_text',
-            text: text.slice(0, 150),
+            text: String(text).slice(0, 150),
             emoji: true
         }
     };
@@ -43,37 +46,53 @@ function divider() {
     return { type: 'divider' };
 }
 
+function addSection(blocks, title, content) {
+    if (!content) return;
+
+    blocks.push(
+        divider(),
+        header(title),
+        section(content)
+    );
+}
+
+// ---------- Main Summary ----------
+
 const blocks = [
     header('🎭 PLAYWRIGHT EXECUTION SUMMARY'),
-    section(`${context.buildEmoji} *${eventTitle}*\n${context.buildText}`),
+    section(
+        `*${eventTitle}*\n${context.buildText || 'Validation completed.'}`
+    ),
     divider(),
 
     header('❤️ Execution Health'),
-    section(context.executionHealth),
+    section(context.executionHealth || 'N/A'),
 
     header('📋 Execution Overview'),
     section([
-        `*Browser:* ${context.browser}`,
-        `*Tag:* ${context.executedTag}`,
-        `*Environment:* ${context.environment}`,
-        `*Playwright:* ${context.playwrightVersion}`,
-        `*Node:* ${context.nodeVersion}`,
-        `*Runner OS:* ${context.runnerOs}`,
-        `*Duration:* ${context.executionDuration}`
+        `*Browser:* ${context.browser || 'N/A'}`,
+        `*Tag:* ${context.executedTag || 'N/A'}`,
+        `*Environment:* ${context.environment || 'N/A'}`,
+        `*Playwright:* ${context.playwrightVersion || 'N/A'}`,
+        `*Node:* ${context.nodeVersion || 'N/A'}`,
+        `*Runner OS:* ${context.runnerOS || 'N/A'}`,
+        `*Duration:* ${context.executionDuration || 'N/A'}`
     ].join('\n')),
 
     header('📊 Execution Metrics'),
     section([
-        `🧪 Total: *${metrics.total}*`,
-        `✅ Passed: *${metrics.passed}* (${metrics.passRate}%)`,
-        `❌ Failed: *${metrics.failed}* (${metrics.failureRate}%)`,
-        `⚠️ Flaky: *${metrics.flaky}* (${metrics.flakyRate}%)`,
-        `⏭️ Skipped: *${metrics.skipped}* (${metrics.skippedRate}%)`,
-        `🏆 Quality Score: *${metrics.qualityScore}%*`
+        `🧪 Total: *${metrics.totalTests ?? 0}*`,
+        `✅ Passed: *${metrics.passedTests ?? 0}* (${metrics.passRate ?? 0}%)`,
+        `❌ Failed: *${metrics.failedTests ?? 0}* (${metrics.failureRate ?? 0}%)`,
+        `⚠️ Flaky: *${metrics.flakyTests ?? 0}* (${metrics.flakyRate ?? 0}%)`,
+        `⏭️ Skipped: *${metrics.skippedTests ?? 0}* (${metrics.skippedRate ?? 0}%)`,
+        `🏆 Quality Score: *${metrics.qualityScore ?? 0}%*`
     ].join('\n'))
 ];
 
-if (pr.number) {
+// ---------- Pull Request Details ----------
+
+if (context.eventName === 'pull_request' && pr.number && pr.number !== 'N/A') {
     blocks.push(
         divider(),
         header('📋 Pull Request Details'),
@@ -88,6 +107,8 @@ if (pr.number) {
     );
 }
 
+// ---------- Analytics and Risk Reports ----------
+
 const reportSections = [
     ['🛡️ Release Readiness', slack.releaseReadiness],
     ['🖥️ Application Health', slack.applicationHealth],
@@ -101,31 +122,42 @@ const reportSections = [
 ];
 
 for (const [title, content] of reportSections) {
-    if (content) {
-        blocks.push(
-            divider(),
-            header(title),
-            section(content)
-        );
-    }
+    addSection(blocks, title, content);
 }
 
-if (data.reportLinks) {
-    blocks.push(
-        divider(),
-        header('🔗 Report Links'),
-        section(data.reportLinks)
-    );
+// ---------- Report Links ----------
+
+const reportLinks = [
+    ['GitHub Actions Run', links.runUrl],
+    ['Playwright Report', links.playwrightReport],
+    ['Test Results', links.testResults],
+    ['JSON Results', links.jsonResults],
+    ['Allure Results', links.allureResults],
+    ['Allure Report', links.allureReport],
+    ['Markdown Reports', links.markdownReports]
+]
+    .filter(([, url]) => url && url !== 'N/A')
+    .map(([label, url]) => `<${url}|${label}>`)
+    .join(' | ');
+
+addSection(blocks, '🔗 Report Links', reportLinks);
+
+// ---------- Final Payload ----------
+
+if (!channel) {
+    throw new Error('Slack channel is missing.');
 }
 
 const payload = {
-    channel: data.slackChannel,
-    text: `Playwright ${eventTitle} — ${context.buildText}`,
+    channel,
+    text: `Playwright ${eventTitle} — ${metrics.failedTests ?? 0} failed test(s)`,
     blocks
 };
 
-if (!payload.channel) {
-    throw new Error('Slack channel is missing.');
+if (blocks.length > 50) {
+    throw new Error(
+        `Slack Block Kit limit exceeded: ${blocks.length} blocks.`
+    );
 }
 
 fs.writeFileSync(
@@ -134,4 +166,6 @@ fs.writeFileSync(
     'utf8'
 );
 
-console.log('Slack payload generated successfully.');
+console.log('Slack notification payload generated successfully.');
+console.log(`Event: ${eventTitle}`);
+console.log(`Blocks: ${blocks.length}`);

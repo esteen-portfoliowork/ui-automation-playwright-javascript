@@ -528,13 +528,24 @@ jobs:
       - name: 🚦 Prepare Execution Health
         if: always()
         run: |
-          if [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -eq 0 ]; then
-            echo "EXECUTION_HEALTH=🟢 Excellent - All Tests Passed" >> $GITHUB_ENV
-          elif [ "$FAILED_TESTS" -eq 0 ] && [ "$FLAKY_TESTS" -gt 0 ]; then
-            echo "EXECUTION_HEALTH=🟡 Stable with Flaky Tests" >> $GITHUB_ENV
+          TOTAL="${TOTAL_TESTS:-0}"
+          FAILED="${FAILED_TESTS:-0}"
+          FLAKY="${FLAKY_TESTS:-0}"
+
+          if [ "$TOTAL" -eq 0 ]; then
+            HEALTH="⚪ Unknown - No Test Results"
+
+          elif [ "$FAILED" -eq 0 ] && [ "$FLAKY" -eq 0 ]; then
+            HEALTH="🟢 Excellent - All Tests Passed"
+
+          elif [ "$FAILED" -eq 0 ] && [ "$FLAKY" -gt 0 ]; then
+            HEALTH="🟡 Stable with Flaky Tests"
+
           else
-            echo "EXECUTION_HEALTH=🔴 Failures Detected - Investigation Required" >> $GITHUB_ENV
+            HEALTH="🔴 Failures Detected - Investigation Required"
           fi
+
+          echo "EXECUTION_HEALTH=$HEALTH" >> "$GITHUB_ENV"
 
       - name: 📨 Generate Notification Data
         id: notification_data
@@ -572,7 +583,14 @@ jobs:
           SKIPPED_RATE: ${{ env.SKIPPED_RATE }}
           QUALITY_SCORE: ${{ env.QUALITY_SCORE }}
 
-          REPORT_LINKS_SLACK: ${{ steps.report_links.outputs.REPORT_LINKS_SLACK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          PLAYWRIGHT_REPORT_URL: ${{ steps.upload_playwright_report.outputs.artifact-url }}
+          TEST_RESULTS_URL: ${{ steps.upload_test_results.outputs.artifact-url }}
+          JSON_RESULTS_URL: ${{ steps.upload_json_results.outputs.artifact-url }}
+          ALLURE_RESULTS_URL: ${{ steps.upload_allure_results.outputs.artifact-url }}
+          ALLURE_REPORT_URL: ${{ steps.upload_allure_report.outputs.artifact-url }}
+          MARKDOWN_REPORT_URL: ${{ steps.upload_markdown_reports.outputs.artifact-url }}
 
           PR_NUMBER: ${{ env.PR_NUMBER }}
           PR_TITLE: ${{ env.PR_TITLE }}
@@ -589,6 +607,14 @@ jobs:
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
+          append_report() {
+            if [ -s "$1" ]; then
+              cat "$1" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "_Report unavailable: $1_" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          }
+
           echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -640,19 +666,19 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
             echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| 🔢 PR Number | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| 📝 PR Title | ${{ env.PR_TITLE }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| 🔗 PR URL | ${{ env.PR_URL }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| 👤 Author | ${{ env.PR_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| 🌿 Source Branch | ${{ env.PR_BRANCH }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| 🎯 Target Branch | ${{ env.PR_BASE_BRANCH }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| 🏷️ Label | ${{ env.PR_LABELS }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| 🔖 Commit SHA | ${{ env.PR_SHA }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔢 PR Number | #$PR_NUMBER |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 📝 PR Title | $PR_TITLE |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 🔗 PR URL | $PR_URL |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 👤 Author | $PR_AUTHOR |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 🌿 Source Branch | $PR_BRANCH |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 🎯 Target Branch | $PR_BASE_BRANCH |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 🏷️ Labels | $PR_LABELS |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 🔖 Commit SHA | $PR_SHA |" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           echo "## 🛡️ Release Readiness" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat release-readiness.md >> $GITHUB_STEP_SUMMARY
+          cat append_report release-readiness.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 📊 Execution Metrics" >> $GITHUB_STEP_SUMMARY
@@ -668,52 +694,52 @@ jobs:
 
           echo "## 🖥️ Application Health" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
+          cat append_report application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat module-breakdown.md >> $GITHUB_STEP_SUMMARY
+          cat append_report module-breakdown.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🏷️ Test Tag Analytics" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
+          cat append_report tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🏆 Top Risk Module" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat top-risk-modules.md >> $GITHUB_STEP_SUMMARY
+          cat append_report top-risk-modules.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Modules" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat failed-modules.md >> $GITHUB_STEP_SUMMARY
+          cat append_report failed-modules.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat failed-tests.md >> $GITHUB_STEP_SUMMARY
+          cat append_report failed-tests.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ⚠️ Flaky Tests" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat flaky-tests.md >> $GITHUB_STEP_SUMMARY
+          cat append_report flaky-tests.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ⏱️ Slowest Module" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat slowest-module.md >> $GITHUB_STEP_SUMMARY
+          cat append_report slowest-module.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 📈 Historical Test Trend" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat historical-test-trend.md >> $GITHUB_STEP_SUMMARY
+          cat append_report historical-test-trend.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat report-links.md >> $GITHUB_STEP_SUMMARY
+          cat append_report report-links.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -n "${{ steps.upload_markdown_reports.outputs.artifact-url }}" ]; then
             echo "[📄 Download Markdown Execution Reports](${{ steps.upload_markdown_reports.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
@@ -724,6 +750,7 @@ jobs:
           cat notification-data.json
 
       - name: 📨 Generate Slack Payload
+        if: always()
         run: |
           node .github/scripts/notifications/generate-slack-pr.js
 
@@ -752,12 +779,16 @@ jobs:
           cat pr-slack.json
 
       - name: 📣 Publish Slack Notification
-        if: always()
+        if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
         uses: slackapi/slack-github-action@v4
         with:
           method: chat.postMessage
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          token: ${{ secrets.SLACK_GITHUB_ACTIONS_PR_MANUAL_SLACK_BOT_TOKEN }}
           payload-file-path: ./pr-slack.json
+
+      - name: 📝 Generate PR Comment
+        if: always() && github.event_name == 'pull_request'
+        run: node .github/scripts/notifications/generate-pr-comment.js
 
       - name: 📬 Publish or Update PR Comment
         if: always() && github.event_name == 'pull_request' && hashFiles('pr-comment.md') != ''
