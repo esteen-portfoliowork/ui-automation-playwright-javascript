@@ -25,9 +25,22 @@ const channel = data.notification?.slackChannel;
 // ---------- Validate Inputs ----------
 
 if (!eventTitle) {
-    throw new Error(
-        `Unsupported Slack event: ${eventName}`
-    );
+    switch (eventName) {
+        case 'pull_request':
+            generatePRSlack();
+            break;
+
+        case 'workflow_dispatch':
+            generateManualSlack();
+            break;
+
+        case 'push':
+            console.log('Push validation does not require Slack payload.');
+            break;
+
+        default:
+            console.log(`Unsupported event: ${eventName}`);
+    }
 }
 
 if (!channel) {
