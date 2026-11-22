@@ -8,7 +8,7 @@ const data = JSON.parse(
 const context = data.context || {};
 const metrics = data.metrics || {};
 const pr = data.pr || {};
-const slack = data.slack || {};
+const slack = data.notification?.slack || {};
 const links = data.links || {};
 
 const eventTitle = {
