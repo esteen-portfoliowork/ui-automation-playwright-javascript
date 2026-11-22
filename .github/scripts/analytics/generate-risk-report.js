@@ -202,15 +202,15 @@ const modules = Object.values(failedModuleCounts)
     );
 
 // Failed Modules Markdown
-const failedModuleMarkdown = [
-    '| Application | Module | Failed Tests |',
-    '|:-------------:|:--------:|:-------------:|',
-    ...(modules.length
-        ? modules.map(item =>
+const failedModuleMarkdown = modules.length
+    ? [
+        '| Application | Module | Failed Tests |',
+        '|:-------------:|:--------:|:-------------:|',
+        ...modules.map(item =>
             `| ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.count} |`
         )
-        : ['| N/A | No failed modules | 0 |'])
-].join('\n');
+    ].join('\n')
+    : '✅ No failed modules found.';
 
 writeMarkdown(
     'failed-modules.md',
@@ -218,15 +218,15 @@ writeMarkdown(
 );
 
 // Failed Tests Markdown
-const failedTestMarkdown = [
-    '| Application | Module | Test Case | Project | Retries |',
-    '|:-------------:|:--------:|:-----------:|:---------:|:--------:|',
-    ...(failedTests.length
-        ? failedTests.map(test =>
+const failedTestMarkdown = failedTests.length
+    ? [
+        '| Application | Module | Test Case | Project | Retries |',
+        '|:-------------:|:--------:|:-----------:|:---------:|:--------:|',
+        ...failedTests.map(test =>
             `| ${escapeMarkdown(test.application)} | ${escapeMarkdown(test.module)} | ${escapeMarkdown(test.title)} | ${escapeMarkdown(test.project)} | ${test.retries} |`
         )
-        : ['| N/A | N/A | No failed tests | N/A | 0 |'])
-].join('\n');
+    ].join('\n')
+    : '✅ No failed tests found.';
 
 writeMarkdown(
     'failed-tests.md',
@@ -234,15 +234,15 @@ writeMarkdown(
 );
 
 // Flaky Tests Markdown
-const flakyTestMarkdown = [
-    '| Application | Module | Test Case | Project | Retries |',
-    '|:-------------:|:--------:|:-----------:|:---------:|:--------:|',
-    ...(flakyTests.length
-        ? flakyTests.map(test =>
+const flakyTestMarkdown = flakyTests.length
+    ? [
+        '| Application | Module | Test Case | Project | Retries |',
+        '|:-------------:|:--------:|:-----------:|:---------:|:--------:|',
+        ...flakyTests.map(test =>
             `| ${escapeMarkdown(test.application)} | ${escapeMarkdown(test.module)} | ${escapeMarkdown(test.title)} | ${escapeMarkdown(test.project)} | ${test.retries} |`
         )
-        : ['| N/A | N/A | No flaky tests | N/A | 0 |'])
-].join('\n');
+    ].join('\n')
+    : '✅ No flaky tests found.';
 
 writeMarkdown(
     'flaky-tests.md',
@@ -264,14 +264,16 @@ const topRiskMarkdown = [
     '',
     '### 🏆 Top 10 Highest-Risk Modules',
     '',
-    '| Rank | Application | Module | Total | Executed | Failed | Flaky | Failure Rate | Flaky Rate | Risk Score | Risk Level |',
-    '|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|',
     ...(topRiskModules.length
-        ? topRiskModules.map((item, index) =>
-            `| #${index + 1} | ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.total} | ${item.executed} | ${item.failed} | ${item.flaky} | ${item.failureRate.toFixed(2)}% | ${item.flakyRate.toFixed(2)}% | ${item.riskScore.toFixed(2)}% | ${item.riskLevel} |`
-        )
+        ? [
+            '| Rank | Application | Module | Total | Executed | Failed | Flaky | Failure Rate | Flaky Rate | Risk Score | Risk Level |',
+            '|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|',
+            ...topRiskModules.map((item, index) =>
+                `| #${index + 1} | ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.total} | ${item.executed} | ${item.failed} | ${item.flaky} | ${item.failureRate.toFixed(2)}% | ${item.flakyRate.toFixed(2)}% | ${item.riskScore.toFixed(2)}% | ${item.riskLevel} |`
+            )
+        ]
         : [
-            '| - | N/A | No modules found | 0 | 0 | 0 | 0 | 0.00% | 0.00% | 0.00% | 🟢 Healthy |'
+            'No modules available for risk analysis.'
         ]),
     '',
     '#### 🧮 Risk Score Calculation',

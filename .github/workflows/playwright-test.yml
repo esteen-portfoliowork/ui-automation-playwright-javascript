@@ -358,6 +358,11 @@ jobs:
         if: always()
         run: node .github/scripts/analytics/generate-risk-report.js
 
+      - name: 🔍 Validate Empty Report Sections
+        if: always()
+        run: |
+          node .github/scripts/analytics/test-empty-report-sections.js
+
       - name: 📋 Generate Breakdown Reports
         id: breakdown
         if: always()
@@ -634,6 +639,51 @@ jobs:
         if: always()
         run: |
           node .github/scripts/reporting/generate-workflow-summary.js
+
+      - name: 🔍 Validate Unified Reporting
+        if: always()
+        run: |
+          node -e "
+            const fs = require('fs');
+
+            const report = 'execution-summary.md';
+
+            if (!fs.existsSync(report)) {
+              throw new Error('Master report was not generated.');
+            }
+
+            const content = fs.readFileSync(report, 'utf8');
+
+            const requiredSections = [
+              'Playwright Execution Summary',
+              'Execution Health',
+              'Execution Overview',
+              'Execution Metrics',
+              'Release Readiness',
+              'Application Health',
+              'Module Breakdown',
+              'Test Tag Analytics',
+              'Top Risk Modules',
+              'Failed Modules',
+              'Failed Tests',
+              'Flaky Tests',
+              'Slowest Module',
+              'Historical Test Trend',
+              'Report Links'
+            ];
+
+            for (const section of requiredSections) {
+              if (!content.includes(section)) {
+                throw new Error(
+                  'Missing report section: ' + section
+                );
+              }
+            }
+
+            console.log('Master report validation passed.');
+            console.log('All required sections are present.');
+            console.log('Report length:', content.length);
+          "
 
       - name: 🔍 Validate Notification Data
         if: always()

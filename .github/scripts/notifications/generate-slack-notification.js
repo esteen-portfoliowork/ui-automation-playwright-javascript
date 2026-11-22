@@ -1,188 +1,388 @@
-// Import fs
 const fs = require('fs');
 
-// Read notification-data.json
+const REPORT_FILE = 'execution-summary.md';
+const DATA_FILE = 'notification-data.json';
+
 const data = JSON.parse(
-    fs.readFileSync('notification-data.json', 'utf8')
+    fs.readFileSync(DATA_FILE, 'utf8')
 );
 
-// Initialize variables
 const context = data.context || {};
 const metrics = data.metrics || {};
-const pr = data.pr || {};
-const slack = data.slack || {};
-const links = data.links || {};
+
+const eventName =
+    data.context?.eventName ||
+    data.eventName ||
+    process.env.GITHUB_EVENT_NAME;
 
 const eventTitle = {
     pull_request: 'Pull Request Validation',
-    workflow_dispatch: 'Manual Validation',
-    push: 'Push Validation'
-}[context.eventName] || 'Playwright Validation';
+    workflow_dispatch: 'Manual Validation'
+}[eventName];
 
 const channel = data.notification?.slackChannel;
 
-function header(text) {
-    return {
-        type: 'header',
-        text: {
-            type: 'plain_text',
-            text: String(text).slice(0, 150),
-            emoji: true
-        }
-    };
-}
+// ---------- Validate Inputs ----------
 
-function section(text) {
-    if (!text) return null;
-
-    return {
-        type: 'section',
-        text: {
-            type: 'mrkdwn',
-            text: String(text).slice(0, 3000)
-        }
-    };
-}
-
-function divider() {
-    return { type: 'divider' };
-}
-
-function addSection(blocks, title, content) {
-    if (!content) return;
-
-    blocks.push(
-        divider(),
-        header(title),
-        section(content)
+if (!eventTitle) {
+    throw new Error(
+        `Unsupported Slack event: ${eventName}`
     );
 }
 
-// ---------- Generate summary ----------
-const blocks = [
-    header('🎭 PLAYWRIGHT EXECUTION SUMMARY'),
-    section(
-        `*${eventTitle}*\n${context.buildText || 'Validation completed.'}`
-    ),
-    divider(),
-
-    header('❤️ Execution Health'),
-    section(context.executionHealth || 'N/A'),
-
-    header('📋 Execution Overview'),
-    section([
-        `*Browser:* ${context.browser || 'N/A'}`,
-        `*Tag:* ${context.executedTag || 'N/A'}`,
-        `*Environment:* ${context.environment || 'N/A'}`,
-        `*Playwright:* ${context.playwrightVersion || 'N/A'}`,
-        `*Node:* ${context.nodeVersion || 'N/A'}`,
-        `*Runner OS:* ${context.runnerOS || 'N/A'}`,
-        `*Duration:* ${context.executionDuration || 'N/A'}`
-    ].join('\n')),
-
-    header('📊 Execution Metrics'),
-    section([
-        `🧪 Total: *${metrics.totalTests ?? 0}*`,
-        `✅ Passed: *${metrics.passedTests ?? 0}* (${metrics.passRate ?? 0}%)`,
-        `❌ Failed: *${metrics.failedTests ?? 0}* (${metrics.failureRate ?? 0}%)`,
-        `⚠️ Flaky: *${metrics.flakyTests ?? 0}* (${metrics.flakyRate ?? 0}%)`,
-        `⏭️ Skipped: *${metrics.skippedTests ?? 0}* (${metrics.skippedRate ?? 0}%)`,
-        `🏆 Quality Score: *${metrics.qualityScore ?? 0}%*`
-    ].join('\n'))
-];
-
-// Pull Request Details
-if (context.eventName === 'pull_request' && pr.number && pr.number !== 'N/A') {
-    blocks.push(
-        divider(),
-        header('📋 Pull Request Details'),
-        section([
-            `*PR:* <${pr.url}|#${pr.number}>`,
-            `*Title:* ${pr.title || 'N/A'}`,
-            `*Author:* ${pr.author || 'N/A'}`,
-            `*Source:* ${pr.branch || 'N/A'}`,
-            `*Target:* ${pr.baseBranch || 'N/A'}`,
-            `*Labels:* ${pr.labels || 'N/A'}`
-        ].join('\n'))
-    );
-}
-
-// Analytics and Risk Reports
-const reportSections = [
-    ['🛡️ Release Readiness', slack.releaseReadiness],
-    ['🖥️ Application Health', slack.applicationHealth],
-    ['📦 Module Breakdown', slack.moduleBreakdown],
-    ['🏷️ Test Tag Analytics', slack.tagExecution],
-    ['🏆 Top Risk Module', slack.topRiskModule],
-    ['❌ Failed Modules', slack.failedModules],
-    ['❌ Failed Tests', slack.failedTests],
-    ['⚠️ Flaky Tests', slack.flakyTests],
-    ['⏱️ Slowest Module', slack.slowestModule]
-];
-
-for (const [title, content] of reportSections) {
-    addSection(blocks, title, content);
-}
-
-// Report Links
-const reportLinks = [
-    ['GitHub Actions Run', links.runUrl],
-    ['Playwright Report', links.playwrightReport],
-    ['Test Results', links.testResults],
-    ['JSON Results', links.jsonResults],
-    ['Allure Results', links.allureResults],
-    ['Allure Report', links.allureReport],
-    ['Markdown Reports', links.markdownReports]
-]
-    .filter(([, url]) => url && url !== 'N/A')
-    .map(([label, url]) => `<${url}|${label}>`)
-    .join(' | ');
-
-addSection(blocks, '🔗 Report Links', reportLinks);
-
-// Check slack channel
 if (!channel) {
     throw new Error('Slack channel is missing.');
 }
-// ---------- ----------
 
-// ---------- Generate payload ----------
+if (!fs.existsSync(REPORT_FILE)) {
+    throw new Error(
+        `Master report not found: ${REPORT_FILE}`
+    );
+}
+
+const report = fs.readFileSync(
+    REPORT_FILE,
+    'utf8'
+).trim();
+
+if (!report) {
+    throw new Error('Master report is empty.');
+}
+
+// ---------- Parse Master Report ----------
+
+function parseSections(markdown) {
+    const sections = [];
+    let current = null;
+
+    for (const line of markdown.split('\n')) {
+        const match = line.match(/^#{1,6}\s+(.+)$/);
+
+        if (match) {
+            current = {
+                title: match[1].trim(),
+                lines: []
+            };
+
+            sections.push(current);
+        } else if (current) {
+            current.lines.push(line);
+        }
+    }
+
+    return sections;
+}
+
+const sections = parseSections(report);
+
+// ---------- Markdown Helpers ----------
+
+function convertInlineMarkdown(text) {
+    return text
+        // GitHub links -> Slack links
+        .replace(
+            /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+            '<$2|$1>'
+        )
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '*$1*')
+        // Italic
+        .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '_$1_');
+}
+
+function escapeCell(value) {
+    return String(value || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// ---------- Extract Markdown Tables ----------
+
+function extractTable(lines) {
+    const tableLines = lines
+        .map(line => line.trim())
+        .filter(line =>
+            line.startsWith('|') &&
+            line.endsWith('|')
+        );
+
+    if (tableLines.length < 2) {
+        return null;
+    }
+
+    const rows = tableLines
+        .map(line =>
+            line
+                .split('|')
+                .slice(1, -1)
+                .map(escapeCell)
+        )
+        .filter(row =>
+            !row.every(cell => /^:?-{2,}:?$/.test(cell))
+        );
+
+    if (rows.length < 2) {
+        return null;
+    }
+
+    return rows;
+}
+
+// ---------- Format Monospaced Table ----------
+
+function formatTable(rows) {
+    const columnCount = Math.max(
+        ...rows.map(row => row.length)
+    );
+
+    const normalizedRows = rows.map(row =>
+        Array.from(
+            { length: columnCount },
+            (_, index) => row[index] || ''
+        )
+    );
+
+    const widths = Array.from(
+        { length: columnCount },
+        (_, column) =>
+            Math.min(
+                28,
+                Math.max(
+                    4,
+                    ...normalizedRows.map(row =>
+                        Math.min(28, row[column].length)
+                    )
+                )
+            )
+    );
+
+    function formatRow(row) {
+        return row.map((cell, index) => {
+            const value = cell.length > widths[index]
+                ? cell.slice(0, widths[index] - 1) + '…'
+                : cell;
+
+            return value.padEnd(widths[index]);
+        }).join(' | ');
+    }
+
+    const header = formatRow(normalizedRows[0]);
+
+    const separator = widths
+        .map(width => '-'.repeat(width))
+        .join('-+-');
+
+    const body = normalizedRows
+        .slice(1)
+        .map(formatRow);
+
+    return [
+        '```',
+        header,
+        separator,
+        ...body,
+        '```'
+    ].join('\n');
+}
+
+// ---------- Format Report Links ----------
+
+function formatReportLinks(rows) {
+    if (!rows || rows.length < 2) {
+        return 'No report links available.';
+    }
+
+    return rows.slice(1).map(row => {
+        const name = row[0] || 'Report';
+        const link = row[1] || '';
+
+        const match = link.match(
+            /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/
+        );
+
+        if (match) {
+            return `*${name}*  <${match[2]}|${match[1]}>`;
+        }
+
+        const slackLink = link.match(
+            /<(https?:\/\/[^|>]+)\|([^>]+)>/
+        );
+
+        if (slackLink) {
+            return `*${name}*  <${slackLink[1]}|${slackLink[2]}>`;
+        }
+
+        return `*${name}*  ${link || 'Unavailable'}`;
+    }).join('\n');
+}
+
+// ---------- Render Report Sections ----------
+
+function renderSection(section) {
+    const title = section.title;
+    const lines = section.lines;
+
+    const rows = extractTable(lines);
+
+    // Report Links: retain clickable URLs.
+    if (/report links/i.test(title)) {
+        return formatReportLinks(rows);
+    }
+
+    // Data sections: use monospaced tables.
+    const tableSections = [
+        /historical test trend/i,
+        /risk overview/i,
+        /scoring breakdown/i,
+        /execution metrics/i,
+        /pull request details/i,
+        /execution overview/i
+    ];
+
+    if (rows && tableSections.some(pattern => pattern.test(title))) {
+        return formatTable(rows);
+    }
+
+    // Other sections retain readable Markdown.
+    return lines
+        .map(line => {
+            const trimmed = line.trim();
+
+            // Remove empty table separators.
+            if (/^\|[\s:|-]+\|$/.test(trimmed)) {
+                return '';
+            }
+
+            // Convert other table rows into readable text.
+            if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+                const cells = trimmed
+                    .split('|')
+                    .slice(1, -1)
+                    .map(escapeCell);
+
+                return `• ${cells.join(' | ')}`;
+            }
+
+            // Convert Markdown bullets.
+            if (/^[-*]\s+/.test(trimmed)) {
+                return `• ${convertInlineMarkdown(trimmed.replace(/^[-*]\s+/, ''))}`;
+            }
+
+            return convertInlineMarkdown(line);
+        })
+        .join('\n')
+        .trim();
+}
+
+// ---------- Build Slack Blocks ----------
+
+const blocks = [];
+
+for (const item of sections) {
+    const title = item.title;
+
+    // Do not show PR details in Manual or Push runs.
+    if (
+        /pull request details/i.test(title) &&
+        eventName !== 'pull_request'
+    ) {
+        continue;
+    }
+
+    // Avoid duplicating the master report title.
+    if (/^🎭\s*playwright execution summary$/i.test(title)) {
+        continue;
+    }
+
+    const content = renderSection(item);
+
+    if (!content) {
+        continue;
+    }
+
+    blocks.push({
+        type: 'header',
+        text: {
+            type: 'plain_text',
+            text: title.slice(0, 150),
+            emoji: true
+        }
+    });
+
+    // Split content to respect Slack section text limits.
+    const chunks = [];
+
+    let remaining = content;
+
+    while (remaining.length > 2800) {
+        let splitAt = remaining.lastIndexOf('\n', 2800);
+
+        if (splitAt < 1000) {
+            splitAt = 2800;
+        }
+
+        chunks.push(remaining.slice(0, splitAt));
+        remaining = remaining.slice(splitAt).trim();
+    }
+
+    if (remaining) {
+        chunks.push(remaining);
+    }
+
+    for (const chunk of chunks) {
+        blocks.push({
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: chunk
+            }
+        });
+    }
+}
+
+// ---------- Validate Slack Block Limits ----------
+const MAX_SLACK_BLOCKS = 50;
+
+console.log('Slack Block Validation');
+console.log(`Generated Blocks: ${blocks.length}`);
+console.log(`Maximum Allowed: ${MAX_SLACK_BLOCKS}`);
+
+if (blocks.length > MAX_SLACK_BLOCKS) {
+    throw new Error(
+        `Slack block limit exceeded: ${blocks.length}/${MAX_SLACK_BLOCKS}. ` +
+        'Consider splitting the report into multiple Slack messages.'
+    );
+}
+
+console.log('Slack block validation passed.');
+
+// ---------- Create Payload ----------
+
 const payload = {
     channel,
-    text: `Playwright ${eventTitle} — ${metrics.failedTests ?? 0} failed test(s)`,
+    text:
+        `Playwright ${eventTitle} | ` +
+        `Validation: ${context.buildStatus || 'UNKNOWN'} | ` +
+        `Tests: ${metrics.totalTests ?? 0} | ` +
+        `Failed: ${metrics.failedTests ?? 0}`,
     blocks
 };
 
-if (blocks.length > 50) {
-    throw new Error(
-        `Slack Block Kit limit exceeded: ${blocks.length} blocks.`
-    );
-}
-// ---------- ----------
+// ---------- Select Output File ----------
 
-// ---------- Select Payload Filename ----------
-const outputFile = context.eventName === 'pull_request'
+const outputFile = eventName === 'pull_request'
     ? 'pr-slack.json'
-    : context.eventName === 'workflow_dispatch'
-        ? 'manual-slack.json'
-        : null;
+    : 'manual-slack.json';
 
-if (!outputFile) {
-    throw new Error(
-        `Unsupported Slack event: ${context.eventName}`
-    );
-}
-// ---------- ----------
+// ---------- Write Payload ----------
 
-// ---------- Generate Slack Payload ----------
 fs.writeFileSync(
     outputFile,
     JSON.stringify(payload, null, 2),
     'utf8'
 );
-// ---------- ----------
 
 console.log(`Slack payload generated: ${outputFile}`);
-console.log('Slack notification payload generated successfully.');
 console.log(`Event: ${eventTitle}`);
+console.log(`Sections: ${sections.length}`);
 console.log(`Blocks: ${blocks.length}`);

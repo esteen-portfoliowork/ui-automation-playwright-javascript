@@ -247,7 +247,7 @@ const markdown = [
     `> ${heading}`,
     '',
     '| Metric | Previous Run | Current Run | Change |',
-    '|---|---:|---:|---:|',
+    '|:---|:---:|:---:|:---:|',
     ...markdownRows,
     '',
     '> Rate changes are shown in percentage points (pp). Test-case and duration changes are relative percentages.',
