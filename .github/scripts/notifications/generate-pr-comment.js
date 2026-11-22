@@ -9,6 +9,30 @@ const context = data.context;
 const metrics = data.metrics;
 const pr = data.pr;
 
+// ---------- Verify if data is undefined ----------
+if (!data.context || !data.metrics || !data.pr) {
+    throw new Error(
+        'Invalid notification-data.json: context, metrics, or pr is missing.'
+    );
+}
+
+const requiredMetrics = [
+    'totalTests',
+    'passedTests',
+    'failedTests',
+    'flakyTests',
+    'skippedTests'
+];
+
+for (const key of requiredMetrics) {
+    if (!Number.isFinite(metrics[key])) {
+        throw new Error(
+            `Invalid notification metric: ${key}`
+        );
+    }
+}
+// ---------- ----------
+
 function readReport(file) {
     return fs.existsSync(file)
         ? fs.readFileSync(file, 'utf8').trim()
@@ -27,7 +51,7 @@ const sections = [
     '',
     context.executionHealth,
     '',
-    `Executed **${metrics.total}** automated tests with a pass rate of **${metrics.passRate}%** in **${context.executionDuration}**.`,
+    `Executed **${metrics.totalTests}** automated tests with a pass rate of **${metrics.passRate}%** in **${context.executionDuration}**.`,
     '',
     '## 📋 Pull Request Details',
     '',
@@ -44,11 +68,11 @@ const sections = [
     '',
     '| Metric | Count | Rate |',
     '|---|---:|---:|',
-    `| Total Tests | ${metrics.total} | - |`,
-    `| Passed | ${metrics.passed} | ${metrics.passRate}% |`,
-    `| Failed | ${metrics.failed} | ${metrics.failureRate}% |`,
-    `| Flaky | ${metrics.flaky} | ${metrics.flakyRate}% |`,
-    `| Skipped | ${metrics.skipped} | ${metrics.skippedRate}% |`,
+    `| Total Tests | ${metrics.totalTests} | - |`,
+    `| Passed | ${metrics.passedTests} | ${metrics.passRate}% |`,
+    `| Failed | ${metrics.failedTests} | ${metrics.failureRate}% |`,
+    `| Flaky | ${metrics.flakyTests} | ${metrics.flakyRate}% |`,
+    `| Skipped | ${metrics.skippedTests} | ${metrics.skippedRate}% |`,
     `| Quality Score | - | ${metrics.qualityScore}% |`,
     '',
     '## 🛡️ Release Readiness',
