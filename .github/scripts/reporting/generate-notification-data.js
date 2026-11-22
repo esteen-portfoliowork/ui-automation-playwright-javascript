@@ -38,25 +38,104 @@ const historical = fs.existsSync('historical-trend.json')
 const notificationData = {
     generatedAt: new Date().toISOString(),
 
+    // Execution Context
+    context: {
+        eventName: process.env.GITHUB_EVENT_NAME || 'Unknown',
+        repository: process.env.GITHUB_REPOSITORY || 'N/A',
+        runNumber: process.env.GITHUB_RUN_NUMBER || 'N/A',
+        runId: process.env.GITHUB_RUN_ID || 'N/A',
+        runUrl: process.env.RUN_URL || 'N/A',
+
+        buildStatus: process.env.BUILD_STATUS || 'UNKNOWN',
+        buildEmoji: process.env.BUILD_EMOJI || '⚪',
+        buildText: process.env.BUILD_TEXT || 'Build status unavailable.',
+        executionHealth: process.env.EXECUTION_HEALTH || 'Unknown',
+
+        browser: process.env.BROWSER || 'N/A',
+        executedTag: process.env.EXECUTED_TAG || 'N/A',
+        environment: process.env.ENVIRONMENT || 'N/A',
+
+        playwrightVersion: process.env.PLAYWRIGHT_VERSION || 'N/A',
+        nodeVersion: process.env.NODE_VERSION || 'N/A',
+        runnerOS: process.env.RUNNER_OS_NAME || 'N/A',
+
+        startDate: process.env.START_DATE || 'N/A',
+        endDate: process.env.END_DATE || 'N/A',
+        executionDuration: process.env.EXECUTION_DURATION || 'N/A'
+    },
+
+    // Execution Metrics
+    metrics: {
+        totalTests: Number(process.env.TOTAL_TESTS || 0),
+        passedTests: Number(process.env.PASSED_TESTS || 0),
+        failedTests: Number(process.env.FAILED_TESTS || 0),
+        flakyTests: Number(process.env.FLAKY_TESTS || 0),
+        skippedTests: Number(process.env.SKIPPED_TESTS || 0),
+
+        passRate: Number(process.env.PASS_RATE || 0),
+        failureRate: Number(process.env.FAILURE_RATE || 0),
+        flakyRate: Number(process.env.FLAKY_RATE || 0),
+        skippedRate: Number(process.env.SKIPPED_RATE || 0),
+
+        qualityScore: Number(process.env.QUALITY_SCORE || 0)
+    },
+
+    // Analytics
     execution: analytics.execution,
 
     applications: analytics.applications,
     modules: analytics.modules,
     tags: analytics.tags,
+    untaggedTests: analytics.untaggedTests,
 
-    failedModules: risk.failedModules,
-    failedTests: risk.failedTests,
-    flakyTests: risk.flakyTests,
+    // Risk Analysis
+    risk: {
+        summary: risk.summary,
 
-    topRiskModules: risk.topRiskModules,
-    topRiskModule: risk.topRiskModule,
+        failedModules: risk.failedModules,
+        failedTests: risk.failedTests,
+        flakyTests: risk.flakyTests,
 
-    slowestModule: risk.slowestModule,
+        topRiskModules: risk.topRiskModules,
+        topRiskModule: risk.topRiskModule,
 
-    releaseReadiness: risk.releaseReadiness,
+        slowestModule: risk.slowestModule,
 
-    historicalTrend: historical
+        releaseReadiness: risk.releaseReadiness
+    },
+
+    // Historical Trend
+    historicalTrend: historical,
+
+    // Pull Request Context
+    pr: {
+        number: process.env.PR_NUMBER || 'N/A',
+        title: process.env.PR_TITLE || 'N/A',
+        url: process.env.PR_URL || 'N/A',
+        author: process.env.PR_AUTHOR || 'N/A',
+        branch: process.env.PR_BRANCH || 'N/A',
+        baseBranch: process.env.PR_BASE_BRANCH || 'N/A',
+        labels: process.env.PR_LABELS || 'N/A',
+        sha: process.env.PR_SHA || 'N/A'
+    },
+
+    // Report Links
+    links: {
+        runUrl: process.env.RUN_URL || 'N/A',
+        playwrightReport: process.env.PLAYWRIGHT_REPORT_URL || '',
+        testResults: process.env.TEST_RESULTS_URL || '',
+        jsonResults: process.env.JSON_RESULTS_URL || '',
+        allureResults: process.env.ALLURE_RESULTS_URL || '',
+        allureReport: process.env.ALLURE_REPORT_URL || '',
+        markdownReports: process.env.MARKDOWN_REPORT_URL || ''
+    },
+
+    // Notification Configuration
+    notification: {
+        slackChannel: process.env.SLACK_CHANNEL || ''
+    }
 };
+// ---------- ----------
 
 // ---------- Formatting helpers ----------
 function formatDuration(ms) {
