@@ -358,6 +358,11 @@ jobs:
         if: always()
         run: node .github/scripts/analytics/generate-risk-report.js
 
+      - name: 🔍 Validate Empty Report Sections
+        if: always()
+        run: |
+          node .github/scripts/analytics/test-empty-report-sections.js
+
       - name: 📋 Generate Breakdown Reports
         id: breakdown
         if: always()
