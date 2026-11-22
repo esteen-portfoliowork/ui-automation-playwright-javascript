@@ -367,6 +367,13 @@ jobs:
         if: always()
         run: node .github/scripts/analytics/generate-historical-trend.js
 
+      - name: 💾 Save Historical Test Data
+        if: always() && github.ref == 'refs/heads/main' && env.TOTAL_TESTS != '0' && env.FAILED_TESTS == '0'
+        uses: actions/cache/save@v4
+        with:
+          path: history/previous-summary.json
+          key: playwright-history-main-${{ github.run_id }}
+
       - name: 📄 Upload Playwright Report
         id: upload_playwright_report
         if: always()
