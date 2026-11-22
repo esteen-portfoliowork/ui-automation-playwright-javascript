@@ -1,370 +1,137 @@
+
 const fs = require('fs');
 
-// ---------- Read Notification data ----------
-const data =
-  JSON.parse(
-    fs.readFileSync(
-      'notification-data.json',
-      'utf8'
-    )
-  );
-// ---------- ----------
+const data = JSON.parse(
+    fs.readFileSync('notification-data.json', 'utf8')
+);
 
-// ---------- Table-building functions ----------
-function buildTableRows(data) {
-    return data.map(([label, value]) => [
-        {
-        type: 'raw_text',
-        text: label
-        },
-        {
-        type: 'raw_text',
-        text: value || 'N/A'
+const context = data.context;
+const metrics = data.metrics;
+const pr = data.pr;
+const slack = data.slack;
+
+const eventTitle = {
+    pull_request: 'Pull Request Validation',
+    workflow_dispatch: 'Manual Validation',
+    push: 'Push Validation'
+}[context.eventName] || 'Playwright Validation';
+
+function header(text) {
+    return {
+        type: 'header',
+        text: {
+            type: 'plain_text',
+            text: text.slice(0, 150),
+            emoji: true
         }
-    ]);
+    };
 }
 
-function buildTableRows3(data) {
-    return data.map(([col1, col2, col3]) => [
-        {
-        type: 'raw_text',
-        text: col1 || 'N/A'
-        },
-        {
-        type: 'raw_text',
-        text: col2 || 'N/A'
-        },
-        {
-        type: 'raw_text',
-        text: col3 || 'N/A'
+function section(text) {
+    if (!text) return null;
+
+    return {
+        type: 'section',
+        text: {
+            type: 'mrkdwn',
+            text: String(text).slice(0, 3000)
         }
-    ]);
+    };
 }
-// ---------- ----------
 
-// ---------- Markdown Section helper ----------
-function markdownSection(title, content, notAvailable) {
-    return [
-        {
-            type: 'header',
-            text: {
-                type: 'plain_text',
-                text: title
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: content || notAvailable
-            }
-        }
-    ];
+function divider() {
+    return { type: 'divider' };
 }
-// ---------- ----------
 
-// ---------- Execution Overview and PR details ----------
-const executionOverviewRows = buildTableRows([
-    ['🌐 Browser', data.BROWSER],
-    ['🏷️ Executed Tag', data.EXECUTED_TAG],
-    ['🌍 Environment', data.ENVIRONMENT],
-    ['🎭 Playwright Version', data.PLAYWRIGHT_VERSION],
-    ['📦 Node Version', data.NODE_VERSION],
-    ['💻 Runner OS', data.RUNNER_OS_NAME],
-    ['▶️ Start Time', data.START_DATE],
-    ['⏹️ End Time', data.END_DATE]
-]);
+const blocks = [
+    header('🎭 PLAYWRIGHT EXECUTION SUMMARY'),
+    section(`${context.buildEmoji} *${eventTitle}*\n${context.buildText}`),
+    divider(),
 
-const prDetailsRows = buildTableRows([
-    ['🔢 PR Number', `#${data.PR_NUMBER}`],
-    ['📝 PR Title', data.PR_TITLE],
-    ['🔗 PR URL', data.PR_URL],
-    ['👤 Author', data.PR_AUTHOR],
-    ['🌿 Source Branch', data.PR_BRANCH],
-    ['🎯 Target Branch', data.PR_BASE_BRANCH],
-    ['🏷️ Labels', data.PR_LABELS],
-    ['🔖 Commit SHA', data.PR_SHA]
-]);
-// ---------- ----------
+    header('❤️ Execution Health'),
+    section(context.executionHealth),
 
-// ---------- Execution Metrics ----------
-const executionMetrics = buildTableRows3([
-    ['🧪 Total Tests', data.TOTAL_TESTS, '-'],
-    ['✅ Passed', data.PASSED_TESTS, `${data.PASS_RATE}%`],
-    ['❌ Failed', data.FAILED_TESTS, `${data.FAILURE_RATE}%`],
-    ['⚠️ Flaky', data.FLAKY_TESTS, `${data.FLAKY_RATE}%`],
-    ['⏭️ Skipped', data.SKIPPED_TESTS, `${data.SKIPPED_RATE}%`],
-    ['🏆 Quality Score', '-', `${data.QUALITY_SCORE}%`],
-    ['⏱️ Duration', data.EXECUTION_DURATION, '-']
-]);
-// ---------- ----------
+    header('📋 Execution Overview'),
+    section([
+        `*Browser:* ${context.browser}`,
+        `*Tag:* ${context.executedTag}`,
+        `*Environment:* ${context.environment}`,
+        `*Playwright:* ${context.playwrightVersion}`,
+        `*Node:* ${context.nodeVersion}`,
+        `*Runner OS:* ${context.runnerOs}`,
+        `*Duration:* ${context.executionDuration}`
+    ].join('\n')),
 
-// ---------- Slack Payload ----------
+    header('📊 Execution Metrics'),
+    section([
+        `🧪 Total: *${metrics.total}*`,
+        `✅ Passed: *${metrics.passed}* (${metrics.passRate}%)`,
+        `❌ Failed: *${metrics.failed}* (${metrics.failureRate}%)`,
+        `⚠️ Flaky: *${metrics.flaky}* (${metrics.flakyRate}%)`,
+        `⏭️ Skipped: *${metrics.skipped}* (${metrics.skippedRate}%)`,
+        `🏆 Quality Score: *${metrics.qualityScore}%*`
+    ].join('\n'))
+];
+
+if (pr.number) {
+    blocks.push(
+        divider(),
+        header('📋 Pull Request Details'),
+        section([
+            `*PR:* <${pr.url}|#${pr.number}>`,
+            `*Title:* ${pr.title || 'N/A'}`,
+            `*Author:* ${pr.author || 'N/A'}`,
+            `*Source:* ${pr.branch || 'N/A'}`,
+            `*Target:* ${pr.baseBranch || 'N/A'}`,
+            `*Labels:* ${pr.labels || 'N/A'}`
+        ].join('\n'))
+    );
+}
+
+const reportSections = [
+    ['🛡️ Release Readiness', slack.releaseReadiness],
+    ['🖥️ Application Health', slack.applicationHealth],
+    ['📦 Module Breakdown', slack.moduleBreakdown],
+    ['🏷️ Test Tag Analytics', slack.tagExecution],
+    ['🏆 Top Risk Module', slack.topRiskModule],
+    ['❌ Failed Modules', slack.failedModules],
+    ['❌ Failed Tests', slack.failedTests],
+    ['⚠️ Flaky Tests', slack.flakyTests],
+    ['⏱️ Slowest Module', slack.slowestModule]
+];
+
+for (const [title, content] of reportSections) {
+    if (content) {
+        blocks.push(
+            divider(),
+            header(title),
+            section(content)
+        );
+    }
+}
+
+if (data.reportLinks) {
+    blocks.push(
+        divider(),
+        header('🔗 Report Links'),
+        section(data.reportLinks)
+    );
+}
+
 const payload = {
-    channel: data.SLACK_CHANNEL,
-    text: 'Playwright Execution Summary',
-    blocks: [
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: '🎭 PLAYWRIGHT EXECUTION SUMMARY'
-            }
-        },
-        {
-            type: 'divider'
-        },
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `${data.buildEmoji} Pull Request Validation`
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'plain_text',
-                text: data.BUILD_TEXT
-            }
-        },
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `❤️ Execution Health`
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'plain_text',
-                text: data.EXECUTION_HEALTH
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'plain_text',
-                text: `Executed ${data.TOTAL_TESTS} automated tests with a pass rate of ${data.PASS_RATE}% in ${data.EXECUTION_DURATION}.`
-            }
-        },
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `📋 Execution Overview`
-            }
-        },
-        {
-            type: 'table',
-            column_settings: [
-                {
-                align: 'center'
-                },
-                {
-                align: 'center'
-                }
-            ],
-            rows: [
-                [
-                {
-                    type: 'raw_text',
-                    text: 'Item'
-                },
-                {
-                    type: 'raw_text',
-                    text: 'Value'
-                }
-                ],
-                ...executionOverviewRows
-            ]
-        },
-        {
-            type: 'header',
-            level: 3,
-            text: {
-                type: 'plain_text',
-                text: `📋 Pull Request Details`
-            }
-        },
-        {
-            type: 'table',
-            column_settings: [
-                {
-                align: 'center'
-                },
-                {
-                align: 'center'
-                }
-            ],
-            rows: [
-                [
-                {
-                    type: 'raw_text',
-                    text: 'Item'
-                },
-                {
-                    type: 'raw_text',
-                    text: 'Value'
-                }
-                ],
-                ...prDetailsRows
-            ]
-        },
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `📊 Execution Metrics`
-            }
-        },
-        {
-            type: 'table',
-            column_settings: [
-                {
-                align: 'center'
-                },
-                {
-                align: 'center'
-                },
-                {
-                align: 'center'
-                }
-            ],
-            rows: [
-                [
-                {
-                    type: 'raw_text',
-                    text: 'Item'
-                },
-                {
-                    type: 'raw_text',
-                    text: 'Value'
-                },
-                {
-                    type: 'raw_text',
-                    text: 'Value'
-                }
-                ],
-                ...executionMetrics
-            ]
-        },
-        ...markdownSection(
-            '🛡️ Release Readiness',
-            data.RELEASE_READINESS_TEXT,
-            'No release readiness data available.'
-        ),
-        ...markdownSection(
-            '🖥️ Application Health',
-            data.applicationHealth,
-            'No application health data available.'
-        ),
-        ...markdownSection(
-            '📦 Module Breakdown',
-            data.MODULE_BREAKDOWN_TEXT,
-            'No module available.'
-        ),
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `🏷️ Test Tag Analytics`
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: data.tagExecution || 'No tag available.'
-            }
-        },
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `🏆 Top Risk Module`
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: data.TOP_RISK_MODULE_TEXT || 'No risk modules available.'
-            }
-        },
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `❌ Failed Modules`
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: data.FAILED_MODULE_TEXT || 'No failed modules available.'
-            }
-        },
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `❌ Failed Tests`
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: data.FAILED_TEST_TEXT || 'No failed tests available.'
-            }
-        },
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `⚠️ Flaky Tests`
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: data.FLAKY_TEST_TEXT || 'No flaky tests available.'
-            }
-        },
-        {
-            type: 'header',
-            level: 1,
-            text: {
-                type: 'plain_text',
-                text: `⏱️ Slowest Module`
-            }
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: data.SLOWEST_MODULE_TEXT || 'No slowest module available.'
-            }
-        },
-    ]
+    channel: data.slackChannel,
+    text: `Playwright ${eventTitle} — ${context.buildText}`,
+    blocks
 };
 
+if (!payload.channel) {
+    throw new Error('Slack channel is missing.');
+}
+
 fs.writeFileSync(
-  'pr-slack.json',
-  JSON.stringify(payload, null, 2)
+    'pr-slack.json',
+    JSON.stringify(payload, null, 2),
+    'utf8'
 );
-// ---------- ----------
+
+console.log('Slack payload generated successfully.');

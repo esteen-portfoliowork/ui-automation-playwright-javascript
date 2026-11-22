@@ -12,6 +12,7 @@ run-name: >
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -151,6 +152,31 @@ jobs:
             echo "BROWSER=chromium" >> $GITHUB_ENV
             echo "ENVIRONMENT=N/A" >> $GITHUB_ENV
           fi
+
+      - name: 🧾 Capture Pull Request Details
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ', ') }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          {
+            echo "PR_NUMBER=$PR_NUMBER"
+            echo "PR_TITLE<<PR_TITLE_EOF"
+            printf '%s\n' "$PR_TITLE"
+            echo "PR_TITLE_EOF"
+            echo "PR_URL=$PR_URL"
+            echo "PR_AUTHOR=$PR_AUTHOR"
+            echo "PR_BRANCH=$PR_BRANCH"
+            echo "PR_BASE_BRANCH=$PR_BASE_BRANCH"
+            echo "PR_LABELS=$PR_LABELS"
+            echo "PR_SHA=$PR_SHA"
+          } >> "$GITHUB_ENV"
 
       - name: 💻 Get Runner OS
         run: |
@@ -477,16 +503,26 @@ jobs:
       - name: 🎨 Prepare Build Status
         if: always()
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "BUILD_STATUS=PASSED" >> $GITHUB_ENV
-            echo "BUILD_EMOJI=🟢" >> $GITHUB_ENV
-            echo "BUILD_TEXT=✅ Build Status: PASSED" >> $GITHUB_ENV
-            echo "BUILD_COLOR=good" >> $GITHUB_ENV
+          FAILED="${FAILED_TESTS:-0}"
+          TOTAL="${TOTAL_TESTS:-0}"
+
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "BUILD_STATUS=NO_RESULTS" >> "$GITHUB_ENV"
+            echo "BUILD_EMOJI=⚪" >> "$GITHUB_ENV"
+            echo "BUILD_TEXT=⚪ Validation Status: NO RESULTS" >> "$GITHUB_ENV"
+            echo "BUILD_COLOR=warning" >> "$GITHUB_ENV"
+
+          elif [ "$FAILED" -gt 0 ]; then
+            echo "BUILD_STATUS=FAILED" >> "$GITHUB_ENV"
+            echo "BUILD_EMOJI=🔴" >> "$GITHUB_ENV"
+            echo "BUILD_TEXT=❌ Validation Status: FAILED" >> "$GITHUB_ENV"
+            echo "BUILD_COLOR=danger" >> "$GITHUB_ENV"
+
           else
-            echo "BUILD_STATUS=FAILED" >> $GITHUB_ENV
-            echo "BUILD_EMOJI=🔴" >> $GITHUB_ENV
-            echo "BUILD_TEXT=❌ Build Status: FAILED" >> $GITHUB_ENV
-            echo "BUILD_COLOR=danger" >> $GITHUB_ENV
+            echo "BUILD_STATUS=PASSED" >> "$GITHUB_ENV"
+            echo "BUILD_EMOJI=🟢" >> "$GITHUB_ENV"
+            echo "BUILD_TEXT=✅ Validation Status: PASSED" >> "$GITHUB_ENV"
+            echo "BUILD_COLOR=good" >> "$GITHUB_ENV"
           fi
 
       - name: 🚦 Prepare Execution Health
@@ -500,15 +536,69 @@ jobs:
             echo "EXECUTION_HEALTH=🔴 Failures Detected - Investigation Required" >> $GITHUB_ENV
           fi
 
+      - name: 📨 Generate Notification Data
+        id: notification_data
+        if: always()
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+
+          SLACK_CHANNEL: C0CDR49PPSL
+
+          BUILD_EMOJI: ${{ env.BUILD_EMOJI }}
+          BUILD_TEXT: ${{ env.BUILD_TEXT }}
+          EXECUTION_HEALTH: ${{ env.EXECUTION_HEALTH }}
+
+          BROWSER: ${{ env.BROWSER }}
+          EXECUTED_TAG: ${{ env.EXECUTED_TAG }}
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+
+          PLAYWRIGHT_VERSION: ${{ env.PLAYWRIGHT_VERSION }}
+          NODE_VERSION: ${{ env.NODE_VERSION }}
+          RUNNER_OS_NAME: ${{ env.RUNNER_OS_NAME }}
+
+          START_DATE: ${{ env.START_DATE }}
+          END_DATE: ${{ env.END_DATE }}
+          EXECUTION_DURATION: ${{ env.EXECUTION_DURATION }}
+
+          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
+          PASSED_TESTS: ${{ env.PASSED_TESTS }}
+          FAILED_TESTS: ${{ env.FAILED_TESTS }}
+          FLAKY_TESTS: ${{ env.FLAKY_TESTS }}
+          SKIPPED_TESTS: ${{ env.SKIPPED_TESTS }}
+
+          PASS_RATE: ${{ env.PASS_RATE }}
+          FAILURE_RATE: ${{ env.FAILURE_RATE }}
+          FLAKY_RATE: ${{ env.FLAKY_RATE }}
+          SKIPPED_RATE: ${{ env.SKIPPED_RATE }}
+          QUALITY_SCORE: ${{ env.QUALITY_SCORE }}
+
+          REPORT_LINKS_SLACK: ${{ steps.report_links.outputs.REPORT_LINKS_SLACK }}
+
+          PR_NUMBER: ${{ env.PR_NUMBER }}
+          PR_TITLE: ${{ env.PR_TITLE }}
+          PR_URL: ${{ env.PR_URL }}
+          PR_AUTHOR: ${{ env.PR_AUTHOR }}
+          PR_BRANCH: ${{ env.PR_BRANCH }}
+          PR_BASE_BRANCH: ${{ env.PR_BASE_BRANCH }}
+          PR_LABELS: ${{ env.PR_LABELS }}
+          PR_SHA: ${{ env.PR_SHA }}
+
+        run: |
+          node .github/scripts/reporting/generate-notification-data.js
+
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
           echo "# 🎭 Playwright Execution Summary" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "## ${{ env.BUILD_EMOJI }} Pull Request Validation" >> $GITHUB_STEP_SUMMARY
+            echo "## ${{ env.BUILD_EMOJI }} Pull Request Validation" >> "$GITHUB_STEP_SUMMARY"
+
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "## ${{ env.BUILD_EMOJI }} Manual Validation" >> "$GITHUB_STEP_SUMMARY"
+
           else
-            echo "## ${{ env.BUILD_EMOJI }} Manual Validation" >> $GITHUB_STEP_SUMMARY
+            echo "## ${{ env.BUILD_EMOJI }} Push Validation" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           echo "${{ env.BUILD_TEXT }}" >> $GITHUB_STEP_SUMMARY
@@ -637,23 +727,6 @@ jobs:
         run: |
           node .github/scripts/notifications/generate-slack-pr.js
 
-      - name: 📨 Generate Notification Data
-        id: notification_data
-        if: always()
-        env:
-          SLACK_CHANNEL: C0CDR49PPSL
-
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-          PLAYWRIGHT_REPORT_URL: ${{ steps.upload_playwright_report.outputs.artifact-url }}
-          TEST_RESULTS_URL: ${{ steps.upload_test_results.outputs.artifact-url }}
-          JSON_RESULTS_URL: ${{ steps.upload_json_results.outputs.artifact-url }}
-          ALLURE_RESULTS_URL: ${{ steps.upload_allure_results.outputs.artifact-url }}
-          ALLURE_REPORT_URL: ${{ steps.upload_allure_report.outputs.artifact-url }}
-          MARKDOWN_REPORT_URL: ${{ steps.upload_markdown_reports.outputs.artifact-url }}
-
-        run: node .github/scripts/reporting/generate-notification-data.js
-
       - name: 🔍 Debug Notification Data
         if: always()
         run: |
@@ -674,15 +747,57 @@ jobs:
             exit 1
           fi
 
-      - name: 📝 Generate PR Comment
-        if: always() && github.event_name == 'pull_request'
-        run: |
-          node .github/scripts/notifications/generate-pr-comment.js
-
       - name: 🔍 Debug Slack Payload
         run: |
           cat pr-slack.json
 
-      - name: 📝 Generate PR Comment
-        run: |
-          node .github/scripts/notifications/generate-pr-comment.js
+      - name: 📣 Publish Slack Notification
+        if: always()
+        uses: slackapi/slack-github-action@v4
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload-file-path: ./pr-slack.json
+
+      - name: 📬 Publish or Update PR Comment
+        if: always() && github.event_name == 'pull_request' && hashFiles('pr-comment.md') != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            const marker = '<!-- playwright-validation-report -->';
+            const body = fs.readFileSync('pr-comment.md', 'utf8');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number
+            });
+
+            const existing = comments.find(comment =>
+              comment.body && comment.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body
+              });
+
+              core.info('Existing Playwright PR comment updated.');
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body
+              });
+
+              core.info('New Playwright PR comment created.');
+            }
