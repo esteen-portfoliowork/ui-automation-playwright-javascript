@@ -11,7 +11,7 @@ const context = data.context || {};
 const metrics = data.metrics || {};
 
 const eventName =
-    context.eventName ||
+    data.context?.eventName ||
     data.eventName ||
     process.env.GITHUB_EVENT_NAME;
 
