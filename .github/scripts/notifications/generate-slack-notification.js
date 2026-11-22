@@ -338,20 +338,23 @@ for (const item of sections) {
             }
         });
     }
-
-    blocks.push({
-        type: 'divider'
-    });
 }
 
-// ---------- Validate Slack Limits ----------
+// ---------- Validate Slack Block Limits ----------
+const MAX_SLACK_BLOCKS = 50;
 
-if (blocks.length > 50) {
+console.log('Slack Block Validation');
+console.log(`Generated Blocks: ${blocks.length}`);
+console.log(`Maximum Allowed: ${MAX_SLACK_BLOCKS}`);
+
+if (blocks.length > MAX_SLACK_BLOCKS) {
     throw new Error(
-        `Slack block limit exceeded: ${blocks.length}. ` +
-        'Split the report across multiple messages.'
+        `Slack block limit exceeded: ${blocks.length}/${MAX_SLACK_BLOCKS}. ` +
+        'Consider splitting the report into multiple Slack messages.'
     );
 }
+
+console.log('Slack block validation passed.');
 
 // ---------- Create Payload ----------
 
