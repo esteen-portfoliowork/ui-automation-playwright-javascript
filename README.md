@@ -21,7 +21,7 @@
 
 UI Playwright - JavaScript is an enterprise-ready UI automation framework designed to provide scalable, maintainable, and reliable end-to-end testing.
 
-The framework leverages Playwright, Page Object Model (POM), GitHub Actions, Allure Reporting, Slack Notifications, and Release Management automation to support modern quality engineering practices.
+The framework leverages Playwright, Page Object Model (POM), GitHub Actions, Allure Reporting, Slack Notifications, Pull Request Validation Dashboards, and a Unified Reporting Architecture powered by shared analytics datasets to support modern quality engineering practices.
 
 This repository demonstrates automation architecture, CI/CD pipelines, reporting integrations, release governance, and documentation management.
 
@@ -52,26 +52,65 @@ npx playwright test --grep @filter
 - Pull Request Validation
 - Manual Test Execution (workflow_dispatch)
 - GitHub Actions Execution Summary
+- GitHub to GitLab Repository Synchronization
 - Allure Reporting
 - Playwright HTML Reports
-- Automated PR Comments
+- Automated Pull Request Validation Comments
 - Slack Notifications
+- Automated Release Notes Generation
 - Artifact Publishing
 - GitHub Pages Integration
 - Release Drafter
 - GitHub Release Management
+- Unified Reporting Architecture
+- Analytics Dataset
+- Historical Trend Analysis
+- Release Readiness Assessment
+- Risk-Based Reporting
+- Failed Module Reporting
+- Flaky Test Reporting
+- Top Risk Module Analysis
+- Release Recommendation Indicators
 
 ### Validation Reporting
 
-- GitHub Actions Dashboard
-- Execution Health Indicators
-- Test Quality Metrics
-- Module-Level Reporting
-- Application-Level Reporting
-- Tag-Level Reporting
-- Failed Test Analytics
-- Pull Request Validation Comments
-- Slack Execution Notifications
+- Workflow Summary Dashboard
+- Historical Trend Analysis
+- Release Readiness Assessment
+- Application Health Dashboard
+- Module Breakdown Reporting
+- Tag Execution Summary
+- Failed Module Reporting
+- Failed Test Reporting
+- Flaky Test Reporting
+- Top Risk Module Reporting
+- Slowest Module Analysis
+- Pull Request Validation Dashboard
+- Slack Execution Dashboard
+
+## Unified Reporting Architecture
+
+The framework uses a centralized reporting architecture to ensure consistent execution metrics across Workflow Summary, Pull Request Comments, and Slack Notifications.
+
+Reporting components are generated from shared datasets and reusable reporting services.
+
+Core Components:
+
+- Analytics Dataset
+- Risk Report Dataset
+- Historical Trend Dataset
+- Shared Test Aggregation Engine
+- Workflow Summary Generator
+- Pull Request Comment Generator
+- Slack Notification Generator
+
+Benefits:
+
+- Single source of truth
+- Consistent reporting metrics
+- Reduced code duplication
+- Easier maintenance
+- Scalable reporting architecture
 
 ## Technology Stack
 
@@ -114,8 +153,14 @@ For detailed framework architecture and execution flow, see:
 │   └── templates/
 ├── playwright.config.js
 ├── package.json
-└── .github/
-    └── workflows/
+├──.github/
+|   ├── scripts/
+│   |  ├── analytics/
+|   |  ├── core/
+|   |  ├── notifications/
+|   |  ├── reporting/
+│   └── templates/
+│   └── workflows/
 ```
 
 ## Prerequisites
@@ -216,7 +261,7 @@ This repository uses:
 | Programming Language | JavaScript |
 | Supported Browsers | 3 |
 | Current Integrations | 9 |
-| Release Assets | 5 |
+| Release Assets | 6 |
 | CI/CD Platforms | 2 |
 
 ## Test Documentation
@@ -323,37 +368,59 @@ Supports workflow_dispatch with:
 
 ### Reporting
 
-- GitHub Actions Summary
+- GitHub Actions Workflow Summary
+- Pull Request Validation Dashboard
+- Slack Notification Dashboard
+- Historical Trend Reporting
+- Release Readiness Reporting
+- Risk Analysis Reporting
 - Playwright HTML Report
 - Allure Report
-- JSON Results
-- Test Statistics
+- JSON Analytics Dataset
+- Release Documentation Generation
 
 ### Notifications
 
 - Slack execution notifications
-- Application-level execution reporting
-- Module-level execution reporting
-- Failed test reporting
 - Pull request validation comments
+- Historical trend visibility
+- Release readiness indicators
+- Failed module reporting
+- Failed test reporting
+- Flaky test reporting
+- Top risk module reporting
+- Report navigation links
 
 Slack notifications include:
 
 - Execution status
+- Build status
 - Pass/fail metrics
-- Health indicators
-- Application summary
-- Module summary
-- Failed test details
-- Executed tag visibility
+- Application health dashboard
+- Module breakdown
+- Tag execution summary
+- Failed modules
+- Failed tests
+- Flaky tests
+- Top risk modules
+- Slowest module
+- Historical execution trends
+- Release readiness assessment
+- Report links
 
 ## Execution Reporting
 
 The framework provides visibility through:
 
-- GitHub Actions Summary Dashboard
-- Pull Request Validation Comments
-- Slack Notifications
+- Workflow Summary Dashboard
+- Pull Request Validation Dashboard
+- Slack Notification Dashboard
+- Historical Trend Reporting
+- Release Readiness Assessment
+- Top Risk Module Reporting
+- Failed Module Reporting
+- Failed Test Reporting
+- Flaky Test Reporting
 - Playwright HTML Reports
 - Allure Reports
 
