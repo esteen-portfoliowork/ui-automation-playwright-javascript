@@ -1,6 +1,6 @@
 # Jira Tickets
 
-Document Version: v0.5.0
+Document Version: v0.5.1
 
 | Jira ID | Type | Status | Description |
 |--------|----------|-------|-----------------------|
@@ -20,6 +20,7 @@ Document Version: v0.5.0
 | KAN-62 | Story | Done | Implement Release Readiness (Workflow Report, Slack, PR Comment) |
 | KAN-64 | Bug | Done | Resolve inconsistent flaky test counts |
 | KAN-67 | Story | Done | Optimize Code for reporting and analytics |
+| KAN-72 | Bug | Done | Fix build failed on Push Validation |
 
 ## GitHub Issue Tickets
 | Status | Description |
@@ -77,11 +78,13 @@ Document Version: v0.5.0
 | Closed | KAN-67-Part5 - UI Playwright - JavaScript: Refactor Slack and GitHub adapters |
 | Closed | KAN-67-Part6 - UI Playwright - JavaScript: Unified Reporting Across All Destinations |
 | Closed | KAN-33-Doc03 - UI Playwright - JavaScript: Update Documentation and Release Assets for v0.5.0 Test Tagging Features |
+| Closed | KAN-72 - UI Playwright - JavaScript: Fix build failed on Push Validation |
+| Closed | KAN-33-Doc04 - UI Playwright - JavaScript: Update Documentation and Release Assets for v0.5.1 Test Tagging Features |
 
 ## Release Metadata
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.4.0 |
+| Release Version | v0.5.1 |
 | Release Date | 2026-11-23 |
 | Repository | UI Playwright - JavaScript |

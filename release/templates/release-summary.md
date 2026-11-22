@@ -1,6 +1,6 @@
 # Release Summary
 
-Document Version: v0.5.0
+Document Version: v0.5.1
 
 ## Overview
 
@@ -177,7 +177,7 @@ The following release assets provide detailed technical documentation for this r
 
 | Metric | Value |
 |----------|----------|
-| Release Version | v0.5.0 |
+| Release Version | v0.5.1 |
 | Jira Tickets | 16 |
 | Integrations | 9 |
 | Automated Test Cases | 14 |
@@ -192,6 +192,6 @@ The following release assets provide detailed technical documentation for this r
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.4.0 |
+| Release Version | v0.5.1 |
 | Release Date | 2026-11-23 |
 | Repository | UI Playwright - JavaScript |
