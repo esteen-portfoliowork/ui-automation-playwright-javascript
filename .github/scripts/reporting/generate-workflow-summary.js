@@ -130,26 +130,35 @@ for (const [title, file] of reports) {
     );
 }
 
-// ---------- Write Summary ----------
+// ---------- Generate Master Execution Report ----------
+const output = lines.join('\n') + '\n';
 
-const output = lines.join('\n');
+const reportPath = 'execution-summary.md';
 
+// Save the complete report.
+fs.writeFileSync(
+    reportPath,
+    output,
+    'utf8'
+);
+
+console.log(
+    `Master execution report generated: ${reportPath}`
+);
+
+// ---------- Publish to GitHub Workflow Summary ----------
 if (process.env.GITHUB_STEP_SUMMARY) {
     fs.appendFileSync(
         process.env.GITHUB_STEP_SUMMARY,
-        output + '\n',
-        'utf8'
-    );
-
-    console.log('GitHub Workflow Summary generated.');
-} else {
-    fs.writeFileSync(
-        'workflow-summary-preview.md',
-        output + '\n',
+        output,
         'utf8'
     );
 
     console.log(
-        'Preview generated: workflow-summary-preview.md'
+        'GitHub Workflow Summary published successfully.'
+    );
+} else {
+    console.log(
+        'GITHUB_STEP_SUMMARY unavailable. Master report was saved locally.'
     );
 }
