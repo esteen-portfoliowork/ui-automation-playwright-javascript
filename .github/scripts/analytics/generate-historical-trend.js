@@ -260,6 +260,59 @@ writeMarkdown(
     markdown
 );
 
+// ---------- Save current execution to history ----------
+const currentRun = {
+    runNumber: Number(process.env.GITHUB_RUN_NUMBER || 0),
+    runId: process.env.GITHUB_RUN_ID || null,
+    runUrl: process.env.RUN_URL || null,
+    eventName: process.env.GITHUB_EVENT_NAME || 'unknown',
+
+    total: current.total,
+    passed: current.passed,
+    failed: current.failed,
+    flaky: current.flaky,
+    skipped: current.skipped,
+
+    passRate: current.passRate,
+    failRate: current.failRate,
+    flakyRate: current.flakyRate,
+
+    durationSeconds: currentDurationSeconds,
+
+    successful: current.total > 0 && current.failed === 0,
+
+    generatedAt: new Date().toISOString()
+};
+
+// Only successful test executions become historical baselines.
+if (currentRun.successful) {
+    const updatedRuns = [
+        ...runs,
+        currentRun
+    ].slice(-30);
+
+    fs.mkdirSync('history', { recursive: true });
+
+    fs.writeFileSync(
+        historyPath,
+        JSON.stringify(
+            { runs: updatedRuns },
+            null,
+            2
+        ),
+        'utf8'
+    );
+
+    console.log(
+        `Historical run #${currentRun.runNumber} saved.`
+    );
+} else {
+    console.log(
+        'Current run was not saved because it contains failed tests or no test results.'
+    );
+}
+// ---------- ----------
+
 const delimiter = 'HISTORICAL_TREND_EOF';
 
 // log console
