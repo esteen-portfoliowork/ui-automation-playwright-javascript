@@ -1,6 +1,6 @@
 # Dependency Versions
 
-Document Version: v0.4.0
+Document Version: v0.5.0
 
 ## Dependencies
 
@@ -25,8 +25,8 @@ Document Version: v0.4.0
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.4.0 |
-| Release Date | 2026-11-08 |
+| Release Version | v0.5.0 |
+| Release Date | 2026-11-23 |
 | Repository | UI Playwright - JavaScript |
 
 ## Verification Information
@@ -34,5 +34,5 @@ Document Version: v0.4.0
 | Item | Value |
 |--------|--------|
 | Verified By | GitHub Release Process |
-| Verification Date | 2026-11-08 |
-| Release Version | v0.4.0 |
+| Verification Date | 2026-11-23 |
+| Release Version | v0.5.0 |
