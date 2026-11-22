@@ -1,129 +1,49 @@
-
 const fs = require('fs');
 
-const data = JSON.parse(
-    fs.readFileSync('notification-data.json', 'utf8')
-);
+const REPORT_FILE = 'execution-summary.md';
+const OUTPUT_FILE = 'pr-comment.md';
 
-const context = data.context;
-const metrics = data.metrics;
-const pr = data.pr;
+const MARKER = '<!-- playwright-validation-report -->';
 
-// ---------- Verify if data is undefined ----------
-if (!data.context || !data.metrics || !data.pr) {
+// ---------- Validate Master Report ----------
+
+if (!fs.existsSync(REPORT_FILE)) {
     throw new Error(
-        'Invalid notification-data.json: context, metrics, or pr is missing.'
+        `Master execution report not found: ${REPORT_FILE}`
     );
 }
 
-const requiredMetrics = [
-    'totalTests',
-    'passedTests',
-    'failedTests',
-    'flakyTests',
-    'skippedTests'
-];
+const report = fs.readFileSync(
+    REPORT_FILE,
+    'utf8'
+).trim();
 
-for (const key of requiredMetrics) {
-    if (!Number.isFinite(metrics[key])) {
-        throw new Error(
-            `Invalid notification metric: ${key}`
-        );
-    }
-}
-// ---------- ----------
-
-function readReport(file) {
-    return fs.existsSync(file)
-        ? fs.readFileSync(file, 'utf8').trim()
-        : `_Report unavailable: ${file}_`;
+if (!report) {
+    throw new Error(
+        'Master execution report is empty.'
+    );
 }
 
-const sections = [
-    '<!-- playwright-validation-report -->',
-    '# 🎭 Playwright Execution Summary',
+// ---------- Generate PR Comment ----------
+
+const comment = [
+    MARKER,
     '',
-    `## ${context.buildEmoji} Pull Request Validation`,
-    '',
-    context.buildText,
-    '',
-    '## ❤️ Execution Health',
-    '',
-    context.executionHealth,
-    '',
-    `Executed **${metrics.totalTests}** automated tests with a pass rate of **${metrics.passRate}%** in **${context.executionDuration}**.`,
-    '',
-    '## 📋 Pull Request Details',
-    '',
-    `| Item | Value |`,
-    `|---|---|`,
-    `| PR Number | #${pr.number || 'N/A'} |`,
-    `| PR Title | ${pr.title || 'N/A'} |`,
-    `| Author | ${pr.author || 'N/A'} |`,
-    `| Source Branch | ${pr.branch || 'N/A'} |`,
-    `| Target Branch | ${pr.baseBranch || 'N/A'} |`,
-    `| Labels | ${pr.labels || 'N/A'} |`,
-    '',
-    '## 📊 Execution Metrics',
-    '',
-    '| Metric | Count | Rate |',
-    '|---|---:|---:|',
-    `| Total Tests | ${metrics.totalTests} | - |`,
-    `| Passed | ${metrics.passedTests} | ${metrics.passRate}% |`,
-    `| Failed | ${metrics.failedTests} | ${metrics.failureRate}% |`,
-    `| Flaky | ${metrics.flakyTests} | ${metrics.flakyRate}% |`,
-    `| Skipped | ${metrics.skippedTests} | ${metrics.skippedRate}% |`,
-    `| Quality Score | - | ${metrics.qualityScore}% |`,
-    '',
-    '## 🛡️ Release Readiness',
-    '',
-    readReport('release-readiness.md'),
-    '',
-    '## 🖥️ Application Health',
-    '',
-    readReport('application-health-dashboard.md'),
-    '',
-    '## 📦 Module Breakdown',
-    '',
-    readReport('module-breakdown.md'),
-    '',
-    '## 🏷️ Test Tag Analytics',
-    '',
-    readReport('tag-execution-summary.md'),
-    '',
-    '## 🏆 Top Risk Modules',
-    '',
-    readReport('top-risk-modules.md'),
-    '',
-    '## ❌ Failed Modules',
-    '',
-    readReport('failed-modules.md'),
-    '',
-    '## ❌ Failed Tests',
-    '',
-    readReport('failed-tests.md'),
-    '',
-    '## ⚠️ Flaky Tests',
-    '',
-    readReport('flaky-tests.md'),
-    '',
-    '## ⏱️ Slowest Module',
-    '',
-    readReport('slowest-module.md'),
-    '',
-    '## 📈 Historical Test Trend',
-    '',
-    readReport('historical-test-trend.md'),
-    '',
-    '## 🔗 Report Links',
-    '',
-    readReport('report-links.md')
-];
+    report
+].join('\n');
+
+// ---------- Save PR Comment ----------
 
 fs.writeFileSync(
-    'pr-comment.md',
-    sections.join('\n'),
+    OUTPUT_FILE,
+    comment + '\n',
     'utf8'
 );
 
-console.log('PR comment generated successfully.');
+console.log(
+    'PR comment generated from the master execution report.'
+);
+
+console.log(
+    `Output: ${OUTPUT_FILE}`
+);
