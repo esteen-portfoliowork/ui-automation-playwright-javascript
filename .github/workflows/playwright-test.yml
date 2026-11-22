@@ -502,28 +502,38 @@ jobs:
 
       - name: 🎨 Prepare Build Status
         if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
         run: |
-          FAILED="${FAILED_TESTS:-0}"
-          TOTAL="${TOTAL_TESTS:-0}"
+          case "$JOB_STATUS" in
+            success)
+              echo "BUILD_STATUS=PASSED" >> "$GITHUB_ENV"
+              echo "BUILD_EMOJI=🟢" >> "$GITHUB_ENV"
+              echo "BUILD_TEXT=✅ Validation Status: PASSED" >> "$GITHUB_ENV"
+              echo "BUILD_COLOR=good" >> "$GITHUB_ENV"
+              ;;
 
-          if [ "$TOTAL" -eq 0 ]; then
-            echo "BUILD_STATUS=NO_RESULTS" >> "$GITHUB_ENV"
-            echo "BUILD_EMOJI=⚪" >> "$GITHUB_ENV"
-            echo "BUILD_TEXT=⚪ Validation Status: NO RESULTS" >> "$GITHUB_ENV"
-            echo "BUILD_COLOR=warning" >> "$GITHUB_ENV"
+            failure)
+              echo "BUILD_STATUS=FAILED" >> "$GITHUB_ENV"
+              echo "BUILD_EMOJI=🔴" >> "$GITHUB_ENV"
+              echo "BUILD_TEXT=❌ Validation Status: FAILED" >> "$GITHUB_ENV"
+              echo "BUILD_COLOR=danger" >> "$GITHUB_ENV"
+              ;;
 
-          elif [ "$FAILED" -gt 0 ]; then
-            echo "BUILD_STATUS=FAILED" >> "$GITHUB_ENV"
-            echo "BUILD_EMOJI=🔴" >> "$GITHUB_ENV"
-            echo "BUILD_TEXT=❌ Validation Status: FAILED" >> "$GITHUB_ENV"
-            echo "BUILD_COLOR=danger" >> "$GITHUB_ENV"
+            cancelled)
+              echo "BUILD_STATUS=CANCELLED" >> "$GITHUB_ENV"
+              echo "BUILD_EMOJI=⚪" >> "$GITHUB_ENV"
+              echo "BUILD_TEXT=⚪ Validation Status: CANCELLED" >> "$GITHUB_ENV"
+              echo "BUILD_COLOR=warning" >> "$GITHUB_ENV"
+              ;;
 
-          else
-            echo "BUILD_STATUS=PASSED" >> "$GITHUB_ENV"
-            echo "BUILD_EMOJI=🟢" >> "$GITHUB_ENV"
-            echo "BUILD_TEXT=✅ Validation Status: PASSED" >> "$GITHUB_ENV"
-            echo "BUILD_COLOR=good" >> "$GITHUB_ENV"
-          fi
+            *)
+              echo "BUILD_STATUS=UNKNOWN" >> "$GITHUB_ENV"
+              echo "BUILD_EMOJI=⚪" >> "$GITHUB_ENV"
+              echo "BUILD_TEXT=⚪ Validation Status: UNKNOWN" >> "$GITHUB_ENV"
+              echo "BUILD_COLOR=warning" >> "$GITHUB_ENV"
+              ;;
+          esac
 
       - name: 🚦 Prepare Execution Health
         if: always()
