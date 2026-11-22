@@ -1,6 +1,6 @@
 # Architecture
 
-Document Version: v0.5.0
+Document Version: v0.5.1
 
 ## Overview
 
@@ -134,6 +134,6 @@ Slack Notification
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.5.0 |
+| Release Version | v0.5.1 |
 | Release Date | 2026-11-23 |
 | Repository | UI Playwright - JavaScript |
