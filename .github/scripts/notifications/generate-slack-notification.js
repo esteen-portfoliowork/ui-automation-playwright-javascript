@@ -1,15 +1,19 @@
 const fs = require('fs');
 
 const REPORT_FILE = 'execution-summary.md';
+const DATA_FILE = 'notification-data.json';
 
 const data = JSON.parse(
-    fs.readFileSync('notification-data.json', 'utf8')
+    fs.readFileSync(DATA_FILE, 'utf8')
 );
 
 const context = data.context || {};
 const metrics = data.metrics || {};
 
-const eventName = context.eventName;
+const eventName =
+    context.eventName ||
+    data.eventName ||
+    process.env.GITHUB_EVENT_NAME;
 
 const eventTitle = {
     pull_request: 'Pull Request Validation',
@@ -27,14 +31,12 @@ if (!eventTitle) {
 }
 
 if (!channel) {
-    throw new Error(
-        'Slack channel is missing.'
-    );
+    throw new Error('Slack channel is missing.');
 }
 
 if (!fs.existsSync(REPORT_FILE)) {
     throw new Error(
-        `Master execution report not found: ${REPORT_FILE}`
+        `Master report not found: ${REPORT_FILE}`
     );
 }
 
@@ -44,176 +46,310 @@ const report = fs.readFileSync(
 ).trim();
 
 if (!report) {
-    throw new Error(
-        'Master execution report is empty.'
-    );
+    throw new Error('Master report is empty.');
 }
 
-// ---------- Convert GitHub Markdown to Slack ----------
+// ---------- Parse Master Report ----------
 
-function convertMarkdown(markdown) {
-    const lines = markdown.split('\n');
-    const result = [];
+function parseSections(markdown) {
+    const sections = [];
+    let current = null;
 
-    for (const line of lines) {
-        const trimmed = line.trim();
+    for (const line of markdown.split('\n')) {
+        const match = line.match(/^#{1,6}\s+(.+)$/);
 
-        // Remove Markdown table separator rows.
-        if (/^\|?[\s:|-]+\|?$/.test(trimmed)) {
-            continue;
+        if (match) {
+            current = {
+                title: match[1].trim(),
+                lines: []
+            };
+
+            sections.push(current);
+        } else if (current) {
+            current.lines.push(line);
         }
+    }
 
-        // Convert Markdown table rows into readable text.
-        if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
-            const cells = trimmed
-                .split('|')
-                .slice(1, -1)
-                .map(cell => cell.trim());
+    return sections;
+}
 
-            if (cells.length >= 2) {
-                const [label, ...values] = cells;
+const sections = parseSections(report);
 
-                result.push(
-                    `• *${label}:* ${values.join(' | ')}`
-                );
-            }
+// ---------- Markdown Helpers ----------
 
-            continue;
-        }
-
-        // Convert Markdown headings into Slack headings.
-        const headingMatch = trimmed.match(/^#{1,6}\s+(.+)$/);
-
-        if (headingMatch) {
-            result.push(`*${headingMatch[1]}*`);
-            continue;
-        }
-
-        // Convert GitHub Markdown links into Slack links.
-        const converted = trimmed.replace(
+function convertInlineMarkdown(text) {
+    return text
+        // GitHub links -> Slack links
+        .replace(
             /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
             '<$2|$1>'
+        )
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '*$1*')
+        // Italic
+        .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '_$1_');
+}
+
+function escapeCell(value) {
+    return String(value || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// ---------- Extract Markdown Tables ----------
+
+function extractTable(lines) {
+    const tableLines = lines
+        .map(line => line.trim())
+        .filter(line =>
+            line.startsWith('|') &&
+            line.endsWith('|')
         );
 
-        result.push(converted);
+    if (tableLines.length < 2) {
+        return null;
     }
 
-    return result.join('\n').trim();
+    const rows = tableLines
+        .map(line =>
+            line
+                .split('|')
+                .slice(1, -1)
+                .map(escapeCell)
+        )
+        .filter(row =>
+            !row.every(cell => /^:?-{2,}:?$/.test(cell))
+        );
+
+    if (rows.length < 2) {
+        return null;
+    }
+
+    return rows;
 }
 
-// ---------- Split Report into Slack-Compatible Chunks ----------
+// ---------- Format Monospaced Table ----------
 
-function splitText(text, maxLength = 2800) {
-    const paragraphs = text.split(/\n{2,}/);
-    const chunks = [];
+function formatTable(rows) {
+    const columnCount = Math.max(
+        ...rows.map(row => row.length)
+    );
 
-    let current = '';
+    const normalizedRows = rows.map(row =>
+        Array.from(
+            { length: columnCount },
+            (_, index) => row[index] || ''
+        )
+    );
 
-    for (const paragraph of paragraphs) {
-        if (paragraph.length > maxLength) {
-            if (current) {
-                chunks.push(current);
-                current = '';
-            }
+    const widths = Array.from(
+        { length: columnCount },
+        (_, column) =>
+            Math.min(
+                28,
+                Math.max(
+                    4,
+                    ...normalizedRows.map(row =>
+                        Math.min(28, row[column].length)
+                    )
+                )
+            )
+    );
 
-            // Split unusually long paragraphs safely.
-            for (let i = 0; i < paragraph.length; i += maxLength) {
-                chunks.push(
-                    paragraph.slice(i, i + maxLength)
-                );
-            }
+    function formatRow(row) {
+        return row.map((cell, index) => {
+            const value = cell.length > widths[index]
+                ? cell.slice(0, widths[index] - 1) + '…'
+                : cell;
 
-            continue;
-        }
-
-        const candidate = current
-            ? `${current}\n\n${paragraph}`
-            : paragraph;
-
-        if (candidate.length > maxLength) {
-            if (current) {
-                chunks.push(current);
-            }
-
-            current = paragraph;
-        } else {
-            current = candidate;
-        }
+            return value.padEnd(widths[index]);
+        }).join(' | ');
     }
 
-    if (current) {
-        chunks.push(current);
-    }
+    const header = formatRow(normalizedRows[0]);
 
-    return chunks;
+    const separator = widths
+        .map(width => '-'.repeat(width))
+        .join('-+-');
+
+    const body = normalizedRows
+        .slice(1)
+        .map(formatRow);
+
+    return [
+        '```',
+        header,
+        separator,
+        ...body,
+        '```'
+    ].join('\n');
 }
 
-// ---------- Slack Block Helpers ----------
+// ---------- Format Report Links ----------
 
-function header(text) {
-    return {
+function formatReportLinks(rows) {
+    if (!rows || rows.length < 2) {
+        return 'No report links available.';
+    }
+
+    return rows.slice(1).map(row => {
+        const name = row[0] || 'Report';
+        const link = row[1] || '';
+
+        const match = link.match(
+            /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/
+        );
+
+        if (match) {
+            return `*${name}*  <${match[2]}|${match[1]}>`;
+        }
+
+        const slackLink = link.match(
+            /<(https?:\/\/[^|>]+)\|([^>]+)>/
+        );
+
+        if (slackLink) {
+            return `*${name}*  <${slackLink[1]}|${slackLink[2]}>`;
+        }
+
+        return `*${name}*  ${link || 'Unavailable'}`;
+    }).join('\n');
+}
+
+// ---------- Render Report Sections ----------
+
+function renderSection(section) {
+    const title = section.title;
+    const lines = section.lines;
+
+    const rows = extractTable(lines);
+
+    // Report Links: retain clickable URLs.
+    if (/report links/i.test(title)) {
+        return formatReportLinks(rows);
+    }
+
+    // Data sections: use monospaced tables.
+    const tableSections = [
+        /historical test trend/i,
+        /risk overview/i,
+        /scoring breakdown/i,
+        /execution metrics/i,
+        /pull request details/i,
+        /execution overview/i
+    ];
+
+    if (rows && tableSections.some(pattern => pattern.test(title))) {
+        return formatTable(rows);
+    }
+
+    // Other sections retain readable Markdown.
+    return lines
+        .map(line => {
+            const trimmed = line.trim();
+
+            // Remove empty table separators.
+            if (/^\|[\s:|-]+\|$/.test(trimmed)) {
+                return '';
+            }
+
+            // Convert other table rows into readable text.
+            if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+                const cells = trimmed
+                    .split('|')
+                    .slice(1, -1)
+                    .map(escapeCell);
+
+                return `• ${cells.join(' | ')}`;
+            }
+
+            // Convert Markdown bullets.
+            if (/^[-*]\s+/.test(trimmed)) {
+                return `• ${convertInlineMarkdown(trimmed.replace(/^[-*]\s+/, ''))}`;
+            }
+
+            return convertInlineMarkdown(line);
+        })
+        .join('\n')
+        .trim();
+}
+
+// ---------- Build Slack Blocks ----------
+
+const blocks = [];
+
+for (const item of sections) {
+    const title = item.title;
+
+    // Do not show PR details in Manual or Push runs.
+    if (
+        /pull request details/i.test(title) &&
+        eventName !== 'pull_request'
+    ) {
+        continue;
+    }
+
+    // Avoid duplicating the master report title.
+    if (/^🎭\s*playwright execution summary$/i.test(title)) {
+        continue;
+    }
+
+    const content = renderSection(item);
+
+    if (!content) {
+        continue;
+    }
+
+    blocks.push({
         type: 'header',
         text: {
             type: 'plain_text',
-            text: text.slice(0, 150),
+            text: title.slice(0, 150),
             emoji: true
         }
-    };
-}
+    });
 
-function section(text) {
-    return {
-        type: 'section',
-        text: {
-            type: 'mrkdwn',
-            text
+    // Split content to respect Slack section text limits.
+    const chunks = [];
+
+    let remaining = content;
+
+    while (remaining.length > 2800) {
+        let splitAt = remaining.lastIndexOf('\n', 2800);
+
+        if (splitAt < 1000) {
+            splitAt = 2800;
         }
-    };
-}
 
-function divider() {
-    return {
+        chunks.push(remaining.slice(0, splitAt));
+        remaining = remaining.slice(splitAt).trim();
+    }
+
+    if (remaining) {
+        chunks.push(remaining);
+    }
+
+    for (const chunk of chunks) {
+        blocks.push({
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: chunk
+            }
+        });
+    }
+
+    blocks.push({
         type: 'divider'
-    };
+    });
 }
-
-// ---------- Build Slack Message ----------
-
-const slackText = convertMarkdown(report);
-const chunks = splitText(slackText);
-
-const blocks = [
-    header('🎭 PLAYWRIGHT EXECUTION SUMMARY'),
-
-    section(
-        `*${eventTitle}*\n${context.buildText || 'Validation completed.'}`
-    ),
-
-    section(
-        `*Validation Status:* ${context.buildStatus || 'UNKNOWN'}\n` +
-        `*Execution Health:* ${context.executionHealth || 'Unknown'}\n` +
-        `*Total Tests:* ${metrics.totalTests ?? 0}\n` +
-        `*Pass Rate:* ${metrics.passRate ?? 0}%`
-    ),
-
-    divider(),
-
-    ...chunks.map(chunk => section(chunk))
-];
 
 // ---------- Validate Slack Limits ----------
 
 if (blocks.length > 50) {
     throw new Error(
         `Slack block limit exceeded: ${blocks.length}. ` +
-        'The report must be split across multiple Slack messages.'
-    );
-}
-
-if (slackText.length > 40000) {
-    throw new Error(
-        'Slack report exceeds the message text limit. ' +
-        'Use multiple Slack messages.'
+        'Split the report across multiple messages.'
     );
 }
 
@@ -221,11 +357,15 @@ if (slackText.length > 40000) {
 
 const payload = {
     channel,
-    text: `Playwright ${eventTitle} — ${metrics.failedTests ?? 0} failed test(s)`,
+    text:
+        `Playwright ${eventTitle} | ` +
+        `Validation: ${context.buildStatus || 'UNKNOWN'} | ` +
+        `Tests: ${metrics.totalTests ?? 0} | ` +
+        `Failed: ${metrics.failedTests ?? 0}`,
     blocks
 };
 
-// ---------- Select Output Filename ----------
+// ---------- Select Output File ----------
 
 const outputFile = eventName === 'pull_request'
     ? 'pr-slack.json'
@@ -239,18 +379,7 @@ fs.writeFileSync(
     'utf8'
 );
 
-console.log(
-    `Slack notification generated: ${outputFile}`
-);
-
-console.log(
-    `Report sections sourced from: ${REPORT_FILE}`
-);
-
-console.log(
-    `Slack blocks: ${blocks.length}`
-);
-
-console.log(
-    `Report characters: ${slackText.length}`
-);
+console.log(`Slack payload generated: ${outputFile}`);
+console.log(`Event: ${eventTitle}`);
+console.log(`Sections: ${sections.length}`);
+console.log(`Blocks: ${blocks.length}`);
