@@ -635,38 +635,29 @@ jobs:
         run: |
           node .github/scripts/reporting/generate-workflow-summary.js
 
-      - name: 🔍 Debug Notification Data
+      - name: 🔍 Validate Notification Data
+        if: always()
         run: |
-          cat notification-data.json
+          node -e "
+            const fs = require('fs');
+
+            const data = JSON.parse(
+              fs.readFileSync('notification-data.json', 'utf8')
+            );
+
+            console.log('Event:', data.context.eventName);
+            console.log('Build:', data.context.buildStatus);
+            console.log('Total Tests:', data.metrics.totalTests);
+            console.log('Failed Tests:', data.metrics.failedTests);
+            console.log('Slack Channel Configured:', Boolean(data.notification.slackChannel));
+            console.log('Report Links:', Object.keys(data.links));
+            console.log('Slack Sections:', Object.keys(data.slack));
+          "
 
       - name: 📨 Generate Slack Payload
         if: always()
         run: |
           node .github/scripts/notifications/generate-slack-notification.js
-
-      - name: 🔍 Debug Notification Data
-        if: always()
-        run: |
-          echo "Checking notification-data.json"
-
-          if [ -f notification-data.json ]; then
-            node -e "
-              const data = require('./notification-data.json');
-
-              console.log('Execution Context:', data.context);
-              console.log('Execution Metrics:', data.metrics);
-              console.log('PR Details:', data.pr);
-              console.log('Risk Analysis:', data.risk.summary);
-              console.log('Report Links:', data.links);
-            "
-          else
-            echo "❌ notification-data.json was not generated."
-            exit 1
-          fi
-
-      - name: 🔍 Debug Slack Payload
-        run: |
-          cat pr-slack.json
 
       - name: 📣 Publish Slack Notification
         if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
