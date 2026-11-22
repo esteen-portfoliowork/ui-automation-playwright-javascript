@@ -678,7 +678,7 @@ jobs:
 
           echo "## 🛡️ Release Readiness" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report release-readiness.md >> $GITHUB_STEP_SUMMARY
+          append_report release-readiness.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 📊 Execution Metrics" >> $GITHUB_STEP_SUMMARY
@@ -694,52 +694,52 @@ jobs:
 
           echo "## 🖥️ Application Health" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
+          append_report application-health-dashboard.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 📦 Module Breakdown" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report module-breakdown.md >> $GITHUB_STEP_SUMMARY
+          append_report module-breakdown.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🏷️ Test Tag Analytics" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
+          append_report tag-execution-summary.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🏆 Top Risk Module" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report top-risk-modules.md >> $GITHUB_STEP_SUMMARY
+          append_report top-risk-modules.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Modules" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report failed-modules.md >> $GITHUB_STEP_SUMMARY
+          append_report failed-modules.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report failed-tests.md >> $GITHUB_STEP_SUMMARY
+          append_report failed-tests.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ⚠️ Flaky Tests" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report flaky-tests.md >> $GITHUB_STEP_SUMMARY
+          append_report flaky-tests.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## ⏱️ Slowest Module" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report slowest-module.md >> $GITHUB_STEP_SUMMARY
+          append_report slowest-module.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 📈 Historical Test Trend" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report historical-test-trend.md >> $GITHUB_STEP_SUMMARY
+          append_report historical-test-trend.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🔗 Report Links" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat append_report report-links.md >> $GITHUB_STEP_SUMMARY
+          append_report report-links.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -n "${{ steps.upload_markdown_reports.outputs.artifact-url }}" ]; then
             echo "[📄 Download Markdown Execution Reports](${{ steps.upload_markdown_reports.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
