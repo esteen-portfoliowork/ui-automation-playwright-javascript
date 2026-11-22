@@ -1,9 +1,12 @@
+// Import fs
 const fs = require('fs');
 
+// Read notification-data.json
 const data = JSON.parse(
     fs.readFileSync('notification-data.json', 'utf8')
 );
 
+// Initialize variables
 const context = data.context || {};
 const metrics = data.metrics || {};
 const pr = data.pr || {};
@@ -55,8 +58,7 @@ function addSection(blocks, title, content) {
     );
 }
 
-// ---------- Main Summary ----------
-
+// ---------- Generate summary ----------
 const blocks = [
     header('🎭 PLAYWRIGHT EXECUTION SUMMARY'),
     section(
@@ -89,8 +91,7 @@ const blocks = [
     ].join('\n'))
 ];
 
-// ---------- Pull Request Details ----------
-
+// Pull Request Details
 if (context.eventName === 'pull_request' && pr.number && pr.number !== 'N/A') {
     blocks.push(
         divider(),
@@ -106,8 +107,7 @@ if (context.eventName === 'pull_request' && pr.number && pr.number !== 'N/A') {
     );
 }
 
-// ---------- Analytics and Risk Reports ----------
-
+// Analytics and Risk Reports
 const reportSections = [
     ['🛡️ Release Readiness', slack.releaseReadiness],
     ['🖥️ Application Health', slack.applicationHealth],
@@ -124,8 +124,7 @@ for (const [title, content] of reportSections) {
     addSection(blocks, title, content);
 }
 
-// ---------- Report Links ----------
-
+// Report Links
 const reportLinks = [
     ['GitHub Actions Run', links.runUrl],
     ['Playwright Report', links.playwrightReport],
@@ -141,12 +140,13 @@ const reportLinks = [
 
 addSection(blocks, '🔗 Report Links', reportLinks);
 
-// ---------- Final Payload ----------
-
+// Check slack channel
 if (!channel) {
     throw new Error('Slack channel is missing.');
 }
+// ---------- ----------
 
+// ---------- Generate payload ----------
 const payload = {
     channel,
     text: `Playwright ${eventTitle} — ${metrics.failedTests ?? 0} failed test(s)`,
@@ -158,13 +158,31 @@ if (blocks.length > 50) {
         `Slack Block Kit limit exceeded: ${blocks.length} blocks.`
     );
 }
+// ---------- ----------
 
+// ---------- Select Payload Filename ----------
+const outputFile = context.eventName === 'pull_request'
+    ? 'pr-slack.json'
+    : context.eventName === 'workflow_dispatch'
+        ? 'manual-slack.json'
+        : null;
+
+if (!outputFile) {
+    throw new Error(
+        `Unsupported Slack event: ${context.eventName}`
+    );
+}
+// ---------- ----------
+
+// ---------- Generate Slack Payload ----------
 fs.writeFileSync(
-    'pr-slack.json',
+    outputFile,
     JSON.stringify(payload, null, 2),
     'utf8'
 );
+// ---------- ----------
 
+console.log(`Slack payload generated: ${outputFile}`);
 console.log('Slack notification payload generated successfully.');
 console.log(`Event: ${eventTitle}`);
 console.log(`Blocks: ${blocks.length}`);
