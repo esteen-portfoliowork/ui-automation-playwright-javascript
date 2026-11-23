@@ -73,7 +73,16 @@ function validateMarkdownFile(file) {
         return;
     }
 
-    if (content.includes('_Report unavailable:')) {
+    const unavailableMarkers = [
+        '_Report unavailable:',
+        '⚪ Report data unavailable:'
+    ];
+
+    const hasUnavailableMarker = unavailableMarkers.some(
+        marker => content.includes(marker)
+    );
+
+    if (hasUnavailableMarker) {
         failures.push(
             `Unavailable report placeholder: ${file}`
         );
