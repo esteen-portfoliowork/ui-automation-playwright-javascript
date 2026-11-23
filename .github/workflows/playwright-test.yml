@@ -521,6 +521,12 @@ jobs:
           fi
           echo "REPORT_LINKS_SLACK=$SLACK_LINKS" >> "$GITHUB_OUTPUT"
 
+      - name: 🔍 Validate Reporting Completeness
+        id: reporting_completeness
+        if: always()
+        run: |
+          node .github/scripts/reporting/validate-report-completeness.js
+
       - name: 🎨 Prepare Build Status
         if: always()
         env:
@@ -705,12 +711,13 @@ jobs:
           "
 
       - name: 📨 Generate Slack Payload
-        if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+        id: generate_slack_payload
+        if: always() && steps.reporting_completeness.outcome == 'success' && steps.notification_data.outcome == 'success' && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
         run: |
           node .github/scripts/notifications/generate-slack-notification.js
 
       - name: 📣 Publish Slack Notification
-        if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+        if: always() && steps.reporting_completeness.outcome == 'success' && steps.notification_data.outcome == 'success' && steps.generate_slack_payload.outcome == 'success' && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
         uses: slackapi/slack-github-action@v4
         with:
           method: chat.postMessage
@@ -718,11 +725,12 @@ jobs:
           payload-file-path: ${{ github.event_name == 'pull_request' && './pr-slack.json' || './manual-slack.json' }}
 
       - name: 📝 Generate PR Comment
-        if: always() && github.event_name == 'pull_request'
+        id: generate_pr_comment
+        if: always() && steps.reporting_completeness.outcome == 'success' && steps.notification_data.outcome == 'success' && github.event_name == 'pull_request'
         run: node .github/scripts/notifications/generate-pr-comment.js
 
       - name: 📬 Publish or Update PR Comment
-        if: always() && github.event_name == 'pull_request' && hashFiles('pr-comment.md') != ''
+        if: always() && steps.reporting_completeness.outcome == 'success' && steps.notification_data.outcome == 'success' && steps.generate_pr_comment.outcome == 'success' && github.event_name == 'pull_request' && hashFiles('pr-comment.md') != ''
         uses: actions/github-script@v7
         with:
           script: |
