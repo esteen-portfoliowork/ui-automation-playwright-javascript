@@ -467,7 +467,6 @@ jobs:
             failed-tests.md
             flaky-tests.md
             slowest-module.md
-            report-links.md
             historical-test-trend.md
           if-no-files-found: warn
           retention-days: 7
@@ -520,6 +519,16 @@ jobs:
             SLACK_LINKS="$SLACK_LINKS | <${MARKDOWN_REPORT_URL}|Markdown Execution Reports>"
           fi
           echo "REPORT_LINKS_SLACK=$SLACK_LINKS" >> "$GITHUB_OUTPUT"
+
+      - name: 🔗 Upload Report Links
+        id: upload_report_links
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event_name == 'pull_request' && format('pr-report-links-{0}', github.run_number) || format('report-links-{0}', github.run_number) }}
+          path: report-links.md
+          if-no-files-found: error
+          retention-days: 7
 
       - name: 🔍 Validate Reporting Completeness
         id: reporting_completeness
