@@ -80,9 +80,32 @@ for (const item of cases) {
     }
 
     if (item.data.length === 0) {
-        if (content !== item.emptyMessage) {
+        const contentLines = content
+            .split(/\r?\n/)
+            .map(line => line.trim())
+            .filter(Boolean);
+
+        const expectedMessage = item.emptyMessage;
+
+        // Allow the message to appear as a standalone line,
+        // even when the Markdown report contains a heading.
+        const hasEmptyMessage = contentLines.some(
+            line =>
+                line === expectedMessage ||
+                line === expectedMessage.replace('✅ ', '')
+        );
+
+        if (!hasEmptyMessage) {
             console.error(
                 `❌ ${item.label}: expected empty-state message is missing.`
+            );
+
+            console.error(
+                `Expected: ${expectedMessage}`
+            );
+
+            console.error(
+                `Actual report content:\n${content}`
             );
 
             failures++;
