@@ -27,9 +27,20 @@ const eventTitle = {
 // ---------- Helpers ----------
 
 function readReport(file) {
-    return fs.existsSync(file)
-        ? fs.readFileSync(file, 'utf8').trim()
-        : `_Report unavailable: ${file}_`;
+    if (!fs.existsSync(file)) {
+        return `⚪ Report data unavailable: ${file}`;
+    }
+
+    const content = fs.readFileSync(
+        file,
+        'utf8'
+    ).trim();
+
+    if (!content) {
+        return `⚪ Report data unavailable: ${file} is empty.`;
+    }
+
+    return content;
 }
 
 function heading(text) {
