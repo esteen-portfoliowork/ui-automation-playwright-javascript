@@ -467,7 +467,6 @@ jobs:
             failed-tests.md
             flaky-tests.md
             slowest-module.md
-            report-links.md
             historical-test-trend.md
           if-no-files-found: warn
           retention-days: 7
