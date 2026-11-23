@@ -716,7 +716,7 @@ jobs:
           node .github/scripts/notifications/generate-slack-notification.js
 
       - name: 📣 Publish Slack Notification
-        if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+        if: always() && steps.reporting_completeness.outcome == 'success' && steps.notification_data.outcome == 'success' && steps.generate_slack_payload.outcome == 'success' && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
         uses: slackapi/slack-github-action@v4
         with:
           method: chat.postMessage
