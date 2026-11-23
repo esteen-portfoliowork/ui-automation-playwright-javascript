@@ -27,12 +27,126 @@ function readJson(filePath) {
     }
 }
 
-const analytics = readJson('analytics.json');
-const risk = readJson('risk-analysis.json');
+// const analytics = readJson('analytics.json');
+// const risk = readJson('risk-analysis.json');
 
-const historical = fs.existsSync('historical-trend.json')
-    ? readJson('historical-trend.json')
+// const historical = fs.existsSync('historical-trend.json')
+//     ? readJson('historical-trend.json')
+//     : null;
+
+
+// ---------- Read generated data ----------
+function readJsonResult(filePath, validator = () => true) {
+    if (!fs.existsSync(filePath)) {
+        return {
+            available: false,
+            data: null,
+            reason: `File not found: ${filePath}`
+        };
+    }
+
+    try {
+        const data = JSON.parse(
+            fs.readFileSync(filePath, 'utf8')
+        );
+
+        if (
+            !data ||
+            typeof data !== 'object' ||
+            Array.isArray(data) ||
+            !validator(data)
+        ) {
+            return {
+                available: false,
+                data: null,
+                reason: `Invalid data structure: ${filePath}`
+            };
+        }
+
+        return {
+            available: true,
+            data,
+            reason: null
+        };
+    } catch (error) {
+        return {
+            available: false,
+            data: null,
+            reason: `Unable to parse ${filePath}: ${error.message}`
+        };
+    }
+}
+
+const analyticsResult = readJsonResult(
+    'analytics.json',
+    data =>
+        Array.isArray(data.applications) &&
+        Array.isArray(data.modules) &&
+        Array.isArray(data.tags)
+);
+
+const riskResult = readJsonResult(
+    'risk-analysis.json',
+    data =>
+        Array.isArray(data.failedModules) &&
+        Array.isArray(data.failedTests) &&
+        Array.isArray(data.flakyTests)
+);
+
+const historicalResult = readJsonResult(
+    'historical-trend.json'
+);
+
+// Use empty structures only as safe fallbacks.
+// Availability flags must always be checked before
+// interpreting these fallback arrays as real results.
+
+const analytics = analyticsResult.data || {
+    execution: {},
+    applications: [],
+    modules: [],
+    tags: [],
+    untaggedTests: []
+};
+
+const risk = riskResult.data || {
+    summary: {},
+    failedModules: [],
+    failedTests: [],
+    flakyTests: [],
+    topRiskModules: [],
+    topRiskModule: null,
+    slowestModule: null,
+    releaseReadiness: null
+};
+
+const historical = historicalResult.available
+    ? historicalResult.data
     : null;
+
+const playwrightResultsAvailable = fs.existsSync(
+    'playwright-report/results.json'
+);
+
+const testResultsAvailable =
+    playwrightResultsAvailable &&
+    analyticsResult.available &&
+    riskResult.available;
+
+const reportingDataIssues = [
+    ...(!playwrightResultsAvailable
+        ? ['Playwright results file unavailable.']
+        : []),
+
+    ...(!analyticsResult.available
+        ? [analyticsResult.reason]
+        : []),
+
+    ...(!riskResult.available
+        ? [riskResult.reason]
+        : [])
+].filter(Boolean);
+// ---------- ----------
 
 // ---------- Notification data ----------
 const notificationData = {
