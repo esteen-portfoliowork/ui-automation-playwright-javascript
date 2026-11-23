@@ -27,12 +27,126 @@ function readJson(filePath) {
     }
 }
 
-const analytics = readJson('analytics.json');
-const risk = readJson('risk-analysis.json');
+// const analytics = readJson('analytics.json');
+// const risk = readJson('risk-analysis.json');
 
-const historical = fs.existsSync('historical-trend.json')
-    ? readJson('historical-trend.json')
+// const historical = fs.existsSync('historical-trend.json')
+//     ? readJson('historical-trend.json')
+//     : null;
+
+
+// ---------- Read generated data ----------
+function readJsonResult(filePath, validator = () => true) {
+    if (!fs.existsSync(filePath)) {
+        return {
+            available: false,
+            data: null,
+            reason: `File not found: ${filePath}`
+        };
+    }
+
+    try {
+        const data = JSON.parse(
+            fs.readFileSync(filePath, 'utf8')
+        );
+
+        if (
+            !data ||
+            typeof data !== 'object' ||
+            Array.isArray(data) ||
+            !validator(data)
+        ) {
+            return {
+                available: false,
+                data: null,
+                reason: `Invalid data structure: ${filePath}`
+            };
+        }
+
+        return {
+            available: true,
+            data,
+            reason: null
+        };
+    } catch (error) {
+        return {
+            available: false,
+            data: null,
+            reason: `Unable to parse ${filePath}: ${error.message}`
+        };
+    }
+}
+
+const analyticsResult = readJsonResult(
+    'analytics.json',
+    data =>
+        Array.isArray(data.applications) &&
+        Array.isArray(data.modules) &&
+        Array.isArray(data.tags)
+);
+
+const riskResult = readJsonResult(
+    'risk-analysis.json',
+    data =>
+        Array.isArray(data.failedModules) &&
+        Array.isArray(data.failedTests) &&
+        Array.isArray(data.flakyTests)
+);
+
+const historicalResult = readJsonResult(
+    'historical-trend.json'
+);
+
+// Use empty structures only as safe fallbacks.
+// Availability flags must always be checked before
+// interpreting these fallback arrays as real results.
+
+const analytics = analyticsResult.data || {
+    execution: {},
+    applications: [],
+    modules: [],
+    tags: [],
+    untaggedTests: []
+};
+
+const risk = riskResult.data || {
+    summary: {},
+    failedModules: [],
+    failedTests: [],
+    flakyTests: [],
+    topRiskModules: [],
+    topRiskModule: null,
+    slowestModule: null,
+    releaseReadiness: null
+};
+
+const historical = historicalResult.available
+    ? historicalResult.data
     : null;
+
+const playwrightResultsAvailable = fs.existsSync(
+    'playwright-report/results.json'
+);
+
+const testResultsAvailable =
+    playwrightResultsAvailable &&
+    analyticsResult.available &&
+    riskResult.available;
+
+const reportingDataIssues = [
+    ...(!playwrightResultsAvailable
+        ? ['Playwright results file unavailable.']
+        : []),
+
+    ...(!analyticsResult.available
+        ? [analyticsResult.reason]
+        : []),
+
+    ...(!riskResult.available
+        ? [riskResult.reason]
+        : [])
+].filter(Boolean);
+// ---------- ----------
 
 // ---------- Notification data ----------
 const notificationData = {
@@ -41,6 +155,13 @@ const notificationData = {
     // Execution Context
     context: {
         eventName: process.env.GITHUB_EVENT_NAME || 'Unknown',
+        
+        playwrightResultsAvailable,
+        analyticsAvailable: analyticsResult.available,
+        riskAnalysisAvailable: riskResult.available,
+        testResultsAvailable,
+        reportingDataIssues,
+        
         repository: process.env.GITHUB_REPOSITORY || 'N/A',
         runNumber: process.env.GITHUB_RUN_NUMBER || 'N/A',
         runId: process.env.GITHUB_RUN_ID || 'N/A',
@@ -147,6 +268,10 @@ function formatDuration(ms) {
 }
 
 function formatFailedModules() {
+    if (!riskResult.available) {
+        return '⚪ Failed module data unavailable.';
+    }
+
     const modules = risk.failedModules || [];
 
     if (modules.length === 0) {
@@ -172,8 +297,14 @@ function formatFailedModules() {
 }
 
 function formatTests(tests, type) {
+    if (!riskResult.available) {
+        return `⚪ ${type} test data unavailable.`;
+    }
+    
     if (!tests.length) {
-        return `No ${type} tests.`;
+        return type === 'flaky'
+            ? '✅ No flaky tests found.'
+            : '✅ No failed tests found.';
     }
 
     return tests.slice(0, 10)
@@ -191,6 +322,10 @@ function formatTests(tests, type) {
 }
 
 function formatTopRiskModule() {
+    if (!riskResult.available) {
+        return '⚪ Risk analysis data unavailable.';
+    }
+
     const item = risk.topRiskModule;
 
     if (!item) {
@@ -209,6 +344,10 @@ function formatTopRiskModule() {
 }
 
 function formatSlowestModule() {
+    if (!riskResult.available) {
+        return '⚪ Risk analysis data unavailable.';
+    }
+
     const item = risk.slowestModule;
 
     if (!item) {
@@ -226,6 +365,10 @@ function formatSlowestModule() {
 }
 
 function formatReleaseReadiness() {
+    if (!riskResult.available) {
+        return '⚪ Release readiness data unavailable.';
+    }
+
     const item = risk.releaseReadiness;
 
     if (!item) {
@@ -256,6 +399,10 @@ function formatReleaseReadiness() {
 }
 
 function formatApplicationHealth() {
+    if (!analyticsResult.available) {
+        return '⚪ Application health data unavailable.';
+    }
+
     return (analytics.applications || [])
         .map(item =>
             `• *${item.application}* — ` +
@@ -271,6 +418,9 @@ function formatApplicationHealth() {
 }
 
 function formatModuleBreakdown() {
+    if (!analyticsResult.available) {
+        return '⚪ Module breakdown data unavailable.';
+    }
     const grouped = {};
 
     for (const item of analytics.modules || []) {
@@ -294,6 +444,10 @@ function formatModuleBreakdown() {
 }
 
 function formatTagExecution() {
+    if (!analyticsResult.available) {
+        return '⚪ Tag execution data unavailable.';
+    }
+
     const tags = (analytics.tags || [])
         .map(item =>
             `• *@${item.tag}* — ` +
