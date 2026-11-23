@@ -39,8 +39,53 @@ function heading(text) {
 function tableRow(label, value) {
     return `| ${label} | ${value ?? 'N/A'} |`;
 }
+// ---------- ----------
+
+// ---------- Overall Test Result ----------
+function getOverallTestResult() {
+    if (context.testResultsAvailable !== true) {
+        return {
+            emoji: '⚪',
+            message:
+                'Test-result data unavailable; overall result cannot be determined.'
+        };
+    }
+
+    const total = Number(metrics.totalTests ?? 0);
+    const failed = Number(metrics.failedTests ?? 0);
+    const flaky = Number(metrics.flakyTests ?? 0);
+
+    if (total === 0) {
+        return {
+            emoji: '⚪',
+            message: 'No test cases were analyzed.'
+        };
+    }
+
+    if (failed === 0 && flaky === 0) {
+        return {
+            emoji: '🟢',
+            message: 'All tests passed without flaky results.'
+        };
+    }
+
+    if (failed === 0 && flaky > 0) {
+        return {
+            emoji: '🟡',
+            message: 'Tests passed with flaky results detected.'
+        };
+    }
+
+    return {
+        emoji: '🔴',
+        message: 'Test failures detected; investigation required.'
+    };
+}
+
+// ---------- ----------
 
 // ---------- Execution Summary ----------
+const overallResult = getOverallTestResult();
 
 const lines = [
     '# 🎭 Playwright Execution Summary',
@@ -49,6 +94,12 @@ const lines = [
     '',
     context.buildText || 'Validation status unavailable.',
     '',
+
+    '## 🧪 Overall Test Result',
+    '',
+    `### ${overallResult.emoji} ${overallResult.message}`,
+    '',
+
     '## ❤️ Execution Health',
     '',
     context.executionHealth || 'Unknown',
