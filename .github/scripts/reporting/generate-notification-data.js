@@ -272,7 +272,7 @@ function formatFailedModules() {
         return '⚪ Failed module data unavailable.';
     }
 
-    // const modules = risk.failedModules || [];
+    const modules = risk.failedModules || [];
 
     if (modules.length === 0) {
         return 'No failed modules.';
@@ -302,7 +302,9 @@ function formatTests(tests, type) {
     }
     
     if (!tests.length) {
-        return `No ${type} tests.`;
+        return type === 'flaky'
+            ? '✅ No flaky tests found.'
+            : '✅ No failed tests found.';
     }
 
     return tests.slice(0, 10)
@@ -445,7 +447,7 @@ function formatTagExecution() {
     if (!analyticsResult.available) {
         return '⚪ Tag execution data unavailable.';
     }
-    
+
     const tags = (analytics.tags || [])
         .map(item =>
             `• *@${item.tag}* — ` +
