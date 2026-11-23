@@ -268,7 +268,11 @@ function formatDuration(ms) {
 }
 
 function formatFailedModules() {
-    const modules = risk.failedModules || [];
+    if (!riskResult.available) {
+        return '⚪ Failed module data unavailable.';
+    }
+
+    // const modules = risk.failedModules || [];
 
     if (modules.length === 0) {
         return 'No failed modules.';
@@ -293,6 +297,10 @@ function formatFailedModules() {
 }
 
 function formatTests(tests, type) {
+    if (!riskResult.available) {
+        return `⚪ ${type} test data unavailable.`;
+    }
+    
     if (!tests.length) {
         return `No ${type} tests.`;
     }
@@ -312,6 +320,10 @@ function formatTests(tests, type) {
 }
 
 function formatTopRiskModule() {
+    if (!riskResult.available) {
+        return '⚪ Risk analysis data unavailable.';
+    }
+
     const item = risk.topRiskModule;
 
     if (!item) {
@@ -330,6 +342,10 @@ function formatTopRiskModule() {
 }
 
 function formatSlowestModule() {
+    if (!riskResult.available) {
+        return '⚪ Risk analysis data unavailable.';
+    }
+
     const item = risk.slowestModule;
 
     if (!item) {
@@ -347,6 +363,10 @@ function formatSlowestModule() {
 }
 
 function formatReleaseReadiness() {
+    if (!riskResult.available) {
+        return '⚪ Release readiness data unavailable.';
+    }
+
     const item = risk.releaseReadiness;
 
     if (!item) {
@@ -377,6 +397,10 @@ function formatReleaseReadiness() {
 }
 
 function formatApplicationHealth() {
+    if (!analyticsResult.available) {
+        return '⚪ Application health data unavailable.';
+    }
+
     return (analytics.applications || [])
         .map(item =>
             `• *${item.application}* — ` +
@@ -392,6 +416,9 @@ function formatApplicationHealth() {
 }
 
 function formatModuleBreakdown() {
+    if (!analyticsResult.available) {
+        return '⚪ Module breakdown data unavailable.';
+    }
     const grouped = {};
 
     for (const item of analytics.modules || []) {
