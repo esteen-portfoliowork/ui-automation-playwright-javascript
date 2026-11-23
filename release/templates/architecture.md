@@ -1,6 +1,6 @@
 # Architecture
 
-Document Version: v0.5.1
+Document Version: v0.6.0
 
 ## Overview
 
@@ -63,7 +63,9 @@ Analytics Dataset
         ↓
 Shared Test Aggregation
         ↓
-Risk & Trend Engine
+Report Validation Layer
+        ↓
+Empty-State Handling
         ↓
 ┌──────────────────────────────┐
 │ Workflow Summary             │
@@ -92,10 +94,14 @@ Stakeholder Visibility
 - Flaky Test Reporting
 - Playwright HTML Report
 - Allure Report
+- Overall Test Result Summary
+- Report Completeness Validation
+- Empty-State Handling
+- Analytics Availability Validation
 
 ## Unified Reporting Architecture
 
-v0.5.0 introduces a centralized reporting architecture that standardizes reporting across GitHub Actions Workflow Summary, Pull Request Comments, and Slack Notifications.
+The framework uses a centralized reporting architecture introduced in v0.5.0 and enhanced in v0.6.0 to provide consistent reporting across Workflow Summary, Pull Request Comments, and Slack Notifications.
 
 Core reporting capabilities are generated from shared analytics datasets and reusable reporting services to ensure:
 
@@ -116,6 +122,40 @@ Key components:
 - Slack Reporting Adapter
 - GitHub Reporting Adapter
 
+## Report Quality Controls
+
+v0.6.0 introduces reporting quality controls to improve report accuracy, completeness, and user experience.
+
+Capabilities include:
+
+- Overall Test Result Summary
+- Analytics Availability Validation
+- Empty-State Reporting
+- Reporting Completeness Validation
+- Missing Section Detection
+- Report Consistency Validation
+
+These controls ensure all reporting channels display consistent, meaningful, and complete execution information even when analytics datasets contain no data.
+
+## v0.6.0 Reporting Enhancements
+
+### Overall Test Result Summary
+
+
+Provides an execution-level summary across all reporting channels.
+
+### Analytics Availability Validation
+
+Validates analytics datasets before report generation.
+
+### Empty-State Handling
+
+Displays meaningful messages when no reportable data exists.
+
+### Reporting Completeness Validation
+
+Verifies required report sections before publication.
+
 ## Execution Flow
 
 GitHub Actions
@@ -134,6 +174,6 @@ Slack Notification
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.5.1 |
-| Release Date | 2026-11-23 |
+| Release Version | v0.6.0 |
+| Release Date | 2026-11-24 |
 | Repository | UI Playwright - JavaScript |

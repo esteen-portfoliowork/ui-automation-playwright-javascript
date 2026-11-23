@@ -30,6 +30,26 @@ categories:
     labels:
       - notification
 
+  - title: '✅ Report Validation'
+    labels:
+      - report-validation
+
+  - title: '📈 Analytics'
+    labels:
+      - analytics
+
+  - title: '⚡ Performance'
+    labels:
+      - performance
+
+  - title: '🎯 Quality Engineering'
+    labels:
+      - quality
+
+  - title: '🤖 Intelligent Insights'
+    labels:
+      - intelligence
+
   - title: '🔒 Security'
     labels:
       - security
@@ -37,10 +57,6 @@ categories:
   - title: '📦 Dependencies'
     labels:
       - dependency
-
-  - title: '⚡ Performance'
-    labels:
-      - performance
 
   - title: '♻️ Refactored Code'
     labels:
@@ -101,7 +117,7 @@ template: |
 
   ---
 
-  ## 📈 Release Statistics
+  ## 📈 Framework Statistics
 
   | Metric | Value |
   |---------|---------|
@@ -109,6 +125,21 @@ template: |
   | Test Modules | 3 |
   | Test Tags | 8 |
   | Supported Browsers | 3 |
+  | Reporting Channels | 3 |
+  | Release Assets | 6 |
+
+  ---
+
+  ## 📈 Release Statistics
+
+  > Update before publishing.
+
+  | Metric | Value |
+  |---------|---------|
+  | New Features | TBD |
+  | Improvements | TBD |
+  | Bug Fixes | TBD |
+  | Breaking Changes | TBD |
 
   ---
 
@@ -199,12 +230,16 @@ version-resolver:
       - cicd
       - reporting
       - notification
+      - report-validation
+      - analytics
+      - performance
+      - quality
+      - intelligence
 
   patch:
     labels:
       - security
       - dependency
-      - performance
       - refactor
       - code
       - bugfix
