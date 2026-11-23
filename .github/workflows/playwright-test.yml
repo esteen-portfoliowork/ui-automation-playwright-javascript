@@ -725,6 +725,7 @@ jobs:
           payload-file-path: ${{ github.event_name == 'pull_request' && './pr-slack.json' || './manual-slack.json' }}
 
       - name: 📝 Generate PR Comment
+        id: generate_pr_comment
         if: always() && steps.reporting_completeness.outcome == 'success' && steps.notification_data.outcome == 'success' && github.event_name == 'pull_request'
         run: node .github/scripts/notifications/generate-pr-comment.js
 
