@@ -442,6 +442,10 @@ function formatModuleBreakdown() {
 }
 
 function formatTagExecution() {
+    if (!analyticsResult.available) {
+        return '⚪ Tag execution data unavailable.';
+    }
+    
     const tags = (analytics.tags || [])
         .map(item =>
             `• *@${item.tag}* — ` +
