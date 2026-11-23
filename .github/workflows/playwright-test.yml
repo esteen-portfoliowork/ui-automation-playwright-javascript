@@ -520,6 +520,16 @@ jobs:
           fi
           echo "REPORT_LINKS_SLACK=$SLACK_LINKS" >> "$GITHUB_OUTPUT"
 
+      - name: 🔗 Upload Report Links
+        id: upload_report_links
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-links-${{ github.run_number }}
+          path: report-links.md
+          if-no-files-found: error
+          retention-days: 7
+
       - name: 🔍 Validate Reporting Completeness
         id: reporting_completeness
         if: always()
