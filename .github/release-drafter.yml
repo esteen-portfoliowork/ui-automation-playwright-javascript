@@ -126,7 +126,7 @@ template: |
   | Test Tags | 8 |
   | Supported Browsers | 3 |
   | Reporting Channels | 3 |
-  | Release Assets | 6 |
+  | Release Assets | 7 |
 
   ---
 
@@ -171,6 +171,7 @@ template: |
   - jira-tickets.md
   - release-summary.md
   - roadmap.md
+  - report-links.md
 
   These documents provide architectural references, dependency inventories, integrated application details, release summaries, and Jira traceability.
 

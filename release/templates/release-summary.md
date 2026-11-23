@@ -1,12 +1,16 @@
 # Release Summary
 
-Document Version: v0.6.0
+Document Version: v0.6.1
 
 ## Overview
 
 UI Playwright - JavaScript is a test automation framework designed to support scalable, maintainable, and enterprise-ready UI test automation.
 
-This release focuses on improving reporting accuracy, completeness, and readability across Workflow Summary, Pull Request Comments, and Slack Notifications through enhanced validation, analytics availability checks, empty-state handling, and overall execution summaries.
+This patch release fixes a release asset packaging issue introduced in v0.6.0.
+
+The report-links.md release asset was not consistently included in generated release artifacts because Markdown artifact packaging executed before the report links file was generated.
+
+This release updates the workflow sequence to upload report-links.md separately after the Prepare Report Links step, ensuring report navigation assets are always included in release outputs.
 
 ---
 
@@ -14,14 +18,9 @@ This release focuses on improving reporting accuracy, completeness, and readabil
 
 ### Major Deliverables
 
-- Overall Test Result Summary
-- Analytics Availability Validation
-- Empty-State Handling
-- Reporting Completeness Validation
-- Unified Reporting Improvements
-- Workflow Summary Enhancements
-- Pull Request Reporting Enhancements
-- Slack Notification Enhancements
+- Report Links Artifact Packaging Fix
+- Release Asset Publishing Reliability Improvements
+- Report Navigation Asset Availability Improvements
 
 ---
 
@@ -125,7 +124,7 @@ This release focuses on improving reporting accuracy, completeness, and readabil
 
 | Metric | Value |
 |----------|----------|
-| Current Release | v0.6.0 |
+| Current Release | v0.6.1 |
 | Framework Maturity | Reporting Intelligence, Quality Validation & Release Platform |
 | Test Coverage | 14 Automated Test Cases |
 | CI/CD Status | Implemented |
@@ -145,6 +144,7 @@ The following release assets provide detailed technical documentation for this r
 - jira-tickets.md — User stories, tasks, and Jira traceability
 - release-summary.md — details about the summary
 - roadmap.md — details about the roadmap
+- report-links.md — centralized report navigation links
 
 ---
 
@@ -155,17 +155,14 @@ The following release assets provide detailed technical documentation for this r
 - KAN-73
 - KAN-74
 - KAN-75
+- KAN-76
 
 ### Areas Updated
 
-- Workflow Summary
-- Pull Request Comments
-- Slack Notifications
-- Analytics Validation
-- Empty-State Handling
-- Reporting Accuracy
-- Reporting Readability
-- Reporting Completeness
+- Release Asset Publishing
+- Report Links Generation
+- GitHub Release Assets
+- Release Documentation Distribution
 
 ---
 
@@ -173,13 +170,13 @@ The following release assets provide detailed technical documentation for this r
 
 | Metric | Value |
 |----------|----------|
-| Release Version | v0.6.0 |
+| Release Version | v0.6.1 |
 | Jira Tickets | 16 |
 | Integrations | 9 |
 | Automated Test Cases | 14 |
 | Test Modules | 3 |
 | Test Tags | 8 |
-| Documentation Assets | 6 |
+| Documentation Assets | 7 |
 | Supported Browsers | 3 |
 
 ---
@@ -188,6 +185,6 @@ The following release assets provide detailed technical documentation for this r
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.6.0 |
+| Release Version | v0.6.1 |
 | Release Date | 2026-11-24 |
 | Repository | UI Playwright - JavaScript |
