@@ -521,6 +521,12 @@ jobs:
           fi
           echo "REPORT_LINKS_SLACK=$SLACK_LINKS" >> "$GITHUB_OUTPUT"
 
+      - name: 🔍 Validate Reporting Completeness
+        id: reporting_completeness
+        if: always()
+        run: |
+          node .github/scripts/reporting/validate-report-completeness.js
+
       - name: 🎨 Prepare Build Status
         if: always()
         env:
