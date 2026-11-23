@@ -711,7 +711,7 @@ jobs:
           "
 
       - name: 📨 Generate Slack Payload
-        if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+        if: always() && steps.reporting_completeness.outcome == 'success' && steps.notification_data.outcome == 'success' && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
         run: |
           node .github/scripts/notifications/generate-slack-notification.js
 
