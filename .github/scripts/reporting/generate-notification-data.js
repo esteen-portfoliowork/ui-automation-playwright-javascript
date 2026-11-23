@@ -155,6 +155,13 @@ const notificationData = {
     // Execution Context
     context: {
         eventName: process.env.GITHUB_EVENT_NAME || 'Unknown',
+        
+        playwrightResultsAvailable,
+        analyticsAvailable: analyticsResult.available,
+        riskAnalysisAvailable: riskResult.available,
+        testResultsAvailable,
+        reportingDataIssues,
+        
         repository: process.env.GITHUB_REPOSITORY || 'N/A',
         runNumber: process.env.GITHUB_RUN_NUMBER || 'N/A',
         runId: process.env.GITHUB_RUN_ID || 'N/A',
