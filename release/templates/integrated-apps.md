@@ -1,6 +1,6 @@
 # UI Playwright Integrated Application
 
-Document Version: v0.6.0
+Document Version: v0.6.1
 
 ## Overview
 
@@ -85,6 +85,6 @@ Create a fully integrated automation ecosystem where:
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.6.0 |
+| Release Version | v0.6.1 |
 | Release Date | 2026-11-24 |
 | Repository | UI Playwright - JavaScript |

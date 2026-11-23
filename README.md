@@ -266,6 +266,8 @@ Release Drafter
   ↓
 GitHub Release
   ↓
+Report Links Generation
+  ↓
 Release Asset Publishing
 
 This repository uses:
@@ -283,7 +285,7 @@ This repository uses:
 | Programming Language | JavaScript |
 | Supported Browsers | 3 |
 | Current Integrations | 9 |
-| Release Assets | 6 |
+| Release Assets | 7 |
 | CI/CD Platforms | 2 |
 
 ## Test Documentation
@@ -347,6 +349,7 @@ The framework supports tag-based execution.
 | jira-tickets.md | User stories and requirements traceability |
 | release-summary.md | Release overview and capabilities |
 | roadmap.md | Planned roadmap |
+| report-links.md | Centralized navigation links for generated reports and release artifacts |
 
 ## Workflow Capabilities
 

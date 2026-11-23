@@ -1,6 +1,6 @@
 # Architecture
 
-Document Version: v0.6.0
+Document Version: v0.6.1
 
 ## Overview
 
@@ -74,6 +74,10 @@ Empty-State Handling
 │ Release Assets               │
 └──────────────────────────────┘
         ↓
+Report Links Generation
+        ↓
+Release Asset Publishing
+        ↓
 Stakeholder Visibility
 
 ## Reporting Components
@@ -98,6 +102,7 @@ Stakeholder Visibility
 - Report Completeness Validation
 - Empty-State Handling
 - Analytics Availability Validation
+- Report Navigation Links
 
 ## Unified Reporting Architecture
 
@@ -141,7 +146,6 @@ These controls ensure all reporting channels display consistent, meaningful, and
 
 ### Overall Test Result Summary
 
-
 Provides an execution-level summary across all reporting channels.
 
 ### Analytics Availability Validation
@@ -155,6 +159,25 @@ Displays meaningful messages when no reportable data exists.
 ### Reporting Completeness Validation
 
 Verifies required report sections before publication.
+
+## v0.6.1 Release Asset Improvements
+
+### Report Links Asset Publication
+
+Root Cause:
+
+- Markdown artifact upload executed before report-links.md generation.
+
+Resolution:
+
+- report-links.md is now uploaded separately after the Prepare Report Links workflow step.
+
+Benefits:
+
+- Reliable report-links.md publication
+- Consistent release asset packaging
+- Improved report navigation availability
+- Reduced risk of missing documentation assets
 
 ## Execution Flow
 
@@ -174,6 +197,6 @@ Slack Notification
 
 | Item | Value |
 |--------|--------|
-| Release Version | v0.6.0 |
+| Release Version | v0.6.1 |
 | Release Date | 2026-11-24 |
 | Repository | UI Playwright - JavaScript |
