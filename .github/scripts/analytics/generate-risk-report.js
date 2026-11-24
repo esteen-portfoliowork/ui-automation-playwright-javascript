@@ -3,6 +3,11 @@
 // Import fs
 const fs = require('fs');
 
+// Import functions from quality-scoring.js
+const {
+    calculateTestStabilityIndex
+} = require('../core/quality-scoring');
+
 // Import functions from test-data.js
 const {
     readPlaywrightResults
@@ -39,6 +44,17 @@ const flakyTests = tests.filter(
 
 const failedModuleCounts = {};
 const moduleRiskCounts = {};
+
+const historyPath = 'history/previous-summary.json';
+
+const historyData = fs.existsSync(historyPath)
+    ? JSON.parse(fs.readFileSync(historyPath, 'utf8'))
+    : { runs: [] };
+
+const testStabilityIndex =
+    calculateTestStabilityIndex(
+        historyData.runs || []
+    );
 // ---------- ----------
 
 // ---------- Build module metrics from normalized tests ----------
