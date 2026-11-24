@@ -656,6 +656,10 @@ jobs:
         if: always() && steps.notification_data.outcome == 'success'
         run: node .github/scripts/core/module-health.test.js
 
+      - name: 🧪 Validate Test Stability Index
+        if: always() && steps.notification_data.outcome == 'success'
+        run: node .github/scripts/core/test-stability.test.js
+
       - name: 🏆 Validate Release Quality Score
         if: always() && steps.notification_data.outcome == 'success'
         run: node .github/scripts/core/release-quality.test.js
