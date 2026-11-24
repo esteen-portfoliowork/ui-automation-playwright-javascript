@@ -90,7 +90,8 @@ const riskResult = readJsonResult(
     data =>
         Array.isArray(data.failedModules) &&
         Array.isArray(data.failedTests) &&
-        Array.isArray(data.flakyTests)
+        Array.isArray(data.flakyTests) &&
+        Array.isArray(data.modules)
 );
 
 const historicalResult = readJsonResult(
@@ -114,6 +115,7 @@ const risk = riskResult.data || {
     failedModules: [],
     failedTests: [],
     flakyTests: [],
+    modules: [],
     topRiskModules: [],
     topRiskModule: null,
     slowestModule: null,
@@ -216,6 +218,8 @@ const notificationData = {
         failedModules: risk.failedModules,
         failedTests: risk.failedTests,
         flakyTests: risk.flakyTests,
+
+        modules: risk.modules,
 
         topRiskModules: risk.topRiskModules,
         topRiskModule: risk.topRiskModule,
