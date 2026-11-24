@@ -135,20 +135,49 @@ for (const module of analytics.modules) {
 }
 // ---------- ----------
 
+
 // ---------- Tag Execution Summary ----------
 const tagLines = [
-  '| Tag | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
-  '|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|'
+  '| Tag | Total | Executed | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Tag Risk Score | Tag Health Score | Health Status |',
+  '|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:---------------:|:----------------:|:-------------:|'
 ];
 
 for (const tag of analytics.tags) {
-  tagLines.push(
-    `| ${tag.tag} | ${tag.total} | ${tag.passed} | ${tag.failed} | ${tag.flaky} | ${tag.skipped} | ${tag.passRate}% | ${tag.failRate}% | ${tag.flakyRate}% | ${tag.skippedRate}% | ${tag.qualityScore}% | ${tag.health} |`
-  );
+
+    const riskScore = Number.isFinite(tag.riskScore)
+        ? `${tag.riskScore.toFixed(2)}%`
+        : 'N/A';
+
+    const healthScore =
+        tag.healthScore !== null &&
+        Number.isFinite(tag.healthScore)
+            ? `${tag.healthScore.toFixed(2)}%`
+            : 'N/A';
+
+    const healthStatus =
+        tag.healthStatus || '⚪ Unknown';
+
+    tagLines.push(
+        `| ${escapeMarkdown(tag.tag)} | ` +
+        `${tag.total} | ` +
+        `${tag.executed} | ` +
+        `${tag.passed} | ` +
+        `${tag.failed} | ` +
+        `${tag.flaky} | ` +
+        `${tag.skipped} | ` +
+        `${tag.passRate}% | ` +
+        `${tag.failRate}% | ` +
+        `${tag.flakyRate}% | ` +
+        `${tag.skippedRate}% | ` +
+        `${tag.qualityScore}% | ` +
+        `${riskScore} | ` +
+        `${healthScore} | ` +
+        `${healthStatus} |`
+    );
 }
 
 writeMarkdown(
-  'tag-execution-summary.md',
-  tagLines.join('\n')
+    'tag-execution-summary.md',
+    tagLines.join('\n')
 );
 // ---------- ----------

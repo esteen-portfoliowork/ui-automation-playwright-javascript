@@ -503,22 +503,43 @@ function formatModuleBreakdown() {
         .join('\n\n');
 }
 
+
 function formatTagExecution() {
     if (!analyticsResult.available) {
         return '⚪ Tag execution data unavailable.';
     }
 
     const tags = (analytics.tags || [])
-        .map(item =>
-            `• *@${item.tag}* — ` +
-            `Total: ${item.total} | ` +
-            `Passed: ${item.passed} | ` +
-            `Failed: ${item.failed} | ` +
-            `Flaky: ${item.flaky} | ` +
-            `Skipped: ${item.skipped} | ` +
-            `Pass Rate: ${Number(item.passRate).toFixed(2)}% | ` +
-            `Health: ${item.health}`
-        );
+        .map(item => {
+
+            const riskScore =
+                Number.isFinite(item.riskScore)
+                    ? `${item.riskScore.toFixed(2)}%`
+                    : 'N/A';
+
+            const healthScore =
+                item.healthScore !== null &&
+                Number.isFinite(item.healthScore)
+                    ? `${item.healthScore.toFixed(2)}%`
+                    : 'N/A';
+
+            const healthStatus =
+                item.healthStatus || '⚪ Unknown';
+
+            return [
+                `• *@${item.tag}*`,
+                `Total: ${item.total}`,
+                `Executed: ${item.executed}`,
+                `Passed: ${item.passed}`,
+                `Failed: ${item.failed}`,
+                `Flaky: ${item.flaky}`,
+                `Skipped: ${item.skipped}`,
+                `Pass Rate: ${Number(item.passRate).toFixed(2)}%`,
+                `Tag Risk Score: ${riskScore}`,
+                `Tag Health Score: ${healthScore}`,
+                `Health Status: ${healthStatus}`
+            ].join(' | ');
+        });
 
     const untagged = analytics.untaggedTests || [];
 
