@@ -459,6 +459,8 @@ jobs:
           path: |
             release-readiness.md
             release-readiness.json
+            release-recommendations.md
+            release-recommendations.json
             application-health-dashboard.md
             module-breakdown.md
             tag-execution-summary.md
@@ -658,6 +660,10 @@ jobs:
         if: always() && steps.notification_data.outcome == 'success'
         run: node .github/scripts/core/release-quality.test.js
 
+      - name: 🤖 Validate Release Recommendations
+        if: always() && steps.notification_data.outcome == 'success'
+        run: node .github/scripts/core/release-recommendations.test.js
+      
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
@@ -683,6 +689,7 @@ jobs:
               'Execution Overview',
               'Execution Metrics',
               'Release Quality Score',
+              'Automated Release Recommendation',
               'Application Health',
               'Module Breakdown',
               'Test Tag Analytics',
@@ -725,6 +732,46 @@ jobs:
             console.log('Slack Channel Configured:', Boolean(data.notification.slackChannel));
             console.log('Report Links:', Object.keys(data.links));
             console.log('Slack Sections:', Object.keys(data.slack));
+          "
+
+      - name: 🔍 Validate Release Recommendation Reports
+        if: always()
+        run: |
+          node -e "
+            const fs = require('fs');
+
+            const jsonFile = 'release-recommendations.json';
+            const mdFile = 'release-recommendations.md';
+
+            if (!fs.existsSync(jsonFile)) {
+              throw new Error('Release recommendation JSON is missing.');
+            }
+
+            if (!fs.existsSync(mdFile)) {
+              throw new Error('Release recommendation Markdown is missing.');
+            }
+
+            const data = JSON.parse(
+              fs.readFileSync(jsonFile, 'utf8')
+            );
+
+            const allowed = [
+              'GO',
+              'CONDITIONAL GO',
+              'NO-GO',
+              'REVIEW REQUIRED'
+            ];
+
+            if (!allowed.includes(data.recommendation)) {
+              throw new Error('Invalid recommendation status.');
+            }
+
+            if (!data.explanation || !data.reasons.length || !data.actions.length) {
+              throw new Error('Recommendation explanation or actions are missing.');
+            }
+
+            console.log('Release recommendation report validation passed.');
+            console.log('Recommendation:', data.recommendation);
           "
 
       - name: 📨 Generate Slack Payload

@@ -28,6 +28,11 @@ const {
     countTests
 } = require('../core/test-aggregation');
 
+// Import functions from release-recommendations.js
+const {
+    generateReleaseRecommendation
+} = require('../core/release-recommendations');
+
 // Import functions from report-utils.js
 const {
     escapeMarkdown,
@@ -649,9 +654,119 @@ fs.writeFileSync(
     'utf8'
 );
 
+// ---------- Automated Release Recommendations ----------
+const releaseRecommendation = generateReleaseRecommendation({
+
+    // Existing Release Quality Score.
+    releaseQuality: releaseReadiness,
+
+    // Existing Test Stability Index.
+    testStability: testStabilityIndex,
+
+    // All analyzed modules with Module Health Scores.
+    modules: riskModules,
+
+    // Actual execution results.
+    execution: {
+        executedTests: executed,
+        failedTests: failed,
+        failureRate
+    },
+
+    // Future Issue 06/07 integration.
+    // NOT_CONFIGURED is not treated as a failed gate.
+    qualityGate: {
+        configured: false,
+        status: 'NOT_CONFIGURED'
+    }
+});
+
+// Add recommendation to the central risk-analysis data.
+riskAnalysis.releaseRecommendation = releaseRecommendation;
+
+fs.writeFileSync(
+    'risk-analysis.json',
+    JSON.stringify(riskAnalysis, null, 2),
+    'utf8'
+);
+
+// ---------- JSON Report ----------
+
+fs.writeFileSync(
+    'release-recommendations.json',
+    JSON.stringify(releaseRecommendation, null, 2),
+    'utf8'
+);
+
+// ---------- Markdown Report ----------
+
+const recommendationEmoji = {
+    'GO': '🟢',
+    'CONDITIONAL GO': '🟡',
+    'NO-GO': '🔴',
+    'REVIEW REQUIRED': '⚪'
+}[releaseRecommendation.recommendation] || '⚪';
+
+const recommendationMarkdown = [
+    '',
+    `## ${recommendationEmoji} ${releaseRecommendation.recommendation}`,
+    '',
+    '### Explanation',
+    '',
+    releaseRecommendation.explanation,
+    '',
+    '### Recommendation Reasons',
+    '',
+    ...releaseRecommendation.reasons.map(
+        reason => `- ${reason}`
+    ),
+    '',
+    '### Recommended Actions',
+    '',
+    ...releaseRecommendation.actions.map(
+        action => `- [ ] ${action}`
+    ),
+    '',
+    '### Quality Metrics',
+    '',
+    '| Metric | Value |',
+    '|---|---:|',
+    `| Release Quality Score | ${releaseRecommendation.metrics.releaseQualityScore ?? 'N/A'} |`,
+    `| Test Stability Index | ${releaseRecommendation.metrics.testStabilityIndex ?? 'N/A'} |`,
+    `| Executed Tests | ${releaseRecommendation.metrics.executedTests ?? 'N/A'} |`,
+    `| Failed Tests | ${releaseRecommendation.metrics.failedTests ?? 'N/A'} |`,
+    `| Failure Rate | ${releaseRecommendation.metrics.failureRate ?? 'N/A'}% |`,
+    `| Lowest Module Health Score | ${releaseRecommendation.metrics.lowestModuleHealthScore ?? 'N/A'} |`,
+    `| Critical Modules | ${releaseRecommendation.metrics.criticalModuleCount ?? 'N/A'} |`,
+    '',
+    '### Quality Gate',
+    '',
+    `- Configured: ${releaseRecommendation.qualityGate.configured}`,
+    `- Status: ${releaseRecommendation.qualityGate.status}`,
+    '',
+    '### Governance Notice',
+    '',
+    'This recommendation is advisory. It does not automatically approve, reject, or deploy a release.',
+    '',
+    `Generated: ${releaseRecommendation.evaluatedAt}`
+].join('\n');
+
+fs.writeFileSync(
+    'release-recommendations.md',
+    recommendationMarkdown + '\n',
+    'utf8'
+);
+
+console.log(
+    `Release Recommendation: ${releaseRecommendation.recommendation}`
+);
+
+console.log(
+    `Release Recommendation Report generated.`
+);
+// ---------- ----------
 
 // ---------- Release Quality Markdown ----------
-
 const readinessStatusEmoji = {
     'GO': '🟢',
     'CONDITIONAL GO': '🟡',
