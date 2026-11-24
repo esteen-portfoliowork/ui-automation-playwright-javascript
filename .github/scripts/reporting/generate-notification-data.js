@@ -282,6 +282,7 @@ const notificationData = {
         jsonResults: process.env.JSON_RESULTS_URL || '',
         allureResults: process.env.ALLURE_RESULTS_URL || '',
         allureReport: process.env.ALLURE_REPORT_URL || '',
+        qualityScoringDashboard:process.env.QUALITY_DASHBOARD_URL || '',
         markdownReports: process.env.MARKDOWN_REPORT_URL || ''
     },
 
