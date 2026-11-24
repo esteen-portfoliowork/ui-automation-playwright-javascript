@@ -11,6 +11,15 @@ const analytics = JSON.parse(
   )
 );
 
+const riskAnalysis = JSON.parse(
+  fs.readFileSync(
+    'risk-analysis.json',
+    'utf8'
+  )
+);
+
+const riskModules = riskAnalysis.modules || [];
+
 // Import functions from report-utils.js
 const {
     escapeMarkdown,
@@ -18,14 +27,47 @@ const {
 } = require('../reporting/report-utils');
 
 // ---------- Application Health ----------
+
+// Find the highest-risk module for each application.
+// The application's scores represent its highest-risk module.
+
+const applicationRiskMap = {};
+
+for (const module of riskModules) {
+  const existing = applicationRiskMap[module.application];
+
+  if (
+    !existing ||
+    module.riskScore > existing.riskScore
+  ) {
+    applicationRiskMap[module.application] = module;
+  }
+}
+
 const applicationLines = [
-  '| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
-  '|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|'
+  '| Application | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Module Risk Score | Module Health Score | Module Health Status |',
+  '|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:------------------:|:-------------------:|:-------------------:|'
 ];
 
 for (const app of analytics.applications) {
+  const highestRiskModule =
+    applicationRiskMap[app.application];
+
+  const moduleRiskScore = highestRiskModule
+    ? `${highestRiskModule.riskScore.toFixed(2)}%`
+    : 'N/A';
+
+  const moduleHealthScore =
+    highestRiskModule?.healthScore !== null &&
+    highestRiskModule?.healthScore !== undefined
+      ? `${highestRiskModule.healthScore.toFixed(2)}%`
+      : 'N/A';
+
+  const moduleHealthStatus =
+    highestRiskModule?.healthStatus || '⚪ Unknown';
+
   applicationLines.push(
-    `| ${app.application} | ${app.total} | ${app.passed} | ${app.failed} | ${app.flaky} | ${app.skipped} | ${app.passRate}% | ${app.failRate}% | ${app.flakyRate}% | ${app.skippedRate}% | ${app.qualityScore}% | ${app.health} |`
+    `| ${escapeMarkdown(app.application)} | ${app.total} | ${app.passed} | ${app.failed} | ${app.flaky} | ${app.skipped} | ${app.passRate}% | ${app.failRate}% | ${app.flakyRate}% | ${app.skippedRate}% | ${app.qualityScore}% | ${moduleRiskScore} | ${moduleHealthScore} | ${moduleHealthStatus} |`
   );
 }
 
@@ -33,6 +75,7 @@ writeMarkdown(
   'application-health-dashboard.md',
   applicationLines.join('\n')
 );
+
 // ---------- ----------
 
 // ---------- Module Breakdown ----------
