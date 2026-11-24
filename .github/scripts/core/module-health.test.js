@@ -1,9 +1,9 @@
-// Resolve report paths from the repository root.
-const REPO_ROOT = path.resolve(__dirname, '../../..');
+// // Resolve report paths from the repository root.
+// const REPO_ROOT = path.resolve(__dirname, '../../..');
 
-function getReportPath(file) {
-    return path.join(REPO_ROOT, file);
-}
+// function getReportPath(file) {
+//     return path.join(REPO_ROOT, file);
+// }
 
 const {
     calculateModuleHealthScore,
