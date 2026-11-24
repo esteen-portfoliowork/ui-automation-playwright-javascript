@@ -246,6 +246,8 @@ function renderSection(section) {
     const tableSections = [
         /historical test trend/i,
         /risk overview/i,
+        /top risk modules/i,
+        /application health/i,
         /scoring breakdown/i,
         /execution metrics/i,
         /pull request details/i,
