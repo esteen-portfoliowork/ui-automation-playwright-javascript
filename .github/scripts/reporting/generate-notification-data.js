@@ -378,37 +378,88 @@ function formatSlowestModule() {
     ].join('\n');
 }
 
+
 function formatReleaseReadiness() {
+
     if (!riskResult.available) {
-        return '⚪ Release readiness data unavailable.';
+        return '⚪ Release Quality data unavailable.';
     }
 
     const item = risk.releaseReadiness;
 
-    if (!item) {
-        return 'Release readiness data unavailable.';
+    if (!item || item.available !== true) {
+        return [
+            '⚪ Release Quality Score unavailable.',
+            item?.reason || 'Required quality metrics are missing.'
+        ].join('\n');
     }
 
     const emoji = {
         'GO': '🟢',
         'CONDITIONAL GO': '🟡',
-        'NO-GO': '🔴'
+        'NO-GO': '🔴',
+        'UNKNOWN': '⚪'
     }[item.status] || '⚪';
 
+    const qualityScore = item.qualityScore;
+
     const scores = item.componentScores;
+    const quality = item.componentQualityScores;
     const metrics = item.metrics;
-    const weights = item.thresholds.weights;
+    const weights = item.componentWeights;
 
     return [
         `${emoji} *${item.status}*`,
+
+        `*Release Quality Score:* ${qualityScore}/100`,
+
         `*Reason:* ${item.reason}`,
-        `*Readiness Score:* ${item.score}/100`,
+
         '',
-        `• Test Pass Rate: ${metrics.passRate.toFixed(2)}% | ${weights.passRate}% | ${scores.passRate.toFixed(2)}`,
-        `• Failure Rate: ${metrics.failureRate.toFixed(2)}% | ${weights.failureRate}% | ${scores.failureRate.toFixed(2)}`,
-        `• Flaky Rate: ${metrics.flakyRate.toFixed(2)}% | ${weights.flakyRate}% | ${scores.flakyRate.toFixed(2)}`,
-        `• Module Risk: ${metrics.highestModuleRisk.toFixed(2)}% | ${weights.moduleRisk}% | ${scores.moduleRisk.toFixed(2)}`,
-        `• Performance: ${formatDuration(metrics.averageTestDurationMs)} | ${weights.performance}% | ${scores.performance.toFixed(2)}`
+
+        '*Component Breakdown*',
+
+        `• Pass Rate: ${metrics.passRate.toFixed(2)}% | ` +
+        `${weights.passRate}% | ` +
+        `${scores.passRate.toFixed(2)} points`,
+
+        `• Failure Rate: ${metrics.failureRate.toFixed(2)}% | ` +
+        `${weights.failureRate}% | ` +
+        `${scores.failureRate.toFixed(2)} points`,
+
+        `• Flaky Rate: ${metrics.flakyRate.toFixed(2)}% | ` +
+        `${weights.flakyRate}% | ` +
+        `${scores.flakyRate.toFixed(2)} points`,
+
+        `• Module Health: ${metrics.lowestModuleHealthScore.toFixed(2)}% | ` +
+        `${weights.moduleRisk}% | ` +
+        `${scores.moduleHealth.toFixed(2)} points`,
+
+        `• Performance: ${formatDuration(metrics.averageTestDurationMs)} | ` +
+        `${weights.performance}% | ` +
+        `${scores.performance.toFixed(2)} points`,
+
+        '',
+
+        '*Additional Quality Indicators*',
+
+        `• Test Stability Index: ${
+            metrics.testStabilityIndex !== null
+                ? `${metrics.testStabilityIndex}/100`
+                : 'Unavailable'
+        }`,
+
+        `• Stability Integration: ${
+            item.stabilityIntegration?.method || 'N/A'
+        }`,
+
+        `• Module Health Integration: ${
+            item.moduleHealthIntegration?.method || 'N/A'
+        }`,
+
+        '',
+
+        '*Total Weight: 100%*'
     ].join('\n');
 }
 
@@ -639,30 +690,62 @@ setOutput(
     notification.slack.tagExecution
 );
 
-// Release readiness values.
+
+// ---------- Release Quality Outputs ----------
 const readiness = risk.releaseReadiness;
 
 if (readiness) {
+
+    setOutput(
+        'RELEASE_QUALITY_AVAILABLE',
+        String(readiness.available === true)
+    );
+
+    setOutput(
+        'RELEASE_QUALITY_STATUS',
+        readiness.status || 'UNKNOWN'
+    );
+
+    setOutput(
+        'RELEASE_QUALITY_SCORE',
+        readiness.qualityScore === null ||
+        readiness.qualityScore === undefined
+            ? ''
+            : String(readiness.qualityScore)
+    );
+
+    // Backward compatibility.
     setOutput(
         'RELEASE_READINESS_STATUS',
-        readiness.status
+        readiness.status || 'UNKNOWN'
     );
 
     setOutput(
         'RELEASE_READINESS_SCORE',
-        String(readiness.score)
+        readiness.qualityScore === null ||
+        readiness.qualityScore === undefined
+            ? ''
+            : String(readiness.qualityScore)
     );
 
     setOutput(
         'RELEASE_READINESS_REASON',
-        readiness.reason
+        readiness.reason || 'N/A'
     );
 
+    setOutput(
+        'RELEASE_QUALITY_JSON',
+        JSON.stringify(readiness, null, 2)
+    );
+
+    // Preserve the existing output name.
     setOutput(
         'RELEASE_READINESS_JSON',
         JSON.stringify(readiness, null, 2)
     );
 }
+
+// ---------- ----------
 
 // Preserve title outputs.
 setOutput(

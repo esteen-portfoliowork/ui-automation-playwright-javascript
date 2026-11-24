@@ -7,7 +7,8 @@ const fs = require('fs');
 const {
     calculateTestStabilityIndex,
     calculateModuleHealthScore,
-    getModuleHealthStatus
+    getModuleHealthStatus,
+    calculateReleaseQualityScore
 } = require('../core/quality-scoring');
 
 // Import functions from test-data.js
@@ -387,8 +388,10 @@ writeMarkdown(
 );
 // ---------- ----------
 
-// ---------- Readiness Metric calculations ----------
-const RELEASE_READINESS_CONFIG = {
+
+// ---------- Release Quality Score ----------
+
+const RELEASE_QUALITY_CONFIG = {
     failureRateThreshold: 5,
     flakyRateThreshold: 5,
     slowTestThresholdMs: 10000,
@@ -407,7 +410,8 @@ const RELEASE_READINESS_CONFIG = {
     }
 };
 
-// Shared Readiness Metrics
+// ---------- Execution Metrics ----------
+
 const readinessCounts = countTests(tests);
 
 const readinessMetrics = calculateMetrics(
@@ -426,109 +430,134 @@ const {
     skipped
 } = readinessCounts;
 
-// Executed tests exclude skipped tests.
 const executed = passed + failed + flaky;
 
-// Use the shared metric calculations.
 const {
     passRate,
     failRate: failureRate,
     flakyRate
 } = readinessMetrics;
 
-// Module Risk
-const highestModuleRisk = riskModules.length > 0
-    ? Math.max(...riskModules.map(module => module.riskScore))
-    : 0;
+// ---------- Module Health ----------
 
-// Performance
-const averageTestDurationMs = slowestModule
-    ? slowestModule.averageDurationMs
-    : 0;
+// Get the weakest Module Health Score.
+// This is the inverse of the highest Module Risk Score.
 
-// Individual Weighted Scores
-const passRateScore =
-    (passRate / 100) *
-    RELEASE_READINESS_CONFIG.weights.passRate;
+const validHealthModules = riskModules.filter(
+    module =>
+        Number.isFinite(module.healthScore)
+);
 
-const failureRateScore =
-    Math.max(0, 100 - failureRate) / 100 *
-    RELEASE_READINESS_CONFIG.weights.failureRate;
+const lowestModuleHealthScore =
+    validHealthModules.length > 0
+        ? Math.min(
+            ...validHealthModules.map(
+                module => module.healthScore
+            )
+        )
+        : null;
 
-const flakyRateScore =
-    Math.max(
-        0,
-        100 - (
-            flakyRate /
-            RELEASE_READINESS_CONFIG.flakyRateThreshold
-        ) * 100
-    ) / 100 *
-    RELEASE_READINESS_CONFIG.weights.flakyRate;
+// ---------- Performance ----------
 
-const moduleRiskScore =
-    Math.max(0, 100 - highestModuleRisk) / 100 *
-    RELEASE_READINESS_CONFIG.weights.moduleRisk;
+// Preserve the existing performance measurement:
+// average duration of the slowest module.
 
-const performanceScore =
-    Math.max(
-        0,
-        100 - (
-            averageTestDurationMs /
-            RELEASE_READINESS_CONFIG.slowTestThresholdMs
-        ) * 100
-    ) / 100 *
-    RELEASE_READINESS_CONFIG.weights.performance;
+const averageTestDurationMs =
+    slowestModule &&
+    slowestModule.durationTestCount > 0
+        ? slowestModule.averageDurationMs
+        : null;
 
-// Final Readiness Score
-const readinessScore = Number((
-    passRateScore +
-    failureRateScore +
-    flakyRateScore +
-    moduleRiskScore +
-    performanceScore
-).toFixed(2));
+// ---------- Centralized Quality Calculation ----------
 
-// Release Decision
+const releaseQuality = calculateReleaseQualityScore({
+
+    executedTests: executed,
+
+    passRate,
+    failureRate,
+    flakyRate,
+
+    testStabilityIndex,
+
+    modules: riskModules,
+
+    averageTestDurationMs,
+
+    weights: RELEASE_QUALITY_CONFIG.weights,
+
+    flakyRateThreshold:
+        RELEASE_QUALITY_CONFIG.flakyRateThreshold,
+
+    slowTestThresholdMs:
+        RELEASE_QUALITY_CONFIG.slowTestThresholdMs
+});
+
+const qualityScore = releaseQuality.qualityScore;
+
+// ---------- Release Decision ----------
+
 let readinessStatus;
 let readinessReason;
 
-if (executed === 0) {
-    readinessStatus = 'NO-GO';
-    readinessReason = 'No executed tests were found.';
+if (!releaseQuality.available) {
+
+    readinessStatus = 'UNKNOWN';
+    readinessReason = releaseQuality.reason;
 
 } else if (
-    failureRate > RELEASE_READINESS_CONFIG.failureRateThreshold
+    failureRate >
+    RELEASE_QUALITY_CONFIG.failureRateThreshold
 ) {
+
     readinessStatus = 'NO-GO';
+
     readinessReason =
         `Failure rate (${failureRate.toFixed(2)}%) exceeds ` +
-        `the ${RELEASE_READINESS_CONFIG.failureRateThreshold}% threshold.`;
+        `the ${RELEASE_QUALITY_CONFIG.failureRateThreshold}% threshold.`;
 
 } else if (
-    readinessScore >= RELEASE_READINESS_CONFIG.decisions.go &&
+    qualityScore >= RELEASE_QUALITY_CONFIG.decisions.go &&
     failed === 0
 ) {
+
     readinessStatus = 'GO';
+
     readinessReason =
-        'All readiness scoring criteria are satisfied.';
+        'All release quality criteria are satisfied.';
 
 } else if (
-    readinessScore >= RELEASE_READINESS_CONFIG.decisions.conditionalGo
+    qualityScore >=
+    RELEASE_QUALITY_CONFIG.decisions.conditionalGo
 ) {
+
     readinessStatus = 'CONDITIONAL GO';
+
     readinessReason =
         'Review outstanding test failures, flaky tests, or risk areas.';
 
 } else {
+
     readinessStatus = 'NO-GO';
+
     readinessReason =
-        'The readiness score is below the minimum release threshold.';
+        'Release Quality Score is below the minimum release threshold.';
 }
 
-// Final Readiness Result
+// ---------- Final Release Quality Result ----------
+
 const releaseReadiness = {
+
+    available: releaseQuality.available,
+
     status: readinessStatus,
-    score: readinessScore,
+
+    // Canonical score field.
+    qualityScore,
+
+    // Backward compatibility.
+    score: qualityScore,
+
     reason: readinessReason,
 
     metrics: {
@@ -538,25 +567,51 @@ const releaseReadiness = {
         failedTests: failed,
         flakyTests: flaky,
         skippedTests: skipped,
+
         passRate,
         failureRate,
         flakyRate,
-        highestModuleRisk: Number(highestModuleRisk.toFixed(2)),
-        averageTestDurationMs: Number(
-            averageTestDurationMs.toFixed(2)
-        )
+
+        highestModuleRisk:
+            validHealthModules.length > 0
+                ? Number(
+                    Math.max(
+                        ...validHealthModules.map(
+                            module => module.riskScore
+                        )
+                    ).toFixed(2)
+                )
+                : null,
+
+        lowestModuleHealthScore,
+
+        averageTestDurationMs,
+
+        testStabilityIndex:
+            testStabilityIndex.available
+                ? testStabilityIndex.score
+                : null
     },
 
-    componentScores: {
-        passRate: Number(passRateScore.toFixed(2)),
-        failureRate: Number(failureRateScore.toFixed(2)),
-        flakyRate: Number(flakyRateScore.toFixed(2)),
-        moduleRisk: Number(moduleRiskScore.toFixed(2)),
-        performance: Number(performanceScore.toFixed(2))
-    },
+    componentQualityScores:
+        releaseQuality.componentQualityScores || null,
 
-    thresholds: RELEASE_READINESS_CONFIG
+    componentScores:
+        releaseQuality.componentScores || null,
+
+    componentWeights:
+        RELEASE_QUALITY_CONFIG.weights,
+
+    stabilityIntegration:
+        releaseQuality.stabilityIntegration || null,
+
+    moduleHealthIntegration:
+        releaseQuality.moduleHealthIntegration || null,
+
+    thresholds: RELEASE_QUALITY_CONFIG
 };
+
+// ---------- ----------
 
 // Structured source for notification generation
 const riskAnalysis = {
@@ -594,31 +649,68 @@ fs.writeFileSync(
     'utf8'
 );
 
-// Readiness Markdown
+
+// ---------- Release Quality Markdown ----------
+
 const readinessStatusEmoji = {
     'GO': '🟢',
     'CONDITIONAL GO': '🟡',
-    'NO-GO': '🔴'
+    'NO-GO': '🔴',
+    'UNKNOWN': '⚪'
 }[releaseReadiness.status] || '⚪';
 
-const readinessMarkdown = `### ${readinessStatusEmoji} ${releaseReadiness.status}
-*Readiness Score:* ${releaseReadiness.score}/100
+const readinessMarkdown = releaseReadiness.available
+    ? `### ${readinessStatusEmoji} Release Quality: ${releaseReadiness.status}
+
+**Release Quality Score:** ${releaseReadiness.qualityScore}/100
 
 ${releaseReadiness.reason}
 
-### Scoring Breakdown
+### Component Scoring Breakdown
 
-| Category | Actual Rate | Weight | Points |
-|:---:|:---:|:---:|:---:|
-| Test Pass Rate | ${passRate.toFixed(2)}% | 40% | ${passRateScore.toFixed(2)} |
-| Failure Rate | ${failureRate.toFixed(2)}% | 25% | ${failureRateScore.toFixed(2)} |
-| Flaky Rate | ${flakyRate.toFixed(2)}% | 15% | ${flakyRateScore.toFixed(2)} |
-| Module Risk | ${highestModuleRisk.toFixed(2)}% | 10% | ${moduleRiskScore.toFixed(2)} |
-| Performance | ${formatDuration(averageTestDurationMs)} | 10% | ${performanceScore.toFixed(2)} |
-| **Total** | — | **100%** | **${readinessScore.toFixed(2)}/100** |
+| Component | Actual Metric | Component Quality | Weight | Weighted Points |
+|:---:|:---:|:---:|:---:|:---:|
+| Pass Rate | ${passRate.toFixed(2)}% | ${releaseQuality.componentQualityScores.passRate.toFixed(2)} | 40% | ${releaseQuality.componentScores.passRate.toFixed(2)} |
+| Failure Rate | ${failureRate.toFixed(2)}% | ${releaseQuality.componentQualityScores.failureRate.toFixed(2)} | 25% | ${releaseQuality.componentScores.failureRate.toFixed(2)} |
+| Flaky Rate | ${flakyRate.toFixed(2)}% | ${releaseQuality.componentQualityScores.flakyRate.toFixed(2)} | 15% | ${releaseQuality.componentScores.flakyRate.toFixed(2)} |
+| Module Health | ${lowestModuleHealthScore.toFixed(2)}% | ${releaseQuality.componentQualityScores.moduleHealth.toFixed(2)} | 10% | ${releaseQuality.componentScores.moduleHealth.toFixed(2)} |
+| Performance | ${formatDuration(averageTestDurationMs)} | ${releaseQuality.componentQualityScores.performance.toFixed(2)} | 10% | ${releaseQuality.componentScores.performance.toFixed(2)} |
+| **Total** | — | — | **100%** | **${releaseReadiness.qualityScore.toFixed(2)}/100** |
+
+### Additional Quality Indicators
+
+| Indicator | Value |
+|:---:|:---:|
+| Test Stability Index | ${testStabilityIndex.available ? `${testStabilityIndex.score}/100` : '⚪ Unavailable'} |
+| Stability Integration | ${releaseQuality.stabilityIntegration.method} |
+| Lowest Module Health Score | ${lowestModuleHealthScore.toFixed(2)}% |
+| Modules Analyzed | ${releaseQuality.moduleHealthIntegration.modulesAnalyzed} |
+
+### Scoring Methodology
+
+- Pass Rate: 40% of the total score.
+- Failure Rate: 25% of the total score.
+- Flaky Rate: 15% of the total score.
+- Module Health: 10% of the total score.
+- Performance: 10% of the total score.
+- Component weights total 100%.
+- Historical Test Stability Index is blended into the Flaky Rate component when available.
+- Module Health uses the lowest health score among analyzed modules.
+- Performance uses the average duration of the slowest module.
+`
+    : `### ⚪ Release Quality: UNKNOWN
+
+**Release Quality Score:** Unavailable
+
+${releaseReadiness.reason}
+
+The release quality evaluation cannot be completed because one or more required metrics are unavailable.
 `;
 
-// Write Readiness Reports
+// ---------- Write Release Quality Reports ----------
+
+// Keep the existing filenames for backward compatibility.
+
 writeMarkdown(
     'release-readiness.md',
     readinessMarkdown
@@ -629,6 +721,7 @@ fs.writeFileSync(
     JSON.stringify(releaseReadiness, null, 2),
     'utf8'
 );
+
 // ---------- ----------
 
 // Logs
@@ -636,5 +729,11 @@ console.log(`Failed modules: ${modules.length}`);
 console.log(`Failed tests: ${failedTests.length}`);
 console.log(`Flaky tests: ${flakyTests.length}`);
 console.log(`Total modules analyzed: ${totalModulesAnalyzed}`);
-console.log(`Release readiness: ${releaseReadiness.status}`);
-console.log(`Readiness score: ${releaseReadiness.score}/100`);
+console.log(
+    `Release Quality Status: ${releaseReadiness.status}`
+);
+console.log(
+    `Release Quality Score: ${
+        releaseReadiness.qualityScore ?? 'Unavailable'
+    }/100`
+);

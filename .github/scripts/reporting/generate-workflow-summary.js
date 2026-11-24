@@ -170,11 +170,11 @@ lines.push(
 // ---------- Report Sections ----------
 
 const reports = [
-    ['🛡️ Release Readiness', 'release-readiness.md'],
+    ['🏆 Release Quality Score', 'release-readiness.md'],
     ['🖥️ Application Health', 'application-health-dashboard.md'],
     ['📦 Module Breakdown', 'module-breakdown.md'],
     ['🏷️ Test Tag Analytics', 'tag-execution-summary.md'],
-    ['🏆 Top Risk Modules', 'top-risk-modules.md'],
+    ['🚨 Top Risk Modules', 'top-risk-modules.md'],
     ['❌ Failed Modules', 'failed-modules.md'],
     ['❌ Failed Tests', 'failed-tests.md'],
     ['⚠️ Flaky Tests', 'flaky-tests.md'],

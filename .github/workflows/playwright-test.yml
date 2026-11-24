@@ -654,6 +654,10 @@ jobs:
         if: always() && steps.notification_data.outcome == 'success'
         run: node .github/scripts/core/module-health.test.js
 
+      - name: 🏆 Validate Release Quality Score
+        if: always() && steps.notification_data.outcome == 'success'
+        run: node .github/scripts/core/release-quality.test.js
+
       - name: 📋 Generate Execution Summary
         if: always()
         run: |
@@ -678,7 +682,7 @@ jobs:
               'Execution Health',
               'Execution Overview',
               'Execution Metrics',
-              'Release Readiness',
+              'Release Quality Score',
               'Application Health',
               'Module Breakdown',
               'Test Tag Analytics',
