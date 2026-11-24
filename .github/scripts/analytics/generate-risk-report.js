@@ -176,7 +176,7 @@ const riskModules = Object.values(moduleRiskCounts).map(item => {
 
     let riskLevel = '🟢 Healthy';
 
-    if (riskScore >= 50) {
+    if (riskScore > 50) {
         riskLevel = '🔴 Critical';
     } else if (riskScore >= 25) {
         riskLevel = '🟠 High';
