@@ -729,5 +729,11 @@ console.log(`Failed modules: ${modules.length}`);
 console.log(`Failed tests: ${failedTests.length}`);
 console.log(`Flaky tests: ${flakyTests.length}`);
 console.log(`Total modules analyzed: ${totalModulesAnalyzed}`);
-console.log(`Release readiness: ${releaseReadiness.status}`);
-console.log(`Readiness score: ${releaseReadiness.score}/100`);
+console.log(
+    `Release Quality Status: ${releaseReadiness.status}`
+);
+console.log(
+    `Release Quality Score: ${
+        releaseReadiness.qualityScore ?? 'Unavailable'
+    }/100`
+);
