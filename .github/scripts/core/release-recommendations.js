@@ -207,9 +207,9 @@ function generateReleaseRecommendation(
 
     const criticalModules = validModules.filter(
         module =>
-            Number(module.healthScore) <
+            Number(module.healthScore) <=
                 config.moduleHealth.critical ||
-            String(module.riskLevel || '').toLowerCase() === 'critical'
+            /critical/i.test(String(module.riskLevel || ''))
     );
 
     metrics.lowestModuleHealthScore =
