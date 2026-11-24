@@ -724,6 +724,7 @@ jobs:
               'Execution Overview',
               'Execution Metrics',
               'Release Quality Score',
+              'Quality Scoring Dashboard',
               'Automated Release Recommendation',
               'Application Health',
               'Module Breakdown',
