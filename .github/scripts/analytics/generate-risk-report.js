@@ -154,10 +154,15 @@ const riskModules = Object.values(moduleRiskCounts).map(item => {
         ? (item.flaky / item.executed) * 100
         : 0;
 
-    // formula: [Risk = (FailureRate \times 0.70) + (FlakyRate \times 0.30)\]
+    // formula: [riskScore = (FailureRate \times 0.70) + (FlakyRate \times 0.30)\]
     const riskScore = Math.min(
         100,
         (failureRate * 0.70) + (flakyRate * 0.30)
+    );
+
+    // formula: healthScore = 100 - riskScore
+    const healthScore = Number(
+        Math.max(0, 100 - riskScore).toFixed(2)
     );
 
     let riskLevel = '🟢 Healthy';
