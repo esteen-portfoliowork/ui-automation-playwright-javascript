@@ -5,7 +5,9 @@ const fs = require('fs');
 
 // Import functions from quality-scoring.js
 const {
-    calculateTestStabilityIndex
+    calculateTestStabilityIndex,
+    calculateModuleHealthScore,
+    getModuleHealthStatus
 } = require('../core/quality-scoring');
 
 // Import functions from test-data.js
@@ -144,18 +146,6 @@ if (slowestModule) {
 // ---------- ----------
 
 // ---------- Module Risk Analysis ----------
-function getModuleHealthStatus(score) {
-    if (!Number.isFinite(score)) {
-        return '⚪ Unknown';
-    }
-
-    if (score >= 90) return '🟢 Healthy';
-    if (score >= 75) return '🔵 Good';
-    if (score >= 50) return '🟡 Needs Attention';
-
-    return '🔴 Critical';
-}
-
 const riskModules = Object.values(moduleRiskCounts).map(item => {
 
     const failureRate = item.executed > 0
@@ -173,9 +163,10 @@ const riskModules = Object.values(moduleRiskCounts).map(item => {
     );
 
     // formula: healthScore = 100 - riskScore
-    const healthScore = item.executed > 0
-        ? Number((100 - riskScore).toFixed(2))
-        : null;
+    const healthScore = calculateModuleHealthScore(
+        riskScore,
+        item.executed
+    );
 
     let riskLevel = '🟢 Healthy';
 
@@ -240,13 +231,39 @@ const modules = Object.values(failedModuleCounts)
     );
 
 // Failed Modules Markdown
+
 const failedModuleMarkdown = modules.length
     ? [
-        '| Application | Module | Failed Tests |',
-        '|:-------------:|:--------:|:-------------:|',
-        ...modules.map(item =>
-            `| ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.count} |`
-        )
+        '| Application | Module | Failed Tests | Module Risk Score | Module Health Score | Health Status |',
+        '|:-------------:|:--------:|:-------------:|:----------------:|:-----------------:|:-------------:|',
+
+        ...modules.map(item => {
+            const riskModule = riskModules.find(
+                module =>
+                    module.application === item.application &&
+                    module.module === item.module
+            );
+
+            const riskScore = riskModule
+                ? `${riskModule.riskScore.toFixed(2)}%`
+                : 'N/A';
+
+            const healthScore =
+                riskModule?.healthScore !== null &&
+                riskModule?.healthScore !== undefined
+                    ? `${riskModule.healthScore.toFixed(2)}%`
+                    : 'N/A';
+
+            const healthStatus =
+                riskModule?.healthStatus || '⚪ Unknown';
+
+            return (
+                `| ${escapeMarkdown(item.application)} | ` +
+                `${escapeMarkdown(item.module)} | ` +
+                `${item.count} | ${riskScore} | ` +
+                `${healthScore} | ${healthStatus} |`
+            );
+        })
     ].join('\n')
     : '✅ No failed modules found.';
 
@@ -341,13 +358,23 @@ writeMarkdown(
 );
 
 // Slowest Module Markdown
+
+const slowestRiskModule = slowestModule
+    ? riskModules.find(
+        module =>
+            module.application === slowestModule.application &&
+            module.module === slowestModule.module
+    )
+    : null;
+
 const slowestModuleMarkdown = [
     '',
     ...(slowestModule
         ? [
-            '| Application | Module | Total Duration | Average Duration | Tests Measured |',
-            '|:---:|:---:|:---:|:---:|:---:|',
-            `| ${escapeMarkdown(slowestModule.application)} | ${escapeMarkdown(slowestModule.module)} | ${formatDuration(slowestModule.durationMs)} | ${formatDuration(slowestModule.averageDurationMs)} | ${slowestModule.durationTestCount} |`
+            '| Application | Module | Total Duration | Average Duration | Tests Measured | Module Risk Score | Module Health Score | Health Status |',
+            '|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|',
+
+            `| ${escapeMarkdown(slowestModule.application)} | ${escapeMarkdown(slowestModule.module)} | ${formatDuration(slowestModule.durationMs)} | ${formatDuration(slowestModule.averageDurationMs)} | ${slowestModule.durationTestCount} | ${slowestRiskModule ? `${slowestRiskModule.riskScore.toFixed(2)}%` : 'N/A'} | ${slowestRiskModule?.healthScore !== null && slowestRiskModule?.healthScore !== undefined ? `${slowestRiskModule.healthScore.toFixed(2)}%` : 'N/A'} | ${slowestRiskModule?.healthStatus || '⚪ Unknown'} |`
         ]
         : [
             'No execution duration data available.'

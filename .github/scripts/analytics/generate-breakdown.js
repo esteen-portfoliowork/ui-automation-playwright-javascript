@@ -79,21 +79,46 @@ writeMarkdown(
 // ---------- ----------
 
 // ---------- Module Breakdown ----------
+
+const riskModuleMap = new Map(
+    riskModules.map(module => [
+        `${module.application}::${module.module}`,
+        module
+    ])
+);
+
 const moduleLines = [
-  '| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Health |',
-  '|:-------------:|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|'
+    '| Application | Module | Total | Passed | Failed | Flaky | Skipped | Pass Rate | Fail Rate | Flaky Rate | Skipped Rate | Quality Score | Module Risk Score | Module Health Score | Health Status |',
+    '|:-------------:|:-------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:----------------:|:-----------------:|:-------------:|'
 ];
 
 for (const module of analytics.modules) {
 
-  moduleLines.push(
-    `| ${module.application} | ${module.module} | ${module.total} | ${module.passed} | ${module.failed} | ${module.flaky} | ${module.skipped} | ${module.passRate}% | ${module.failRate}% | ${module.flakyRate}% | ${module.skippedRate}% | ${module.qualityScore}% | ${module.health} |`
-  );
+    const riskModule = riskModuleMap.get(
+        `${module.application}::${module.module}`
+    );
+
+    const moduleRiskScore = riskModule
+        ? `${riskModule.riskScore.toFixed(2)}%`
+        : 'N/A';
+
+    const moduleHealthScore =
+        riskModule?.healthScore !== null &&
+        riskModule?.healthScore !== undefined
+            ? `${riskModule.healthScore.toFixed(2)}%`
+            : 'N/A';
+
+    const healthStatus =
+        riskModule?.healthStatus || '⚪ Unknown';
+
+    moduleLines.push(
+        `| ${escapeMarkdown(module.application)} | ${escapeMarkdown(module.module)} | ${module.total} | ${module.passed} | ${module.failed} | ${module.flaky} | ${module.skipped} | ${module.passRate}% | ${module.failRate}% | ${module.flakyRate}% | ${module.skippedRate}% | ${module.qualityScore}% | ${moduleRiskScore} | ${moduleHealthScore} | ${healthStatus} |`
+    );
 }
 
 writeMarkdown(
-  'module-breakdown.md',
-  moduleLines.join('\n')
+    'module-breakdown.md',
+    moduleLines.join('\n')
 );
 
 const groupedModules = {};
