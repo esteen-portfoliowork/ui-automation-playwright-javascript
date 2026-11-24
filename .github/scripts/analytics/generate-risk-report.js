@@ -144,6 +144,18 @@ if (slowestModule) {
 // ---------- ----------
 
 // ---------- Module Risk Analysis ----------
+function getModuleHealthStatus(score) {
+    if (!Number.isFinite(score)) {
+        return '⚪ Unknown';
+    }
+
+    if (score >= 90) return '🟢 Healthy';
+    if (score >= 75) return '🔵 Good';
+    if (score >= 50) return '🟡 Needs Attention';
+
+    return '🔴 Critical';
+}
+
 const riskModules = Object.values(moduleRiskCounts).map(item => {
 
     const failureRate = item.executed > 0
@@ -154,11 +166,16 @@ const riskModules = Object.values(moduleRiskCounts).map(item => {
         ? (item.flaky / item.executed) * 100
         : 0;
 
-    // formula: [Risk = (FailureRate \times 0.70) + (FlakyRate \times 0.30)\]
+    // formula: [riskScore = (FailureRate \times 0.70) + (FlakyRate \times 0.30)\]
     const riskScore = Math.min(
         100,
         (failureRate * 0.70) + (flakyRate * 0.30)
     );
+
+    // formula: healthScore = 100 - riskScore
+    const healthScore = item.executed > 0
+        ? Number((100 - riskScore).toFixed(2))
+        : null;
 
     let riskLevel = '🟢 Healthy';
 
@@ -174,10 +191,15 @@ const riskModules = Object.values(moduleRiskCounts).map(item => {
 
     return {
         ...item,
+
         failureRate,
         flakyRate,
+
         riskScore,
-        riskLevel
+        riskLevel,
+
+        healthScore,
+        healthStatus: getModuleHealthStatus(healthScore)
     };
 });
 
@@ -282,24 +304,33 @@ const topRiskMarkdown = [
     '',
     ...(topRiskModules.length
         ? [
-            '| Rank | Application | Module | Total | Executed | Failed | Flaky | Failure Rate | Flaky Rate | Risk Score | Risk Level |',
-            '|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|',
+            '| Rank | Application | Module | Total | Executed | Failed | Flaky | Failure Rate | Flaky Rate | Module Risk Score | Module Health Score | Risk Level | Health Status |',
+            '|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|',
             ...topRiskModules.map((item, index) =>
-                `| #${index + 1} | ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.total} | ${item.executed} | ${item.failed} | ${item.flaky} | ${item.failureRate.toFixed(2)}% | ${item.flakyRate.toFixed(2)}% | ${item.riskScore.toFixed(2)}% | ${item.riskLevel} |`
+                `| #${index + 1} | ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.total} | ${item.executed} | ${item.failed} | ${item.flaky} | ${item.failureRate.toFixed(2)}% | ${item.flakyRate.toFixed(2)}% | ${item.riskScore.toFixed(2)}% | ${item.healthScore === null ? 'N/A' : `${item.healthScore.toFixed(2)}%`} | ${item.riskLevel} | ${item.healthStatus} |`
             )
         ]
         : [
             'No modules available for risk analysis.'
         ]),
     '',
-    '#### 🧮 Risk Score Calculation',
+    '#### 🧮 Module Risk & Health Score Calculation',
     '',
-    '**Risk Score = (Failure Rate × 70%) + (Flaky Rate × 30%)**',
+    '**Module Risk Score = (Failure Rate × 70%) + (Flaky Rate × 30%)**',
+    '',
+    '**Module Health Score = 100 − Module Risk Score**',
     '',
     '- Failure Rate = (Failed Tests / Executed Tests) × 100',
     '- Flaky Rate = (Flaky Tests / Executed Tests) × 100',
     '- Skipped tests are excluded from the rate denominator.',
-    '- Maximum risk score is capped at 100%.',
+    '- Maximum Module Risk Score is capped at 100%.',
+    '- Module Health Score is unavailable when a module has no executed tests.',
+    '',
+    '**Module Health Status:**',
+    '- 90–100: 🟢 Healthy',
+    '- 75–89: 🔵 Good',
+    '- 50–74: 🟡 Needs Attention',
+    '- 0–49: 🔴 Critical',
     '',
     '_Only the top 10 highest-risk modules are displayed._'
 ].join('\n');
@@ -516,6 +547,9 @@ const riskAnalysis = {
     failedModules: modules,
     failedTests,
     flakyTests,
+
+    // Include every analyzed module for downstream reports.
+    modules: riskModules,
 
     topRiskModules,
     topRiskModule,

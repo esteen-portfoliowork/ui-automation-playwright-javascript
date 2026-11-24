@@ -90,7 +90,8 @@ const riskResult = readJsonResult(
     data =>
         Array.isArray(data.failedModules) &&
         Array.isArray(data.failedTests) &&
-        Array.isArray(data.flakyTests)
+        Array.isArray(data.flakyTests) &&
+        Array.isArray(data.modules)
 );
 
 const historicalResult = readJsonResult(
@@ -114,6 +115,7 @@ const risk = riskResult.data || {
     failedModules: [],
     failedTests: [],
     flakyTests: [],
+    modules: [],
     topRiskModules: [],
     topRiskModule: null,
     slowestModule: null,
@@ -216,6 +218,8 @@ const notificationData = {
         failedModules: risk.failedModules,
         failedTests: risk.failedTests,
         flakyTests: risk.flakyTests,
+
+        modules: risk.modules,
 
         topRiskModules: risk.topRiskModules,
         topRiskModule: risk.topRiskModule,
@@ -338,8 +342,10 @@ function formatTopRiskModule() {
         `• Flaky: ${item.flaky}`,
         `• Failure Rate: ${item.failureRate.toFixed(2)}%`,
         `• Flaky Rate: ${item.flakyRate.toFixed(2)}%`,
-        `• Risk Score: *${item.riskScore.toFixed(2)}%*`,
-        `• Risk Level: ${item.riskLevel}`
+        `• Module Risk Score: *${item.riskScore.toFixed(2)}%*`,
+        `• Module Health Score: *${item.healthScore === null ? 'N/A' : `${item.healthScore.toFixed(2)}%`}*`,
+        `• Risk Level: ${item.riskLevel}`,
+        `• Health Status: ${item.healthStatus || '⚪ Unknown'}`
     ].join('\n');
 }
 
