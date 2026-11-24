@@ -668,6 +668,7 @@ jobs:
           JSON_RESULTS_URL: ${{ steps.upload_json_results.outputs.artifact-url }}
           ALLURE_RESULTS_URL: ${{ steps.upload_allure_results.outputs.artifact-url }}
           ALLURE_REPORT_URL: ${{ steps.upload_allure_report.outputs.artifact-url }}
+          QUALITY_DASHBOARD_URL: ${{ steps.upload_quality_dashboard.outputs.artifact-url }}
           MARKDOWN_REPORT_URL: ${{ steps.upload_markdown_reports.outputs.artifact-url }}
 
           PR_NUMBER: ${{ env.PR_NUMBER }}
