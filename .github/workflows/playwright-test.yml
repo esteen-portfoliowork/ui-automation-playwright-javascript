@@ -544,6 +544,9 @@ jobs:
           if [ -n "$ALLURE_REPORT_URL" ]; then
             SLACK_LINKS="$SLACK_LINKS | <${ALLURE_REPORT_URL}|Allure Report>"
           fi
+          if [ -n "$QUALITY_DASHBOARD_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${QUALITY_DASHBOARD_URL}|Quality Scoring Dashboard>"
+          fi
           if [ -n "$MARKDOWN_REPORT_URL" ]; then
             SLACK_LINKS="$SLACK_LINKS | <${MARKDOWN_REPORT_URL}|Markdown Execution Reports>"
           fi
