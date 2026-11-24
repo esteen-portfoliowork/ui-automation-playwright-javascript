@@ -101,6 +101,218 @@ function getModuleHealthStatus(score) {
     return '🔴 Critical';
 }
 
+
+function calculateReleaseQualityScore({
+    executedTests,
+    passRate,
+    failureRate,
+    flakyRate,
+    testStabilityIndex,
+    modules,
+    averageTestDurationMs,
+    weights,
+    flakyRateThreshold,
+    slowTestThresholdMs
+}) {
+
+    const isValidNumber = value =>
+        value !== null &&
+        value !== undefined &&
+        Number.isFinite(Number(value));
+
+    // ---------- Validate Required Metrics ----------
+
+    if (
+        !isValidNumber(executedTests) ||
+        executedTests <= 0
+    ) {
+        return {
+            available: false,
+            qualityScore: null,
+            reason: 'No executed tests are available.'
+        };
+    }
+
+    if (
+        !isValidNumber(passRate) ||
+        !isValidNumber(failureRate) ||
+        !isValidNumber(flakyRate)
+    ) {
+        return {
+            available: false,
+            qualityScore: null,
+            reason: 'Required execution metrics are unavailable.'
+        };
+    }
+
+    if (
+        !isValidNumber(averageTestDurationMs) ||
+        averageTestDurationMs <= 0
+    ) {
+        return {
+            available: false,
+            qualityScore: null,
+            reason: 'Performance duration data is unavailable.'
+        };
+    }
+
+    if (
+        !Array.isArray(modules) ||
+        modules.length === 0
+    ) {
+        return {
+            available: false,
+            qualityScore: null,
+            reason: 'Module Health Score data is unavailable.'
+        };
+    }
+
+    const validModuleHealthScores = modules
+        .map(module => module.healthScore)
+        .filter(isValidNumber)
+        .map(Number);
+
+    if (validModuleHealthScores.length === 0) {
+        return {
+            available: false,
+            qualityScore: null,
+            reason: 'No valid Module Health Scores are available.'
+        };
+    }
+
+    // ---------- Validate Weights ----------
+
+    const totalWeight = Object.values(weights)
+        .reduce((sum, weight) => sum + Number(weight), 0);
+
+    if (
+        !Number.isFinite(totalWeight) ||
+        totalWeight !== 100
+    ) {
+        return {
+            available: false,
+            qualityScore: null,
+            reason: 'Release Quality Score weights must total 100%.'
+        };
+    }
+
+    // ---------- Component Quality Scores ----------
+
+    const passRateQuality = Number(passRate);
+
+    const failureRateQuality = Math.max(
+        0,
+        100 - Number(failureRate)
+    );
+
+    const currentFlakyQuality = Math.max(
+        0,
+        100 - (
+            Number(flakyRate) /
+            flakyRateThreshold
+        ) * 100
+    );
+
+    // Use historical stability when available.
+    // Otherwise, use the current execution's flaky quality.
+
+    const stabilityAvailable =
+        testStabilityIndex?.available === true &&
+        isValidNumber(testStabilityIndex.score);
+
+    const flakyRateQuality = stabilityAvailable
+        ? (
+            currentFlakyQuality +
+            Number(testStabilityIndex.score)
+        ) / 2
+        : currentFlakyQuality;
+
+    // Use the weakest module's health score.
+    const moduleHealthQuality = Math.min(
+        ...validModuleHealthScores
+    );
+
+    const performanceQuality = Math.max(
+        0,
+        100 - (
+            Number(averageTestDurationMs) /
+            slowTestThresholdMs
+        ) * 100
+    );
+
+    const componentQualityScores = {
+        passRate: passRateQuality,
+        failureRate: failureRateQuality,
+        flakyRate: flakyRateQuality,
+        moduleHealth: moduleHealthQuality,
+        performance: performanceQuality
+    };
+
+    // ---------- Weighted Component Scores ----------
+
+    const componentScores = {
+        passRate:
+            passRateQuality * weights.passRate / 100,
+
+        failureRate:
+            failureRateQuality * weights.failureRate / 100,
+
+        flakyRate:
+            flakyRateQuality * weights.flakyRate / 100,
+
+        moduleHealth:
+            moduleHealthQuality * weights.moduleRisk / 100,
+
+        performance:
+            performanceQuality * weights.performance / 100
+    };
+
+    // ---------- Final Release Quality Score ----------
+
+    const qualityScore = Number(
+        Object.values(componentScores)
+            .reduce((sum, score) => sum + score, 0)
+            .toFixed(2)
+    );
+
+    return {
+        available: true,
+
+        qualityScore,
+
+        componentQualityScores: Object.fromEntries(
+            Object.entries(componentQualityScores)
+                .map(([key, value]) => [
+                    key,
+                    Number(value.toFixed(2))
+                ])
+        ),
+
+        componentScores: Object.fromEntries(
+            Object.entries(componentScores)
+                .map(([key, value]) => [
+                    key,
+                    Number(value.toFixed(2))
+                ])
+        ),
+
+        stabilityIntegration: {
+            available: stabilityAvailable,
+            method: stabilityAvailable
+                ? '50% current flaky quality + 50% historical Test Stability Index'
+                : 'Current flaky quality only'
+        },
+
+        moduleHealthIntegration: {
+            method: 'Lowest Module Health Score',
+            modulesAnalyzed: validModuleHealthScores.length,
+            lowestModuleHealthScore: Number(
+                moduleHealthQuality.toFixed(2)
+            )
+        }
+    };
+}
+
 module.exports = {
     calculateTestStabilityIndex,
     calculateModuleHealthScore,
