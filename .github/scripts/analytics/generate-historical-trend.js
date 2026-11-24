@@ -284,8 +284,9 @@ const currentRun = {
     generatedAt: new Date().toISOString()
 };
 
-// Only successful test executions become historical baselines.
-if (currentRun.successful) {
+// Save every valid execution for stability analysis.
+// Keep the successful flag for existing historical comparisons.
+if (currentRun.total > 0) {
     const updatedRuns = [
         ...runs,
         currentRun
@@ -304,11 +305,11 @@ if (currentRun.successful) {
     );
 
     console.log(
-        `Historical run #${currentRun.runNumber} saved.`
+        `Historical execution #${currentRun.runNumber} saved.`
     );
 } else {
     console.log(
-        'Current run was not saved because it contains failed tests or no test results.'
+        'Historical execution not saved: no test results available.'
     );
 }
 // ---------- ----------
