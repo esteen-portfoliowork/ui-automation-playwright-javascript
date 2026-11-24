@@ -521,6 +521,7 @@ jobs:
             echo "| 📄 JSON Results | ${JSON_RESULTS_URL:+[Download]($JSON_RESULTS_URL)} |"
             echo "| 📊 Allure Results | ${ALLURE_RESULTS_URL:+[Download]($ALLURE_RESULTS_URL)} |"
             echo "| 📊 Allure Report | ${ALLURE_REPORT_URL:+[Download]($ALLURE_REPORT_URL)} |"
+            echo "| 🏆 Quality Scoring Dashboard | ${QUALITY_DASHBOARD_URL:+[Open]($QUALITY_DASHBOARD_URL)} |"
             echo "| 📁 Markdown Execution Reports | ${MARKDOWN_REPORT_URL:+[Download]($MARKDOWN_REPORT_URL)} |"
             echo ""
             echo "[🔍 View GitHub Actions Run]($RUN_URL)"
