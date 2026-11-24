@@ -259,7 +259,45 @@ assert.equal(
     'CONDITIONAL GO'
 );
 
-// ---------- Test 13: Every Result Has Explanations ----------
+// ---------- Test 13: Boundary Test ----------
+
+const health50Result = generateReleaseRecommendation({
+    ...baseInput,
+    modules: [
+        {
+            application: 'SauceDemo',
+            module: 'boundary',
+            healthScore: 50,
+            riskLevel: '🟠 High'
+        }
+    ]
+});
+
+assert.equal(
+    health50Result.recommendation,
+    'CONDITIONAL GO',
+    'A Module Health Score of 50 is Needs Attention, not a critical hard stop.'
+);
+
+const healthBelow50Result = generateReleaseRecommendation({
+    ...baseInput,
+    modules: [
+        {
+            application: 'SauceDemo',
+            module: 'critical-boundary',
+            healthScore: 49.99,
+            riskLevel: '🔴 Critical'
+        }
+    ]
+});
+
+assert.equal(
+    healthBelow50Result.recommendation,
+    'NO-GO',
+    'A Module Health Score below 50 must trigger a critical hard stop.'
+);
+
+// ---------- Test 14: Every Result Has Explanations ----------
 
 const results = [
     goResult,
@@ -273,7 +311,8 @@ const results = [
     missingModulesResult,
     missingExecutionResult,
     missingGateResult,
-    warningGateResult
+    warningGateResult,
+    health50Result
 ];
 
 for (const result of results) {
@@ -294,4 +333,4 @@ for (const result of results) {
 }
 
 console.log('🤖 Release Recommendation Tests');
-console.log('✅ All 13 Release Recommendation tests passed.');
+console.log('✅ All 14 Release Recommendation tests passed.');
