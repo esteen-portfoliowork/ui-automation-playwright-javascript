@@ -356,6 +356,12 @@ function formatSlowestModule() {
 
     const item = risk.slowestModule;
 
+    const module = (risk.modules || []).find(
+        entry =>
+            entry.application === item.application &&
+            entry.module === item.module
+    );
+
     if (!item) {
         return 'No execution duration data available.';
     }
@@ -366,7 +372,9 @@ function formatSlowestModule() {
         `• Average Duration: ${formatDuration(item.averageDurationMs)}`,
         `• Tests Measured: ${item.durationTestCount}`,
         `• Failed: ${item.failed}`,
-        `• Flaky: ${item.flaky}`
+        `• Flaky: ${item.flaky}`,
+        `• Module Risk Score: ${module ? `${module.riskScore.toFixed(2)}%` : 'N/A'}`,
+        `• Module Health Score: ${module?.healthScore !== null && module?.healthScore !== undefined ? `${module.healthScore.toFixed(2)}%` : 'N/A'} | ${module?.healthStatus || '⚪ Unknown'}`
     ].join('\n');
 }
 
