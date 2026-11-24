@@ -231,13 +231,39 @@ const modules = Object.values(failedModuleCounts)
     );
 
 // Failed Modules Markdown
+
 const failedModuleMarkdown = modules.length
     ? [
-        '| Application | Module | Failed Tests |',
-        '|:-------------:|:--------:|:-------------:|',
-        ...modules.map(item =>
-            `| ${escapeMarkdown(item.application)} | ${escapeMarkdown(item.module)} | ${item.count} |`
-        )
+        '| Application | Module | Failed Tests | Module Risk Score | Module Health Score | Health Status |',
+        '|:-------------:|:--------:|:-------------:|:----------------:|:-----------------:|:-------------:|',
+
+        ...modules.map(item => {
+            const riskModule = riskModules.find(
+                module =>
+                    module.application === item.application &&
+                    module.module === item.module
+            );
+
+            const riskScore = riskModule
+                ? `${riskModule.riskScore.toFixed(2)}%`
+                : 'N/A';
+
+            const healthScore =
+                riskModule?.healthScore !== null &&
+                riskModule?.healthScore !== undefined
+                    ? `${riskModule.healthScore.toFixed(2)}%`
+                    : 'N/A';
+
+            const healthStatus =
+                riskModule?.healthStatus || '⚪ Unknown';
+
+            return (
+                `| ${escapeMarkdown(item.application)} | ` +
+                `${escapeMarkdown(item.module)} | ` +
+                `${item.count} | ${riskScore} | ` +
+                `${healthScore} | ${healthStatus} |`
+            );
+        })
     ].join('\n')
     : '✅ No failed modules found.';
 
