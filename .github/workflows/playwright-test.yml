@@ -682,7 +682,7 @@ jobs:
               'Execution Health',
               'Execution Overview',
               'Execution Metrics',
-              'Release Readiness',
+              'Release Quality Score',
               'Application Health',
               'Module Breakdown',
               'Test Tag Analytics',
