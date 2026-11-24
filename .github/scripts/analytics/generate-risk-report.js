@@ -522,6 +522,8 @@ const riskAnalysis = {
 
     slowestModule,
 
+    testStabilityIndex,
+
     releaseReadiness
 };
 
