@@ -5,7 +5,9 @@ const fs = require('fs');
 
 // Import functions from quality-scoring.js
 const {
-    calculateTestStabilityIndex
+    calculateTestStabilityIndex,
+    calculateModuleHealthScore,
+    getModuleHealthStatus
 } = require('../core/quality-scoring');
 
 // Import functions from test-data.js
@@ -144,18 +146,6 @@ if (slowestModule) {
 // ---------- ----------
 
 // ---------- Module Risk Analysis ----------
-function getModuleHealthStatus(score) {
-    if (!Number.isFinite(score)) {
-        return '⚪ Unknown';
-    }
-
-    if (score >= 90) return '🟢 Healthy';
-    if (score >= 75) return '🔵 Good';
-    if (score >= 50) return '🟡 Needs Attention';
-
-    return '🔴 Critical';
-}
-
 const riskModules = Object.values(moduleRiskCounts).map(item => {
 
     const failureRate = item.executed > 0
@@ -173,9 +163,10 @@ const riskModules = Object.values(moduleRiskCounts).map(item => {
     );
 
     // formula: healthScore = 100 - riskScore
-    const healthScore = item.executed > 0
-        ? Number((100 - riskScore).toFixed(2))
-        : null;
+    const healthScore = calculateModuleHealthScore(
+        riskScore,
+        item.executed
+    );
 
     let riskLevel = '🟢 Healthy';
 
