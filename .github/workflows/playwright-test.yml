@@ -367,6 +367,17 @@ jobs:
         run: |
           node .github/scripts/analytics/test-empty-report-sections.js
 
+      - name: 🏆 Generate Quality Scoring Dashboard
+        id: quality_dashboard
+        if: always()
+        run: |
+          node .github/scripts/analytics/generate-quality-scoring-dashboard.js
+
+      - name: 🧪 Validate Quality Scoring Dashboard
+        if: always()
+        run: |
+          node .github/scripts/analytics/quality-scoring-dashboard.test.js
+
       - name: 📋 Generate Breakdown Reports
         id: breakdown
         if: always()
@@ -663,10 +674,6 @@ jobs:
       - name: 🏆 Validate Release Quality Score
         if: always() && steps.notification_data.outcome == 'success'
         run: node .github/scripts/core/release-quality.test.js
-
-      - name: 🧪 Validate Scoring Dashboard
-        if: always() && steps.notification_data.outcome == 'success'
-        run: node .github/scripts/analytics/quality-scoring-dashboard.test.js
 
       - name: 🤖 Validate Release Recommendations
         if: always() && steps.notification_data.outcome == 'success'
