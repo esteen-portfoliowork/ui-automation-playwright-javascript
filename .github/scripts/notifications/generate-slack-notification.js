@@ -289,11 +289,16 @@ function renderSection(section) {
         .trim();
 }
 
-// ---------- Build Slack Blocks ----------
+ // ---------- Build Slack Blocks ----------
 
 const blocks = [];
 
+const MAX_SLACK_BLOCKS = 50;
+const TARGET_SLACK_BLOCKS = 45;
+const MAX_SECTION_TEXT = 2800;
+
 for (const item of sections) {
+
     const title = item.title;
 
     // Do not show PR details in Manual or Push runs.
@@ -315,61 +320,76 @@ for (const item of sections) {
         continue;
     }
 
-    blocks.push({
-        type: 'header',
-        text: {
-            type: 'plain_text',
-            text: title.slice(0, 150),
-            emoji: true
-        }
-    });
-
     // Split content to respect Slack section text limits.
     const chunks = [];
 
     let remaining = content;
 
-    while (remaining.length > 2800) {
-        let splitAt = remaining.lastIndexOf('\n', 2800);
+    while (remaining.length > MAX_SECTION_TEXT) {
+
+        let splitAt = remaining.lastIndexOf(
+            '\n',
+            MAX_SECTION_TEXT
+        );
 
         if (splitAt < 1000) {
-            splitAt = 2800;
+            splitAt = MAX_SECTION_TEXT;
         }
 
-        chunks.push(remaining.slice(0, splitAt));
-        remaining = remaining.slice(splitAt).trim();
+        chunks.push(
+            remaining.slice(0, splitAt)
+        );
+
+        remaining = remaining
+            .slice(splitAt)
+            .trim();
     }
 
     if (remaining) {
         chunks.push(remaining);
     }
 
-    for (const chunk of chunks) {
+    // Combine title and content into one Slack section block.
+    chunks.forEach((chunk, index) => {
+
+        const blockText = index === 0
+            ? `*${convertInlineMarkdown(title)}*\n${chunk}`
+            : chunk;
+
         blocks.push({
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: chunk
+                text: blockText
             }
         });
-    }
+    });
 }
 
 // ---------- Validate Slack Block Limits ----------
-const MAX_SLACK_BLOCKS = 50;
 
 console.log('Slack Block Validation');
 console.log(`Generated Blocks: ${blocks.length}`);
 console.log(`Maximum Allowed: ${MAX_SLACK_BLOCKS}`);
+console.log(`Target Block Count: ${TARGET_SLACK_BLOCKS}`);
 
 if (blocks.length > MAX_SLACK_BLOCKS) {
+
     throw new Error(
         `Slack block limit exceeded: ${blocks.length}/${MAX_SLACK_BLOCKS}. ` +
-        'Consider splitting the report into multiple Slack messages.'
+        'Reduce report content or split the notification into multiple messages.'
+    );
+}
+
+if (blocks.length > TARGET_SLACK_BLOCKS) {
+    console.warn(
+        `⚠️ Slack block count is above the recommended target: ` +
+        `${blocks.length}/${TARGET_SLACK_BLOCKS}.`
     );
 }
 
 console.log('Slack block validation passed.');
+// ---------- ----------
 
 // ---------- Create Payload ----------
 
