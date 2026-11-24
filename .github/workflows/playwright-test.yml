@@ -734,6 +734,46 @@ jobs:
             console.log('Slack Sections:', Object.keys(data.slack));
           "
 
+      - name: 🔍 Validate Release Recommendation Reports
+        if: always()
+        run: |
+          node -e "
+            const fs = require('fs');
+
+            const jsonFile = 'release-recommendations.json';
+            const mdFile = 'release-recommendations.md';
+
+            if (!fs.existsSync(jsonFile)) {
+              throw new Error('Release recommendation JSON is missing.');
+            }
+
+            if (!fs.existsSync(mdFile)) {
+              throw new Error('Release recommendation Markdown is missing.');
+            }
+
+            const data = JSON.parse(
+              fs.readFileSync(jsonFile, 'utf8')
+            );
+
+            const allowed = [
+              'GO',
+              'CONDITIONAL GO',
+              'NO-GO',
+              'REVIEW REQUIRED'
+            ];
+
+            if (!allowed.includes(data.recommendation)) {
+              throw new Error('Invalid recommendation status.');
+            }
+
+            if (!data.explanation || !data.reasons.length || !data.actions.length) {
+              throw new Error('Recommendation explanation or actions are missing.');
+            }
+
+            console.log('Release recommendation report validation passed.');
+            console.log('Recommendation:', data.recommendation);
+          "
+
       - name: 📨 Generate Slack Payload
         id: generate_slack_payload
         if: always() && steps.reporting_completeness.outcome == 'success' && steps.notification_data.outcome == 'success' && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
