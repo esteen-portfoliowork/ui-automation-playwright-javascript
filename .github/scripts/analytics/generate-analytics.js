@@ -14,6 +14,12 @@ const {
     calculateMetrics
 } = require('../core/metrics');
 
+// Import functions from quality-scoring.js
+const {
+    calculateModuleHealthScore,
+    getModuleHealthStatus
+} = require('../core/quality-scoring');
+
 // Import functions from test-aggregation.js
 const {
     createStatusCounts,
