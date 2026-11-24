@@ -342,8 +342,10 @@ function formatTopRiskModule() {
         `• Flaky: ${item.flaky}`,
         `• Failure Rate: ${item.failureRate.toFixed(2)}%`,
         `• Flaky Rate: ${item.flakyRate.toFixed(2)}%`,
-        `• Risk Score: *${item.riskScore.toFixed(2)}%*`,
-        `• Risk Level: ${item.riskLevel}`
+        `• Module Risk Score: *${item.riskScore.toFixed(2)}%*`,
+        `• Module Health Score: *${item.healthScore === null ? 'N/A' : `${item.healthScore.toFixed(2)}%`}*`,
+        `• Risk Level: ${item.riskLevel}`,
+        `• Health Status: ${item.healthStatus || '⚪ Unknown'}`
     ].join('\n');
 }
 
