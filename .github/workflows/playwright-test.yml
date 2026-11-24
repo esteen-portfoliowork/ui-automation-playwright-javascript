@@ -459,6 +459,8 @@ jobs:
           path: |
             release-readiness.md
             release-readiness.json
+            release-recommendations.md
+            release-recommendations.json
             application-health-dashboard.md
             module-breakdown.md
             tag-execution-summary.md
