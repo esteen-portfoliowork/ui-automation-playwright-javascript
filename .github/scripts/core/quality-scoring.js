@@ -75,6 +75,34 @@ function calculateTestStabilityIndex(runs) {
     };
 }
 
+function calculateModuleHealthScore(riskScore, executed) {
+    if (
+        !Number.isFinite(riskScore) ||
+        !Number.isFinite(executed) ||
+        executed <= 0
+    ) {
+        return null;
+    }
+
+    return Number(
+        Math.max(0, Math.min(100, 100 - riskScore)).toFixed(2)
+    );
+}
+
+function getModuleHealthStatus(score) {
+    if (!Number.isFinite(score)) {
+        return '⚪ Unknown';
+    }
+
+    if (score >= 90) return '🟢 Healthy';
+    if (score >= 75) return '🔵 Good';
+    if (score >= 50) return '🟡 Needs Attention';
+
+    return '🔴 Critical';
+}
+
 module.exports = {
-    calculateTestStabilityIndex
+    calculateTestStabilityIndex,
+    calculateModuleHealthScore,
+    getModuleHealthStatus
 };
