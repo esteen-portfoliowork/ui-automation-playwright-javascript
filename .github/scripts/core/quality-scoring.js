@@ -101,7 +101,6 @@ function getModuleHealthStatus(score) {
     return '🔴 Critical';
 }
 
-
 function calculateReleaseQualityScore({
     executedTests,
     passRate,
