@@ -358,13 +358,23 @@ writeMarkdown(
 );
 
 // Slowest Module Markdown
+
+const slowestRiskModule = slowestModule
+    ? riskModules.find(
+        module =>
+            module.application === slowestModule.application &&
+            module.module === slowestModule.module
+    )
+    : null;
+
 const slowestModuleMarkdown = [
     '',
     ...(slowestModule
         ? [
-            '| Application | Module | Total Duration | Average Duration | Tests Measured |',
-            '|:---:|:---:|:---:|:---:|:---:|',
-            `| ${escapeMarkdown(slowestModule.application)} | ${escapeMarkdown(slowestModule.module)} | ${formatDuration(slowestModule.durationMs)} | ${formatDuration(slowestModule.averageDurationMs)} | ${slowestModule.durationTestCount} |`
+            '| Application | Module | Total Duration | Average Duration | Tests Measured | Module Risk Score | Module Health Score | Health Status |',
+            '|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|',
+
+            `| ${escapeMarkdown(slowestModule.application)} | ${escapeMarkdown(slowestModule.module)} | ${formatDuration(slowestModule.durationMs)} | ${formatDuration(slowestModule.averageDurationMs)} | ${slowestModule.durationTestCount} | ${slowestRiskModule ? `${slowestRiskModule.riskScore.toFixed(2)}%` : 'N/A'} | ${slowestRiskModule?.healthScore !== null && slowestRiskModule?.healthScore !== undefined ? `${slowestRiskModule.healthScore.toFixed(2)}%` : 'N/A'} | ${slowestRiskModule?.healthStatus || '⚪ Unknown'} |`
         ]
         : [
             'No execution duration data available.'
