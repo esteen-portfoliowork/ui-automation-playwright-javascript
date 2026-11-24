@@ -145,12 +145,60 @@ function addMetrics(collection) {
 }
 // ---------- ----------
 
-// ---------- Analytics ----------
+
 analytics.applications = addMetrics(applications);
 analytics.modules = addMetrics(modules);
-analytics.tags = addMetrics(tags);
+
+// ---------- Tag Health Scoring ----------
+
+analytics.tags = addMetrics(tags).map(tag => {
+
+    // Skipped tests are excluded from risk calculations.
+    const executed = tag.passed + tag.failed + tag.flaky;
+
+    const failureRate = executed > 0
+        ? (tag.failed / executed) * 100
+        : 0;
+
+    const flakyRate = executed > 0
+        ? (tag.flaky / executed) * 100
+        : 0;
+
+    // Use the same risk formula as Module Risk Analysis.
+    const riskScore = Math.min(
+        100,
+        (failureRate * 0.70) + (flakyRate * 0.30)
+    );
+
+    const healthScore = calculateModuleHealthScore(
+        riskScore,
+        executed
+    );
+
+    const healthStatus = getModuleHealthStatus(
+        healthScore
+    );
+
+    return {
+        ...tag,
+
+        executed,
+
+        riskScore: Number(riskScore.toFixed(2)),
+
+        healthScore,
+
+        healthStatus,
+
+        // Preserve the existing health property
+        // for backward compatibility.
+        health: healthStatus
+    };
+});
+// ---------- ----------
 
 analytics.untaggedTests = untaggedTests;
+
 
 analytics.execution = {
     totalApplications: analytics.applications.length,
