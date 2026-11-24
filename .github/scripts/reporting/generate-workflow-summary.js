@@ -171,6 +171,7 @@ lines.push(
 
 const reports = [
     ['🏆 Release Quality Score', 'release-readiness.md'],
+    ['📊 Quality Scoring Dashboard', 'quality-scoring-dashboard.md'],
     ['🤖 Automated Release Recommendation', 'release-recommendations.md'],
     ['🖥️ Application Health', 'application-health-dashboard.md'],
     ['📦 Module Breakdown', 'module-breakdown.md'],
