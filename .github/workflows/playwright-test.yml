@@ -683,6 +683,7 @@ jobs:
               'Execution Overview',
               'Execution Metrics',
               'Release Quality Score',
+              'Automated Release Recommendation',
               'Application Health',
               'Module Breakdown',
               'Test Tag Analytics',
