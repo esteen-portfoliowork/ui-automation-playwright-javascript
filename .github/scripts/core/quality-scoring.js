@@ -181,8 +181,47 @@ function calculateReleaseQualityScore({
 
     // ---------- Validate Weights ----------
 
-    const totalWeight = Object.values(weights)
-        .reduce((sum, weight) => sum + Number(weight), 0);
+    const requiredWeightKeys = [
+        'passRate',
+        'failureRate',
+        'flakyRate',
+        'moduleRisk',
+        'performance'
+    ];
+
+    if (
+        !weights ||
+        typeof weights !== 'object' ||
+        Array.isArray(weights) ||
+        requiredWeightKeys.some(key =>
+            !isValidNumber(weights[key]) ||
+            Number(weights[key]) < 0
+        )
+    ) {
+        return {
+            available: false,
+            qualityScore: null,
+            reason: 'Release Quality Score weights are missing or invalid.'
+        };
+    }
+
+    if (
+        !isValidNumber(flakyRateThreshold) ||
+        Number(flakyRateThreshold) <= 0 ||
+        !isValidNumber(slowTestThresholdMs) ||
+        Number(slowTestThresholdMs) <= 0
+    ) {
+        return {
+            available: false,
+            qualityScore: null,
+            reason: 'Release Quality Score thresholds are missing or invalid.'
+        };
+    }
+
+    const totalWeight = requiredWeightKeys.reduce(
+        (sum, key) => sum + Number(weights[key]),
+        0
+    );
 
     if (
         !Number.isFinite(totalWeight) ||
