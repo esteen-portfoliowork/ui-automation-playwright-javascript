@@ -649,31 +649,68 @@ fs.writeFileSync(
     'utf8'
 );
 
-// Readiness Markdown
+
+// ---------- Release Quality Markdown ----------
+
 const readinessStatusEmoji = {
     'GO': '🟢',
     'CONDITIONAL GO': '🟡',
-    'NO-GO': '🔴'
+    'NO-GO': '🔴',
+    'UNKNOWN': '⚪'
 }[releaseReadiness.status] || '⚪';
 
-const readinessMarkdown = `### ${readinessStatusEmoji} ${releaseReadiness.status}
-*Readiness Score:* ${releaseReadiness.score}/100
+const readinessMarkdown = releaseReadiness.available
+    ? `### ${readinessStatusEmoji} Release Quality: ${releaseReadiness.status}
+
+**Release Quality Score:** ${releaseReadiness.qualityScore}/100
 
 ${releaseReadiness.reason}
 
-### Scoring Breakdown
+### Component Scoring Breakdown
 
-| Category | Actual Rate | Weight | Points |
-|:---:|:---:|:---:|:---:|
-| Test Pass Rate | ${passRate.toFixed(2)}% | 40% | ${passRateScore.toFixed(2)} |
-| Failure Rate | ${failureRate.toFixed(2)}% | 25% | ${failureRateScore.toFixed(2)} |
-| Flaky Rate | ${flakyRate.toFixed(2)}% | 15% | ${flakyRateScore.toFixed(2)} |
-| Module Risk | ${highestModuleRisk.toFixed(2)}% | 10% | ${moduleRiskScore.toFixed(2)} |
-| Performance | ${formatDuration(averageTestDurationMs)} | 10% | ${performanceScore.toFixed(2)} |
-| **Total** | — | **100%** | **${readinessScore.toFixed(2)}/100** |
+| Component | Actual Metric | Component Quality | Weight | Weighted Points |
+|:---:|:---:|:---:|:---:|:---:|
+| Pass Rate | ${passRate.toFixed(2)}% | ${releaseQuality.componentQualityScores.passRate.toFixed(2)} | 40% | ${releaseQuality.componentScores.passRate.toFixed(2)} |
+| Failure Rate | ${failureRate.toFixed(2)}% | ${releaseQuality.componentQualityScores.failureRate.toFixed(2)} | 25% | ${releaseQuality.componentScores.failureRate.toFixed(2)} |
+| Flaky Rate | ${flakyRate.toFixed(2)}% | ${releaseQuality.componentQualityScores.flakyRate.toFixed(2)} | 15% | ${releaseQuality.componentScores.flakyRate.toFixed(2)} |
+| Module Health | ${lowestModuleHealthScore.toFixed(2)}% | ${releaseQuality.componentQualityScores.moduleHealth.toFixed(2)} | 10% | ${releaseQuality.componentScores.moduleHealth.toFixed(2)} |
+| Performance | ${formatDuration(averageTestDurationMs)} | ${releaseQuality.componentQualityScores.performance.toFixed(2)} | 10% | ${releaseQuality.componentScores.performance.toFixed(2)} |
+| **Total** | — | — | **100%** | **${releaseReadiness.qualityScore.toFixed(2)}/100** |
+
+### Additional Quality Indicators
+
+| Indicator | Value |
+|:---:|:---:|
+| Test Stability Index | ${testStabilityIndex.available ? `${testStabilityIndex.score}/100` : '⚪ Unavailable'} |
+| Stability Integration | ${releaseQuality.stabilityIntegration.method} |
+| Lowest Module Health Score | ${lowestModuleHealthScore.toFixed(2)}% |
+| Modules Analyzed | ${releaseQuality.moduleHealthIntegration.modulesAnalyzed} |
+
+### Scoring Methodology
+
+- Pass Rate: 40% of the total score.
+- Failure Rate: 25% of the total score.
+- Flaky Rate: 15% of the total score.
+- Module Health: 10% of the total score.
+- Performance: 10% of the total score.
+- Component weights total 100%.
+- Historical Test Stability Index is blended into the Flaky Rate component when available.
+- Module Health uses the lowest health score among analyzed modules.
+- Performance uses the average duration of the slowest module.
+`
+    : `### ⚪ Release Quality: UNKNOWN
+
+**Release Quality Score:** Unavailable
+
+${releaseReadiness.reason}
+
+The release quality evaluation cannot be completed because one or more required metrics are unavailable.
 `;
 
-// Write Readiness Reports
+// ---------- Write Release Quality Reports ----------
+
+// Keep the existing filenames for backward compatibility.
+
 writeMarkdown(
     'release-readiness.md',
     readinessMarkdown
@@ -684,6 +721,7 @@ fs.writeFileSync(
     JSON.stringify(releaseReadiness, null, 2),
     'utf8'
 );
+
 // ---------- ----------
 
 // Logs
