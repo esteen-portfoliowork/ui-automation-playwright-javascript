@@ -1,14 +1,23 @@
-// // Resolve report paths from the repository root.
-// const REPO_ROOT = path.resolve(__dirname, '../../..');
 
-// function getReportPath(file) {
-//     return path.join(REPO_ROOT, file);
-// }
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const {
     calculateModuleHealthScore,
     getModuleHealthStatus
 } = require('./quality-scoring');
+
+// Repository root: three levels above .github/scripts/core
+const REPO_ROOT = path.resolve(__dirname, '../../..');
+
+function getReportPath(file) {
+    return path.join(REPO_ROOT, file);
+}
+
+function getJsonPath(file) {
+    return getReportPath(file);
+}
 
 console.log('\n🏥 Module Health Scoring Tests\n');
 
@@ -115,18 +124,20 @@ for (const file of reportFiles) {
 
         assert.ok(
             fs.existsSync(reportPath),
-            `${file} was not generated at repository root: ${reportPath}`
+            `${file} was not generated: ${reportPath}`
         );
 
         const content = fs.readFileSync(reportPath, 'utf8');
 
-        assert.ok(
-            /Module Health Score/i.test(content),
+        assert.match(
+            content,
+            /Module Health Score/i,
             `${file} is missing Module Health Score`
         );
 
-        assert.ok(
-            /Health Status/i.test(content),
+        assert.match(
+            content,
+            /Health Status/i,
             `${file} is missing Health Status`
         );
     });
@@ -135,27 +146,37 @@ for (const file of reportFiles) {
 // ---------- Risk JSON Validation ----------
 
 test('risk-analysis.json contains health metrics', () => {
-    assert.ok(fs.existsSync('risk-analysis.json'));
+    const file = getJsonPath('risk-analysis.json');
 
-    const risk = JSON.parse(
-        fs.readFileSync('risk-analysis.json', 'utf8')
+    assert.ok(
+        fs.existsSync(file),
+        'risk-analysis.json was not generated'
     );
 
-    assert.ok(Array.isArray(risk.modules));
+    const risk = JSON.parse(
+        fs.readFileSync(file, 'utf8')
+    );
+
+    assert.ok(
+        Array.isArray(risk.modules),
+        'risk-analysis.json must contain a modules array'
+    );
 
     for (const module of risk.modules) {
         assert.ok(
             Object.prototype.hasOwnProperty.call(
                 module,
                 'healthScore'
-            )
+            ),
+            `${module.application}/${module.module} is missing healthScore`
         );
 
         assert.ok(
             Object.prototype.hasOwnProperty.call(
                 module,
                 'healthStatus'
-            )
+            ),
+            `${module.application}/${module.module} is missing healthStatus`
         );
 
         if (module.executed === 0) {
@@ -168,13 +189,26 @@ test('risk-analysis.json contains health metrics', () => {
 // ---------- Notification Data Validation ----------
 
 test('notification-data.json contains module health metrics', () => {
-    assert.ok(fs.existsSync('notification-data.json'));
+    const file = getJsonPath('notification-data.json');
 
-    const notification = JSON.parse(
-        fs.readFileSync('notification-data.json', 'utf8')
+    assert.ok(
+        fs.existsSync(file),
+        'notification-data.json was not generated'
     );
 
-    assert.ok(Array.isArray(notification.risk.modules));
+    const notification = JSON.parse(
+        fs.readFileSync(file, 'utf8')
+    );
+
+    assert.ok(
+        notification.risk,
+        'notification-data.json is missing risk data'
+    );
+
+    assert.ok(
+        Array.isArray(notification.risk.modules),
+        'notification-data.json must contain risk.modules'
+    );
 
     for (const module of notification.risk.modules) {
         assert.ok(
