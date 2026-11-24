@@ -708,7 +708,6 @@ const recommendationEmoji = {
 }[releaseRecommendation.recommendation] || '⚪';
 
 const recommendationMarkdown = [
-    `# 🤖 Automated Release Recommendation`,
     '',
     `## ${recommendationEmoji} ${releaseRecommendation.recommendation}`,
     '',
