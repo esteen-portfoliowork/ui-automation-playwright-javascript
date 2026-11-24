@@ -528,7 +528,13 @@ if (executed === 0) {
 // Final Readiness Result
 const releaseReadiness = {
     status: readinessStatus,
+
+    // New canonical field
+    qualityScore: readinessScore,
+
+    // Backward compatibility
     score: readinessScore,
+
     reason: readinessReason,
 
     metrics: {
@@ -544,8 +550,12 @@ const releaseReadiness = {
         highestModuleRisk: Number(highestModuleRisk.toFixed(2)),
         averageTestDurationMs: Number(
             averageTestDurationMs.toFixed(2)
-        )
-    },
+        ),
+        testStabilityIndex:
+            testStabilityIndex.available
+                ? testStabilityIndex.score
+                : null,
+            },
 
     componentScores: {
         passRate: Number(passRateScore.toFixed(2)),
