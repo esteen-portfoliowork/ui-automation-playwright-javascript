@@ -681,6 +681,15 @@ const releaseRecommendation = generateReleaseRecommendation({
     }
 });
 
+// Add recommendation to the central risk-analysis data.
+riskAnalysis.releaseRecommendation = releaseRecommendation;
+
+fs.writeFileSync(
+    'risk-analysis.json',
+    JSON.stringify(riskAnalysis, null, 2),
+    'utf8'
+);
+
 // ---------- JSON Report ----------
 
 fs.writeFileSync(
