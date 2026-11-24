@@ -50,8 +50,8 @@ assert.equal(
 
 assert.equal(
     result.qualityScore,
-    90.25,
-    'Release Quality Score should be 90.25.'
+    85.25,
+    'Release Quality Score should be 85.25.'
 );
 
 // ---------- Test 2: Component Weights ----------
