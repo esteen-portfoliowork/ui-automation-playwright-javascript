@@ -690,30 +690,62 @@ setOutput(
     notification.slack.tagExecution
 );
 
-// Release readiness values.
+
+// ---------- Release Quality Outputs ----------
 const readiness = risk.releaseReadiness;
 
 if (readiness) {
+
+    setOutput(
+        'RELEASE_QUALITY_AVAILABLE',
+        String(readiness.available === true)
+    );
+
+    setOutput(
+        'RELEASE_QUALITY_STATUS',
+        readiness.status || 'UNKNOWN'
+    );
+
+    setOutput(
+        'RELEASE_QUALITY_SCORE',
+        readiness.qualityScore === null ||
+        readiness.qualityScore === undefined
+            ? ''
+            : String(readiness.qualityScore)
+    );
+
+    // Backward compatibility.
     setOutput(
         'RELEASE_READINESS_STATUS',
-        readiness.status
+        readiness.status || 'UNKNOWN'
     );
 
     setOutput(
         'RELEASE_READINESS_SCORE',
-        String(readiness.score)
+        readiness.qualityScore === null ||
+        readiness.qualityScore === undefined
+            ? ''
+            : String(readiness.qualityScore)
     );
 
     setOutput(
         'RELEASE_READINESS_REASON',
-        readiness.reason
+        readiness.reason || 'N/A'
     );
 
+    setOutput(
+        'RELEASE_QUALITY_JSON',
+        JSON.stringify(readiness, null, 2)
+    );
+
+    // Preserve the existing output name.
     setOutput(
         'RELEASE_READINESS_JSON',
         JSON.stringify(readiness, null, 2)
     );
 }
+
+// ---------- ----------
 
 // Preserve title outputs.
 setOutput(
