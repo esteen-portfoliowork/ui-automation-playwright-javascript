@@ -7,11 +7,13 @@ const requiredJsonFiles = [
     'analytics.json',
     'risk-analysis.json',
     'historical-trend.json',
-    'release-readiness.json'
+    'release-readiness.json',
+    'quality-scoring-dashboard.json'
 ];
 
 const requiredMarkdownFiles = [
     'release-readiness.md',
+    'quality-scoring-dashboard.md',
     'application-health-dashboard.md',
     'module-breakdown.md',
     'tag-execution-summary.md',
