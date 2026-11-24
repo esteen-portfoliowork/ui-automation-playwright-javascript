@@ -94,6 +94,14 @@ const riskResult = readJsonResult(
         Array.isArray(data.modules)
 );
 
+const recommendationResult = readJsonResult(
+    'release-recommendations.json',
+    data =>
+        typeof data.recommendation === 'string' &&
+        Array.isArray(data.reasons) &&
+        Array.isArray(data.actions)
+);
+
 const historicalResult = readJsonResult(
     'historical-trend.json'
 );
@@ -121,6 +129,26 @@ const risk = riskResult.data || {
     slowestModule: null,
     releaseReadiness: null
 };
+
+const releaseRecommendation =
+    recommendationResult.data || {
+        recommendation: 'REVIEW REQUIRED',
+        explanation:
+            'Release recommendation data is unavailable.',
+        reasons: [
+            recommendationResult.reason ||
+            'Recommendation report could not be generated.'
+        ],
+        actions: [
+            'Generate and validate release recommendation data.'
+        ],
+        metrics: {},
+        qualityGate: {
+            configured: false,
+            status: 'UNKNOWN'
+        },
+        evaluatedAt: null
+    };
 
 const historical = historicalResult.available
     ? historicalResult.data
@@ -226,7 +254,9 @@ const notificationData = {
 
         slowestModule: risk.slowestModule,
 
-        releaseReadiness: risk.releaseReadiness
+        releaseReadiness: risk.releaseReadiness,
+
+        releaseRecommendation
     },
 
     // Historical Trend
@@ -463,6 +493,49 @@ function formatReleaseReadiness() {
     ].join('\n');
 }
 
+function formatReleaseRecommendation() {
+
+    const item = releaseRecommendation;
+
+    const emoji = {
+        'GO': '🟢',
+        'CONDITIONAL GO': '🟡',
+        'NO-GO': '🔴',
+        'REVIEW REQUIRED': '⚪'
+    }[item.recommendation] || '⚪';
+
+    return [
+        `${emoji} *${item.recommendation}*`,
+        '',
+        `*Explanation:* ${item.explanation}`,
+        '',
+        '*Reasons*',
+        ...item.reasons.map(
+            reason => `• ${reason}`
+        ),
+        '',
+        '*Recommended Actions*',
+        ...item.actions.map(
+            action => `• ${action}`
+        ),
+        '',
+        `*Release Quality Score:* ${
+            item.metrics.releaseQualityScore ?? 'N/A'
+        }`,
+        `*Test Stability Index:* ${
+            item.metrics.testStabilityIndex ?? 'N/A'
+        }`,
+        `*Lowest Module Health:* ${
+            item.metrics.lowestModuleHealthScore ?? 'N/A'
+        }`,
+        `*Quality Gate:* ${
+            item.qualityGate?.status || 'UNKNOWN'
+        }`,
+        '',
+        '_Advisory recommendation only. No automatic deployment or release approval._'
+    ].join('\n');
+}
+
 function formatApplicationHealth() {
     if (!analyticsResult.available || !riskResult.available) {
         return '⚪ Application health data unavailable.';
@@ -625,7 +698,10 @@ const notification = {
         ),
         topRiskModule: formatTopRiskModule(),
         slowestModule: formatSlowestModule(),
+
         releaseReadiness: formatReleaseReadiness(),
+        releaseRecommendation: formatReleaseRecommendation(),
+
         applicationHealth: formatApplicationHealth(),
         moduleBreakdown: formatModuleBreakdown(),
         tagExecution: formatTagExecution()
@@ -648,6 +724,21 @@ fs.writeFileSync(
 setOutput(
     'RELEASE_READINESS_TEXT',
     notification.slack.releaseReadiness
+);
+
+setOutput(
+    'RELEASE_RECOMMENDATION_TEXT',
+    notification.slack.releaseRecommendation
+);
+
+setOutput(
+    'RELEASE_RECOMMENDATION',
+    releaseRecommendation.recommendation
+);
+
+setOutput(
+    'RELEASE_RECOMMENDATION_JSON',
+    JSON.stringify(releaseRecommendation, null, 2)
 );
 
 setOutput(
