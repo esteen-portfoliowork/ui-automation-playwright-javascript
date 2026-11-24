@@ -315,5 +315,6 @@ function calculateReleaseQualityScore({
 module.exports = {
     calculateTestStabilityIndex,
     calculateModuleHealthScore,
-    getModuleHealthStatus
+    getModuleHealthStatus,
+    calculateReleaseQualityScore
 };
