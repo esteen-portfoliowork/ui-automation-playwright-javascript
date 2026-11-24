@@ -367,6 +367,17 @@ jobs:
         run: |
           node .github/scripts/analytics/test-empty-report-sections.js
 
+      - name: 🏆 Generate Quality Scoring Dashboard
+        id: quality_dashboard
+        if: always()
+        run: |
+          node .github/scripts/analytics/generate-quality-scoring-dashboard.js
+
+      - name: 🧪 Validate Quality Scoring Dashboard
+        if: always()
+        run: |
+          node .github/scripts/analytics/quality-scoring-dashboard.test.js
+
       - name: 📋 Generate Breakdown Reports
         id: breakdown
         if: always()
@@ -461,6 +472,8 @@ jobs:
             release-readiness.json
             release-recommendations.md
             release-recommendations.json
+            quality-scoring-dashboard.md
+            quality-scoring-dashboard.json
             application-health-dashboard.md
             module-breakdown.md
             tag-execution-summary.md
@@ -470,6 +483,18 @@ jobs:
             flaky-tests.md
             slowest-module.md
             historical-test-trend.md
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: 🏆 Upload Quality Scoring Dashboard
+        id: upload_quality_dashboard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event_name == 'pull_request' && format('pr-quality-scoring-dashboard-{0}', github.run_number) || format('quality-scoring-dashboard-{0}', github.run_number) }}
+          path: |
+            quality-scoring-dashboard.md
+            quality-scoring-dashboard.json
           if-no-files-found: warn
           retention-days: 7
 
@@ -484,6 +509,7 @@ jobs:
           ALLURE_RESULTS_URL: ${{ steps.upload_allure_results.outputs.artifact-url }}
           ALLURE_REPORT_URL: ${{ steps.upload_allure_report.outputs.artifact-url }}
           MARKDOWN_REPORT_URL: ${{ steps.upload_markdown_reports.outputs.artifact-url }}
+          QUALITY_DASHBOARD_URL: ${{ steps.upload_quality_dashboard.outputs.artifact-url }}
         run: |
           # ------- Generate Markdown Report Links -------
           {
@@ -495,6 +521,7 @@ jobs:
             echo "| 📄 JSON Results | ${JSON_RESULTS_URL:+[Download]($JSON_RESULTS_URL)} |"
             echo "| 📊 Allure Results | ${ALLURE_RESULTS_URL:+[Download]($ALLURE_RESULTS_URL)} |"
             echo "| 📊 Allure Report | ${ALLURE_REPORT_URL:+[Download]($ALLURE_REPORT_URL)} |"
+            echo "| 🏆 Quality Scoring Dashboard | ${QUALITY_DASHBOARD_URL:+[Open]($QUALITY_DASHBOARD_URL)} |"
             echo "| 📁 Markdown Execution Reports | ${MARKDOWN_REPORT_URL:+[Download]($MARKDOWN_REPORT_URL)} |"
             echo ""
             echo "[🔍 View GitHub Actions Run]($RUN_URL)"
@@ -516,6 +543,9 @@ jobs:
           fi
           if [ -n "$ALLURE_REPORT_URL" ]; then
             SLACK_LINKS="$SLACK_LINKS | <${ALLURE_REPORT_URL}|Allure Report>"
+          fi
+          if [ -n "$QUALITY_DASHBOARD_URL" ]; then
+            SLACK_LINKS="$SLACK_LINKS | <${QUALITY_DASHBOARD_URL}|Quality Scoring Dashboard>"
           fi
           if [ -n "$MARKDOWN_REPORT_URL" ]; then
             SLACK_LINKS="$SLACK_LINKS | <${MARKDOWN_REPORT_URL}|Markdown Execution Reports>"
@@ -638,6 +668,7 @@ jobs:
           JSON_RESULTS_URL: ${{ steps.upload_json_results.outputs.artifact-url }}
           ALLURE_RESULTS_URL: ${{ steps.upload_allure_results.outputs.artifact-url }}
           ALLURE_REPORT_URL: ${{ steps.upload_allure_report.outputs.artifact-url }}
+          QUALITY_DASHBOARD_URL: ${{ steps.upload_quality_dashboard.outputs.artifact-url }}
           MARKDOWN_REPORT_URL: ${{ steps.upload_markdown_reports.outputs.artifact-url }}
 
           PR_NUMBER: ${{ env.PR_NUMBER }}
@@ -693,6 +724,7 @@ jobs:
               'Execution Overview',
               'Execution Metrics',
               'Release Quality Score',
+              'Quality Scoring Dashboard',
               'Automated Release Recommendation',
               'Application Health',
               'Module Breakdown',

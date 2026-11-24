@@ -577,6 +577,9 @@ const releaseReadiness = {
         failureRate,
         flakyRate,
 
+        // Existing overall test execution quality score.
+        testExecutionQualityScore: readinessMetrics.qualityScore,
+
         highestModuleRisk:
             validHealthModules.length > 0
                 ? Number(
