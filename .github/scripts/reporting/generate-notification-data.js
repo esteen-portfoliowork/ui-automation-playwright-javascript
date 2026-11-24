@@ -405,21 +405,42 @@ function formatReleaseReadiness() {
 }
 
 function formatApplicationHealth() {
-    if (!analyticsResult.available) {
+    if (!analyticsResult.available || !riskResult.available) {
         return '⚪ Application health data unavailable.';
     }
 
+    const applicationRiskMap = new Map();
+
+    for (const module of risk.modules || []) {
+        const existing = applicationRiskMap.get(module.application);
+
+        if (!existing || module.riskScore > existing.riskScore) {
+            applicationRiskMap.set(module.application, module);
+        }
+    }
+
     return (analytics.applications || [])
-        .map(item =>
-            `• *${item.application}* — ` +
-            `Total: ${item.total} | ` +
-            `Passed: ${item.passed} | ` +
-            `Failed: ${item.failed} | ` +
-            `Flaky: ${item.flaky} | ` +
-            `Skipped: ${item.skipped} | ` +
-            `Pass Rate: ${item.passRate}% | ` +
-            `Health: ${item.health}`
-        )
+        .map(item => {
+            const module = applicationRiskMap.get(item.application);
+
+            const riskScore = module
+                ? `${module.riskScore.toFixed(2)}%`
+                : 'N/A';
+
+            const healthScore =
+                module?.healthScore !== null &&
+                module?.healthScore !== undefined
+                    ? `${module.healthScore.toFixed(2)}%`
+                    : 'N/A';
+
+            return [
+                `• *${item.application}*`,
+                `Total: ${item.total} | Passed: ${item.passed} | Failed: ${item.failed}`,
+                `Module Risk Score: ${riskScore}`,
+                `Module Health Score: ${healthScore}`,
+                `Health Status: ${module?.healthStatus || '⚪ Unknown'}`
+            ].join(' | ');
+        })
         .join('\n');
 }
 
