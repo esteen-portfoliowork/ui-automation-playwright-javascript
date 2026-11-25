@@ -362,6 +362,17 @@ jobs:
         if: always()
         run: node .github/scripts/analytics/generate-risk-report.js
 
+      - name: 🚦 Evaluate Configurable Quality Gates
+        id: quality_gates
+        if: always()
+        run: |
+          node .github/scripts/analytics/evaluate-quality-gates.js
+
+      - name: 🧪 Validate Quality Gate Evaluator
+        if: always()
+        run: |
+          node .github/scripts/core/quality-gates.test.js
+
       - name: 🔍 Validate Empty Report Sections
         if: always()
         run: |
@@ -472,6 +483,8 @@ jobs:
             release-readiness.json
             release-recommendations.md
             release-recommendations.json
+            quality-gates.json
+            quality-gates.md
             quality-scoring-dashboard.md
             quality-scoring-dashboard.json
             application-health-dashboard.md
