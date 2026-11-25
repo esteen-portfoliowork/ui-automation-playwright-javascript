@@ -141,6 +141,36 @@ function createFixture() {
                 configured: false,
                 status: 'NOT_CONFIGURED'
             }
+        },
+
+        qualityGateEvaluation: {
+            configured: true,
+            status: 'PASSED',
+            summary: {
+                total: 9,
+                passed: 9,
+                failed: 0,
+                unavailable: 0,
+                skipped: 0
+            },
+            results: [
+                {
+                    id: 'minimumTestCount',
+                    name: 'Minimum Executed Test Count',
+                    actual: 95,
+                    expected: 1,
+                    status: 'PASSED',
+                    explanation: 'Minimum test count is satisfied.'
+                },
+                {
+                    id: 'minimumPassRate',
+                    name: 'Minimum Pass Rate',
+                    actual: 93,
+                    expected: 95,
+                    status: 'FAILED',
+                    explanation: 'Pass rate is below the threshold.'
+                }
+            ]
         }
     };
 }
@@ -502,6 +532,58 @@ test('Generator creates JSON and Markdown files', () => {
             force: true
         });
     }
+});
+
+// ---------- QUality Gate evaluation ----------
+
+test('Dashboard uses the actual Quality Gate evaluation', () => {
+    const fixture = createFixture();
+
+    const dashboard = buildDashboard({
+        ...fixture,
+        qualityGateEvaluation:
+            fixture.qualityGateEvaluation
+    });
+
+    assert.equal(
+        dashboard.qualityGate.status,
+        'PASSED'
+    );
+
+    assert.equal(
+        dashboard.qualityGate.summary.total,
+        9
+    );
+
+    assert.equal(
+        dashboard.qualityGate.results.length,
+        2
+    );
+});
+
+
+test('Dashboard includes individual gate explanations in Markdown', () => {
+    const fixture = createFixture();
+
+    const dashboard = buildDashboard({
+        ...fixture,
+        qualityGateEvaluation:
+            fixture.qualityGateEvaluation
+    });
+
+    const markdown = renderMarkdown(dashboard);
+
+    assert.ok(
+        markdown.includes('Minimum Executed Test Count')
+    );
+
+    assert.ok(
+        markdown.includes('Minimum Pass Rate')
+    );
+
+    assert.ok(
+        markdown.includes('Pass rate is below the threshold.')
+    );
 });
 
 // ---------- Summary ----------
