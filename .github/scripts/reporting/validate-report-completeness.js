@@ -8,7 +8,8 @@ const requiredJsonFiles = [
     'risk-analysis.json',
     'historical-trend.json',
     'release-readiness.json',
-    'quality-scoring-dashboard.json'
+    'quality-scoring-dashboard.json',
+    'quality-gates.md'
 ];
 
 const requiredMarkdownFiles = [
