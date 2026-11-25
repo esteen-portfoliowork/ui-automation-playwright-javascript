@@ -320,8 +320,11 @@ test('Unavailable Release Quality Score is not represented as zero', () => {
 
 // ---------- Quality Gate & Recommendation ----------
 
-test('Quality Gate status is preserved', () => {
+test('Dashboard falls back to recommendation Quality Gate when evaluation is unavailable', () => {
     const fixture = createFixture();
+
+    // Simulate Quality Gate evaluation not being available.
+    delete fixture.qualityGateEvaluation;
 
     const dashboard = buildDashboard(fixture);
 
