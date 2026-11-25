@@ -78,7 +78,6 @@ function getReportingFileStatus(files) {
 
 function renderGateMarkdown(gates) {
     const lines = [
-        '# 🚦 Quality Gate Evaluation',
         '',
         `- **Status:** ${gates.status}`,
         `- **Configured:** ${gates.configured ? 'Yes' : 'No'}`,
