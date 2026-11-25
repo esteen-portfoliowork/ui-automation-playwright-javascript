@@ -1,0 +1,53 @@
+
+{
+  "schemaVersion": "1.0.0",
+  "enabled": true,
+
+  "policy": {
+    "failOnUnavailable": true
+  },
+
+  "thresholds": {
+    "minimumTestCount": {
+      "enabled": true,
+      "value": 1
+    },
+    "minimumPassRate": {
+      "enabled": true,
+      "value": 95
+    },
+    "maximumFailureRate": {
+      "enabled": true,
+      "value": 5
+    },
+    "maximumFlakyRate": {
+      "enabled": true,
+      "value": 10
+    },
+    "minimumTestStabilityIndex": {
+      "enabled": true,
+      "value": 75
+    },
+    "minimumModuleHealthScore": {
+      "enabled": true,
+      "value": 50
+    },
+    "minimumReleaseQualityScore": {
+      "enabled": true,
+      "value": 75
+    },
+    "criticalModuleRestriction": {
+      "enabled": true,
+      "allowCriticalModules": false
+    }
+  },
+
+  "reportingData": {
+    "enabled": true,
+    "requiredFiles": [
+      "analytics.json",
+      "risk-analysis.json",
+      "release-readiness.json"
+    ]
+  }
+}
