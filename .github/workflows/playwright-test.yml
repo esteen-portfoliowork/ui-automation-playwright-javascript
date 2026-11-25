@@ -736,6 +736,7 @@ jobs:
               'Execution Health',
               'Execution Overview',
               'Execution Metrics',
+              'Quality Gate Evaluation',
               'Release Quality Score',
               'Quality Scoring Dashboard',
               'Automated Release Recommendation',
