@@ -9,12 +9,13 @@ const requiredJsonFiles = [
     'historical-trend.json',
     'release-readiness.json',
     'quality-scoring-dashboard.json',
-    'quality-gates.md'
+    'quality-gates.json'
 ];
 
 const requiredMarkdownFiles = [
     'release-readiness.md',
     'quality-scoring-dashboard.md',
+    'quality-gates.md',
     'application-health-dashboard.md',
     'module-breakdown.md',
     'tag-execution-summary.md',
