@@ -78,6 +78,7 @@ function getScoreAvailability(score, available) {
 function buildDashboard({
     riskAnalysis,
     releaseRecommendation,
+    qualityGateEvaluation,
     context = {},
     generatedAt = new Date().toISOString()
 }) {
@@ -185,7 +186,10 @@ function buildDashboard({
     // ---------- Quality Gate ----------
 
     const qualityGate =
-        recommendation.qualityGate || {};
+        qualityGateEvaluation ||
+        riskAnalysis.qualityGate ||
+        recommendation.qualityGate ||
+        {};
 
     const gateConfigured =
         typeof qualityGate.configured === 'boolean'
@@ -490,7 +494,13 @@ function buildDashboard({
 
         qualityGate: {
             configured: gateConfigured,
-            status: gateStatus
+            status: gateStatus,
+
+            summary: qualityGate.summary || null,
+
+            results: Array.isArray(qualityGate.results)
+                ? qualityGate.results
+                : []
         },
 
         recommendation: {
@@ -679,6 +689,25 @@ function renderMarkdown(dashboard) {
         ''
     );
 
+    if (dashboard.qualityGate.results.length > 0) {
+        lines.push(
+            '| Gate Criterion | Actual | Expected | Status | Explanation |',
+            '|---|---:|---:|---|---|'
+        );
+
+        for (const gate of dashboard.qualityGate.results) {
+            lines.push(
+                `| ${escapeMarkdown(gate.name)} | ${escapeMarkdown(gate.actual)} | ${escapeMarkdown(gate.expected)} | ${gate.status} | ${escapeMarkdown(gate.explanation)} |`
+            );
+        }
+    } else {
+        lines.push(
+            'No individual Quality Gate evaluation results are available.'
+        );
+    }
+
+    lines.push('');
+
     lines.push(
         '## 🤖 Release Recommendation',
         '',
@@ -737,6 +766,7 @@ function renderMarkdown(dashboard) {
 function generateDashboard({
     riskAnalysis,
     releaseRecommendation,
+    qualityGateEvaluation,
     context = {},
     outputDir = process.cwd(),
     generatedAt
@@ -744,6 +774,7 @@ function generateDashboard({
     const dashboard = buildDashboard({
         riskAnalysis,
         releaseRecommendation,
+        qualityGateEvaluation,
         context,
         generatedAt
     });
@@ -809,6 +840,9 @@ function main() {
         'risk-analysis.json'
     );
 
+    const qualityGateEvaluation =
+        readJson('quality-gates.json', false);
+
     const recommendation =
         readJson(
             'release-recommendations.json',
@@ -820,6 +854,8 @@ function main() {
         riskAnalysis,
 
         releaseRecommendation: recommendation,
+
+        qualityGateEvaluation,
 
         context: {
             eventName:
